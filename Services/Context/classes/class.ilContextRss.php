@@ -31,7 +31,7 @@ class ilContextRss implements ilContextTemplate
 	 */
 	public static function hasUser()
 	{
-		return false;
+		return true;
 	}
 	
 	/**
@@ -51,7 +51,7 @@ class ilContextRss implements ilContextTemplate
 	 */
 	public static function hasHTML()
 	{
-		return false;
+		return true;
 	}
 	
 	/**
@@ -83,7 +83,7 @@ class ilContextRss implements ilContextTemplate
 	{
 		return false;
 	}
-	
+
 	/**
 	 * Check if persistent session handling is supported
 	 * @return boolean
@@ -93,6 +93,17 @@ class ilContextRss implements ilContextTemplate
 		return false;
 	}
 	
+
+	/**
+	 * Supports push messages
+	 *
+	 * @return bool
+	 */
+	public static function supportsPushMessages()
+	{
+		return false;
+	}
+
 }
 
 ?>

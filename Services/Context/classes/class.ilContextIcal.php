@@ -81,7 +81,7 @@ class ilContextIcal implements ilContextTemplate
 	 */
 	public static function doAuthentication()
 	{
-		return true;
+		return false;
 	}
 
 	/**
@@ -92,7 +92,17 @@ class ilContextIcal implements ilContextTemplate
 	{
 		return false;
 	}
-	
+
+	/**
+	 * Supports push messages
+	 *
+	 * @return bool
+	 */
+	public static function supportsPushMessages()
+	{
+		return false;
+	}
+
 }
 
 ?>

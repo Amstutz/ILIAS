@@ -27,7 +27,13 @@ class ilPollBlockGUI extends ilBlockGUI
 	*/
 	function __construct()
 	{
-		global $lng;
+		global $DIC;
+
+		$this->lng = $DIC->language();
+		$this->ctrl = $DIC->ctrl();
+		$this->user = $DIC->user();
+		$this->access = $DIC->access();
+		$lng = $DIC->language();
 		
 		parent::__construct();
 			
@@ -87,7 +93,7 @@ class ilPollBlockGUI extends ilBlockGUI
 	*/
 	function executeCommand()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 
 		$next_class = $ilCtrl->getNextClass();
 		$cmd = $ilCtrl->getCmd("getHTML");
@@ -101,7 +107,10 @@ class ilPollBlockGUI extends ilBlockGUI
 	
 	function fillRow($a_poll)
 	{		
-		global $ilCtrl, $lng, $ilUser, $tpl;
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
+		$ilUser = $this->user;
+		$tpl = $this->main_tpl;
 		
 		
 		// handle messages
@@ -192,7 +201,7 @@ class ilPollBlockGUI extends ilBlockGUI
 								
 				if($this->poll_block->getPoll()->getVotingPeriod())
 				{
-					$this->tpl->setVariable("TXT_VOTING_PERIOD",
+					$this->tpl->setVariable("TXT_VOTING_END_PERIOD",
 						sprintf($lng->txt("poll_voting_period_info"),
 							ilDatePresentation::formatDate(new ilDateTime($this->poll_block->getPoll()->getVotingPeriodEnd(), IL_CAL_UNIX))));
 				}
@@ -310,10 +319,33 @@ class ilPollBlockGUI extends ilBlockGUI
 				$this->tpl->setVariable("TOTAL_ANSWERS", $lng->txt("poll_block_message_already_voted"));
 			}
 		}
+
+		if(!$this->poll_block->mayVote($ilUser->getId()) && !$this->poll_block->getPoll()->hasUserVoted($ilUser->getId()))
+		{
+			if($this->poll_block->getPoll()->getVotingPeriod())
+			{
+				$this->tpl->setVariable("TXT_VOTING_PERIOD",
+					sprintf($lng->txt("poll_voting_period_full_info"),
+						ilDatePresentation::formatDate(new ilDateTime($this->poll_block->getPoll()->getVotingPeriodBegin(), IL_CAL_UNIX)),
+						ilDatePresentation::formatDate(new ilDateTime($this->poll_block->getPoll()->getVotingPeriodEnd(), IL_CAL_UNIX))
+					));
+			}
+		}
+		else
+		{
+			$this->tpl->setVariable("TXT_QUESTION", nl2br(trim($a_poll->getQuestion())));
+
+			$img = $a_poll->getImageFullPath();
+			if($img)
+			{
+				require_once('./Services/WebAccessChecker/classes/class.ilWACSignedPath.php');
+				$this->tpl->setVariable("URL_IMAGE", ilWACSignedPath::signFile($img));
+			}
+		}
 		
 				
 		$this->tpl->setVariable("ANCHOR_ID", $a_poll->getID());
-		$this->tpl->setVariable("TXT_QUESTION", nl2br(trim($a_poll->getQuestion())));
+		//$this->tpl->setVariable("TXT_QUESTION", nl2br(trim($a_poll->getQuestion())));
 		
 		$desc = trim($a_poll->getDescription());
 		if($desc)
@@ -321,12 +353,6 @@ class ilPollBlockGUI extends ilBlockGUI
 			$this->tpl->setVariable("TXT_DESC", nl2br($desc));
 		}
 
-		$img = $a_poll->getImageFullPath();
-		if($img)
-		{
-			require_once('./Services/WebAccessChecker/classes/class.ilWACSignedPath.php');
-			$this->tpl->setVariable("URL_IMAGE", ilWACSignedPath::signFile($img));
-		}
 
 		if ($this->poll_block->showComments()) {
 			$this->tpl->setCurrentBlock("comment_link");
@@ -359,16 +385,20 @@ class ilPollBlockGUI extends ilBlockGUI
 	*/
 	function getHTML()
 	{
-		global $ilCtrl, $lng, $ilAccess, $ilUser;
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
+		$ilAccess = $this->access;
+		$ilUser = $this->user;
 		
 		$this->poll_block->setRefId($this->getRefId());		
 		$this->may_write = $ilAccess->checkAccess("write", "", $this->getRefId());
 		$this->has_content = $this->poll_block->hasAnyContent($ilUser->getId(), $this->getRefId());
-		
-		if(!$this->may_write && !$this->has_content)
+
+		#22078 and 22079 it always contains something.
+		/*if(!$this->may_write && !$this->has_content)
 		{
 			return "";
-		}
+		}*/
 		
 		$poll_obj = $this->poll_block->getPoll();
 		$this->setTitle($poll_obj->getTitle());

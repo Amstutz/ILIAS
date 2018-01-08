@@ -11,7 +11,7 @@ var ilIdentifiedWizardInputExtend;
 		
 		newRowKeySequence: null,
 		newRowKeyStartValue: -1,
-		newRowKeyValueInterval: 1, // #20297
+		newRowKeyValueInterval: -1,
 		newRowKeyValuePrefix: 'IDENTIFIER~',
 		
 		handleRowCleanUp: function(){},
@@ -19,8 +19,8 @@ var ilIdentifiedWizardInputExtend;
 		init: function(parameters)
 		{
 			if(parameters)
-			{console.log($(parameters.fieldContainerSelector));
-				if( $(parameters.fieldContainerSelector).size() )
+			{
+				if( $(parameters.fieldContainerSelector).length )
 				{
 					this.tag_container = parameters.fieldContainerSelector;
 				}

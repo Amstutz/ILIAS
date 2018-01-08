@@ -10,9 +10,6 @@ include_once("./Services/UIComponent/Explorer2/classes/class.ilTreeExplorerGUI.p
  * Clicking items triggers a "selection" command.
  * However ajax/checkbox/radio and use in an inputgui class should be implemented in the future, too.
  *
- * The class has some things in commong with ilRepositoryExplorerGUI. Maybe a common parent class
- * would be a good idea in the future.
- *
  * @author	Alex Killing <alex.killing@gmx.de>
  * @version	$Id$
  *
@@ -20,15 +17,50 @@ include_once("./Services/UIComponent/Explorer2/classes/class.ilTreeExplorerGUI.p
  */
 class ilRepositorySelectorExplorerGUI extends ilTreeExplorerGUI
 {
+	/**
+	 * @var ilObjectDefinition
+	 */
+	protected $obj_definition;
+
+	/**
+	 * @var ilLanguage
+	 */
+	protected $lng;
+
 	protected $type_grps = array();
 	protected $session_materials = array();
 	protected $highlighted_node = null;
 	protected $clickable_types = array();
 
 	/**
+	 * @var ilCtrl
+	 */
+	protected $ctrl;
+
+	/**
+	 * @var ilAccessHandler
+	 */
+	protected $access;
+
+	/**
 	 * @var callable
 	 */
 	protected $nc_modifier = null;
+
+	/**
+	 * @var object
+	 */
+	protected $selection_gui = null;
+
+	/**
+	 * @var string
+	 */
+	protected $selection_par;
+
+	/**
+	 * @var string
+	 */
+	protected $selection_cmd;
 
 	/**
 	 * Constructor
@@ -42,7 +74,16 @@ class ilRepositorySelectorExplorerGUI extends ilTreeExplorerGUI
 	public function __construct($a_parent_obj, $a_parent_cmd, $a_selection_gui = null, $a_selection_cmd = "selectObject",
 								$a_selection_par = "sel_ref_id", $a_id = "rep_exp_sel")
 	{
-		global $tree, $objDefinition;
+		global $DIC;
+
+		$this->tree = $DIC->repositoryTree();
+		$this->obj_definition = $DIC["objDefinition"];
+		$this->lng = $DIC->language();
+		$tree = $DIC->repositoryTree();
+		$objDefinition = $DIC["objDefinition"];
+
+		$this->access = $DIC->access();
+		$this->ctrl = $DIC->ctrl();
 
 		if (is_null($a_selection_gui))
 		{
@@ -106,7 +147,7 @@ class ilRepositorySelectorExplorerGUI extends ilTreeExplorerGUI
 	 */
 	function getNodeContent($a_node)
 	{
-		global $lng;
+		$lng = $this->lng;
 
 		$c = $this->getNodeContentModifier();
 		if (is_callable($c))
@@ -146,7 +187,7 @@ class ilRepositorySelectorExplorerGUI extends ilTreeExplorerGUI
 	 */
 	function getNodeIconAlt($a_node)
 	{
-		global $lng;
+		$lng = $this->lng;
 
 		if ($a_node["child"] == $this->getNodeId($this->getRootNode()))
 		{
@@ -195,7 +236,7 @@ class ilRepositorySelectorExplorerGUI extends ilTreeExplorerGUI
 	 */
 	function getNodeHref($a_node)
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 
 		if ($this->select_postvar == "")
 		{
@@ -219,7 +260,7 @@ class ilRepositorySelectorExplorerGUI extends ilTreeExplorerGUI
 	 */
 	function isNodeVisible($a_node)
 	{
-		global $ilAccess,$tree,$ilSetting;
+		$ilAccess = $this->access;
 
 		if (!$ilAccess->checkAccess('visible', '', $a_node["child"]))
 		{
@@ -238,7 +279,7 @@ class ilRepositorySelectorExplorerGUI extends ilTreeExplorerGUI
 	 */
 	function sortChilds($a_childs, $a_parent_node_id)
 	{
-		global $objDefinition;
+		$objDefinition = $this->obj_definition;
 
 		$parent_obj_id = ilObject::_lookupObjId($a_parent_node_id);
 
@@ -311,7 +352,7 @@ class ilRepositorySelectorExplorerGUI extends ilTreeExplorerGUI
 	 */
 	function getChildsOfNode($a_parent_node_id)
 	{
-		global $ilAccess;
+		$ilAccess = $this->access;
 
 		if (!$ilAccess->checkAccess("read", "", $a_parent_node_id))
 		{
@@ -329,7 +370,7 @@ class ilRepositorySelectorExplorerGUI extends ilTreeExplorerGUI
 	 */
 	function isNodeClickable($a_node)
 	{
-		global $ilAccess;
+		$ilAccess = $this->access;
 
 		if ($this->select_postvar != "")
 		{

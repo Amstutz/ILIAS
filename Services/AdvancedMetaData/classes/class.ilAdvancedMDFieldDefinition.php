@@ -32,6 +32,8 @@ abstract class ilAdvancedMDFieldDefinition
 	const TYPE_FLOAT = 6;
 	const TYPE_LOCATION = 7;
 	const TYPE_SELECT_MULTI = 8;
+	const TYPE_EXTERNAL_LINK = 9;
+	const TYPE_INTERNAL_LINK = 10;
 	
 	/**
 	 * Constructor
@@ -92,7 +94,9 @@ abstract class ilAdvancedMDFieldDefinition
 			self::TYPE_FLOAT => "Float",
 			self::TYPE_LOCATION => "Location",
 			self::TYPE_INTEGER => "Integer",				
-			self::TYPE_SELECT_MULTI => "SelectMulti"				
+			self::TYPE_SELECT_MULTI => "SelectMulti"	,
+			self::TYPE_EXTERNAL_LINK => 'ExternalLink',
+			self::TYPE_INTERNAL_LINK => 'InternalLink'
 		);	
 		$map = array_flip($map);
 		if(array_key_exists($a_type, $map))
@@ -246,9 +250,18 @@ abstract class ilAdvancedMDFieldDefinition
 	 */
 	public static function getValidTypes()
 	{
-		return array(self::TYPE_TEXT, self::TYPE_DATE, self::TYPE_DATETIME,
-			self::TYPE_SELECT, self::TYPE_INTEGER, self::TYPE_FLOAT,
-			self::TYPE_LOCATION, self::TYPE_SELECT_MULTI);
+		return array(
+			self::TYPE_TEXT, 
+			self::TYPE_DATE, 
+			self::TYPE_DATETIME,
+			self::TYPE_SELECT, 
+			self::TYPE_INTEGER, 
+			self::TYPE_FLOAT,
+			self::TYPE_LOCATION, 
+			self::TYPE_SELECT_MULTI,
+			self::TYPE_EXTERNAL_LINK,
+			self::TYPE_INTERNAL_LINK
+		);
 	}
 	
 	/**
@@ -287,7 +300,9 @@ abstract class ilAdvancedMDFieldDefinition
 				self::TYPE_FLOAT => "Float",
 				self::TYPE_LOCATION => "Location",
 				self::TYPE_INTEGER => "Integer",			
-				self::TYPE_SELECT_MULTI => "SelectMulti"				
+				self::TYPE_SELECT_MULTI => "SelectMulti"	,
+				self::TYPE_EXTERNAL_LINK => 'ExternalLink',
+				self::TYPE_INTERNAL_LINK => 'InternalLink'
 			);		
 			return $map[$a_type];
 		}		
@@ -827,7 +842,6 @@ abstract class ilAdvancedMDFieldDefinition
 		$this->setPosition($a_data["position"]);		
 		$this->setSearchable($a_data["searchable"]);
 		$this->setRequired($a_data["required"]);
-		
 		if($a_data["field_values"])
 		{
 			$this->importFieldDefinition(unserialize($a_data["field_values"]));	
@@ -852,7 +866,7 @@ abstract class ilAdvancedMDFieldDefinition
 		if($ilDB->numRows($set))
 		{
 			$row = $ilDB->fetchAssoc($set);
-			$this->import($row);					
+			$this->import($row);
 		}
 	}
 	
@@ -1190,7 +1204,7 @@ abstract class ilAdvancedMDFieldDefinition
 		$obj->setRequired($this->isRequired());
 		$obj->setPosition($this->getPosition());
 		$obj->setSearchable($this->isSearchable());
-		$obj->importFieldDefinition($this->getFieldDefinition());
+		$obj->importFieldDefinition((array) $this->getFieldDefinition());
 		$obj->save(true);
 		
 		return $obj;		

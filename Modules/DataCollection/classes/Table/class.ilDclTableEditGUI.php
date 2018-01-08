@@ -2,7 +2,6 @@
 
 /* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-require_once("./Modules/DataCollection/classes/Table/class.ilDclTable.php");
 
 /**
  * Class ilDclBaseFieldModel
@@ -209,6 +208,9 @@ class ilDclTableEditGUI {
 			$fields = $this->table->getFields();
 			$options = array( 0 => $this->lng->txt('dcl_please_select') );
 			foreach ($fields as $field) {
+				if ($field->getId() == 'comments') {
+					continue;
+				}
 				$options[$field->getId()] = $field->getTitle();
 			}
 			$item->setOptions($options);
@@ -470,8 +472,7 @@ class ilDclTableEditGUI {
 	 */
 	protected function createTableSwitcher() {
 		// Show tables
-		require_once("./Modules/DataCollection/classes/Table/class.ilDclTable.php");
-		$tables = $this->parent_object->getDataCollectionObject()->getTables();
+				$tables = $this->parent_object->getDataCollectionObject()->getTables();
 
 		foreach ($tables as $table) {
 			$options[$table->getId()] = $table->getTitle(); //TODO order tables

@@ -1,6 +1,8 @@
 <?php
 /* Copyright (c) 1998-2014 ILIAS open source, Extended GPL, see docs/LICENSE */
 
+require_once 'Services/WorkflowEngine/test/ilWorkflowEngineBaseTest.php';
+
 /**
  * ilSettingActivityTest is part of the petri net based workflow engine.
  *
@@ -11,10 +13,12 @@
  *
  * @ingroup Services/WorkflowEngine
  */
-class ilSettingActivityTest extends PHPUnit_Framework_TestCase
+class ilSettingActivityTest extends ilWorkflowEngineBaseTest
 {
 	public function setUp()
 	{
+		parent::setUp();
+
 		include_once("./Services/PHPUnit/classes/class.ilUnitUtil.php");
 		//ilUnitUtil::performInitialisation();
 		
@@ -111,7 +115,7 @@ class ilSettingActivityTest extends PHPUnit_Framework_TestCase
 		$activity->setSetting($expected_name, $expected_val);
 
 		require_once './Services/Administration/classes/class.ilSetting.php';
-		$ilSetting_mock = $this->getMock('ilSetting',array('set'),array(),'', FALSE);
+		$ilSetting_mock = $this->createMock('ilSetting',array('set'),array(),'', FALSE);
 
 		$ilSetting_mock->expects($this->exactly(1))
 					   ->method('set')

@@ -36,30 +36,30 @@ include_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
 
 class FormMailCodesGUI extends ilPropertyFormGUI
 {
-	private $lng;
-	private $guiclass;
-	private $subject;
-	private $messagetype;
-	private $sendtype;
-	private $savedmessages;
-	private $mailmessage;
-	private $savemessage;
-	private $savemessagetitle;
+	protected $guiclass;
+	protected $subject;
+	protected $sendtype;
+	protected $savedmessages;
+	protected $mailmessage;
+	protected $savemessage;
+	protected $savemessagetitle;
 	
 	function __construct($guiclass)
 	{
+		global $DIC;
+
 		parent::__construct();
 
-		global $lng;
-		global $ilAccess;
-		global $ilSetting;
-		global $ilUser;
-		global $rbacsystem;
+		$ilAccess = $DIC->access();
+		$ilSetting =  $DIC->settings();
+		$ilUser = $DIC->user();
+		$rbacsystem = $DIC->rbac()->system();
 
-		$this->lng = $lng;
+		$lng = $this->lng;
+
 		$this->guiclass = $guiclass;
 		
-		$this->setFormAction($guiclass->ctrl->getFormAction($this->guiclass));
+		$this->setFormAction($this->ctrl->getFormAction($this->guiclass));
 		$this->setTitle($this->lng->txt('compose'));
 
 		$this->subject = new ilTextInputGUI($this->lng->txt('subject'), 'm_subject');
@@ -125,7 +125,7 @@ class FormMailCodesGUI extends ilPropertyFormGUI
 
 		if ($ilAccess->checkAccess("write", "", $_GET["ref_id"]) && $rbacsystem->checkAccess('smtp_mail', ilMailGlobalServices::getMailObjectRefId()))
 		{
-			if(!(int)$ilSetting->get('prevent_smtp_globally'))
+			if((int)$ilSetting->get('mail_allow_external'))
 			{
 				$this->addCommandButton("sendCodesMail", $this->lng->txt("send"));
 			}

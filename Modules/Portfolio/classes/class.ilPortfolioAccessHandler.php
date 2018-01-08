@@ -18,9 +18,47 @@ require_once('./Services/WebAccessChecker/interfaces/interface.ilWACCheckingClas
  */
 class ilPortfolioAccessHandler implements ilWACCheckingClass
 {
+	/**
+	 * @var ilLanguage
+	 */
+	protected $lng;
+
+	/**
+	 * @var ilObjUser
+	 */
+	protected $user;
+
+	/**
+	 * @var ilRbacReview
+	 */
+	protected $rbacreview;
+
+	/**
+	 * @var ilSetting
+	 */
+	protected $settings;
+
+	/**
+	 * @var ilDB
+	 */
+	protected $db;
+
+	/**
+	 * @var ilAccessHandler
+	 */
+	protected $access;
+
 	public function __construct()
 	{
-		global $lng;
+		global $DIC;
+
+		$this->lng = $DIC->language();
+		$this->user = $DIC->user();
+		$this->rbacreview = $DIC->rbac()->review();
+		$this->settings = $DIC->settings();
+		$this->db = $DIC->database();
+		$this->access = $DIC->access();
+		$lng = $DIC->language();
 		$lng->loadLanguageModule("wsp");
 	}
 
@@ -35,7 +73,7 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	 */
 	public function checkAccess($a_permission, $a_cmd, $a_node_id, $a_type = "")
 	{
-		global $ilUser;
+		$ilUser = $this->user;
 
 		return $this->checkAccessOfUser($ilUser->getId(),$a_permission, $a_cmd, $a_node_id, $a_type);
 	}
@@ -52,9 +90,17 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	 */
 	public function checkAccessOfUser($a_user_id, $a_permission, $a_cmd, $a_node_id, $a_type = "")
 	{
-		global $rbacreview, $ilUser, $ilSetting;
-		
-		// #12059
+		$rbacreview = $this->rbacreview;
+		$ilUser = $this->user;
+		$ilSetting = $this->settings;
+
+		// #20310
+		if(!$ilSetting->get("enable_global_profiles") && $ilUser->getId() == ANONYMOUS_USER_ID)
+		{
+			return false;
+		}
+
+			// #12059
 		if (!$ilSetting->get('user_portfolios'))
 		{
 			return false;
@@ -177,7 +223,8 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	 */
 	public function addPermission($a_node_id, $a_object_id, $a_extended_data = null)
 	{
-		global $ilDB, $ilUser;
+		$ilDB = $this->db;
+		$ilUser = $this->user;
 
 		// current owner must not be added
 		if($a_object_id == $ilUser->getId())
@@ -203,7 +250,7 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	 */
 	public function removePermission($a_node_id, $a_object_id = null)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		$query = "DELETE FROM usr_portf_acl".
 			" WHERE node_id = ".$ilDB->quote($a_node_id, "integer");
@@ -238,7 +285,9 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	 */
 	public static function _getPermissions($a_node_id)
 	{
-		global $ilDB;
+		global $DIC;
+
+		$ilDB = $DIC->database();
 
 		$set = $ilDB->query("SELECT object_id FROM usr_portf_acl".
 			" WHERE node_id = ".$ilDB->quote($a_node_id, "integer"));
@@ -252,7 +301,7 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public function hasRegisteredPermission($a_node_id)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		$set = $ilDB->query("SELECT object_id FROM usr_portf_acl".
 			" WHERE node_id = ".$ilDB->quote($a_node_id, "integer").
@@ -262,7 +311,7 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public function hasGlobalPermission($a_node_id)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		$set = $ilDB->query("SELECT object_id FROM usr_portf_acl".
 			" WHERE node_id = ".$ilDB->quote($a_node_id, "integer").
@@ -272,7 +321,7 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public function hasGlobalPasswordPermission($a_node_id)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		$set = $ilDB->query("SELECT object_id FROM usr_portf_acl".
 			" WHERE node_id = ".$ilDB->quote($a_node_id, "integer").
@@ -282,7 +331,8 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public function getObjectsIShare($a_online_only = true)
 	{
-		global $ilDB, $ilUser;
+		$ilDB = $this->db;
+		$ilUser = $this->user;
 		
 		$res = array();
 		
@@ -308,7 +358,9 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public static function getPossibleSharedTargets()
 	{
-		global $ilUser;
+		global $DIC;
+
+		$ilUser = $DIC->user();
 		
 		include_once "Services/PersonalWorkspace/classes/class.ilWorkspaceAccessGUI.php";
 		include_once "Services/Membership/classes/class.ilParticipants.php";
@@ -326,7 +378,8 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public function getSharedOwners()
 	{
-		global $ilUser, $ilDB;
+		$ilUser = $this->user;
+		$ilDB = $this->db;
 		
 		$obj_ids = $this->getPossibleSharedTargets();
 		
@@ -354,7 +407,7 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public function getSharedObjects($a_owner_id)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		$obj_ids = $this->getPossibleSharedTargets();
 		
@@ -376,7 +429,7 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public function getShardObjectsDataForUserIds(array $a_owner_ids)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		$obj_ids = $this->getPossibleSharedTargets();
 		
@@ -399,7 +452,8 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public function findSharedObjects(array $a_filter = null, array $a_crs_ids = null, array $a_grp_ids = null)
 	{
-		global $ilDB, $ilUser;
+		$ilDB = $this->db;
+		$ilUser = $this->user;
 		if(!$a_filter["acl_type"])
 		{
 			$obj_ids = $this->getPossibleSharedTargets();
@@ -512,7 +566,9 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	public static function getSharedNodePassword($a_node_id)
 	{
-		global $ilDB;
+		global $DIC;
+
+		$ilDB = $DIC->database();
 		
 		include_once "Services/PersonalWorkspace/classes/class.ilWorkspaceAccessGUI.php";
 		
@@ -538,7 +594,7 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	
 	protected function syncProfile($a_node_id)
 	{
-		global $ilUser;
+		$ilUser = $this->user;
 		
 		// #12845		
 		include_once "Modules/Portfolio/classes/class.ilObjPortfolio.php";
@@ -578,7 +634,8 @@ class ilPortfolioAccessHandler implements ilWACCheckingClass
 	 * @return bool
 	 */
 	public function canBeDelivered(ilWACPath $ilWACPath) {
-		global $ilUser, $ilAccess;
+		$ilUser = $this->user;
+		$ilAccess = $this->access;
 				
 		if (preg_match("/\\/prtf_([\\d]*)\\//uism", $ilWACPath->getPath(), $results))
 		{		

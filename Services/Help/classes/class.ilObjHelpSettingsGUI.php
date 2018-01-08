@@ -17,6 +17,62 @@ include_once("./Services/Object/classes/class.ilObject2GUI.php");
 class ilObjHelpSettingsGUI extends ilObject2GUI
 {
 	/**
+	 * @var ilRbacSystem
+	 */
+	protected $rbacsystem;
+
+	/**
+	 * @var ilErrorHandling
+	 */
+	protected $error;
+
+	/**
+	 * @var ilAccessHandler
+	 */
+	protected $access;
+
+	/**
+	 * @var ilSetting
+	 */
+	protected $settings;
+
+	/**
+	 * @var ilTabsGUI
+	 */
+	protected $tabs;
+
+	/**
+	 * @var ilToolbarGUI
+	 */
+	protected $toolbar;
+
+	/**
+	 * @var ilDB
+	 */
+	protected $db;
+
+
+	/**
+	 * Constructor
+	 */
+	function __construct($a_id = 0, $a_id_type = self::REPOSITORY_NODE_ID, $a_parent_node_id = 0)
+	{
+		global $DIC;
+		parent::__construct($a_id, $a_id_type, $a_parent_node_id);
+
+		$this->rbacsystem = $DIC->rbac()->system();
+		$this->error = $DIC["ilErr"];
+		$this->access = $DIC->access();
+		$this->lng = $DIC->language();
+		$this->ctrl = $DIC->ctrl();
+		$this->settings = $DIC->settings();
+		$this->tabs = $DIC->tabs();
+		$this->toolbar = $DIC->toolbar();
+		$this->tpl = $DIC["tpl"];
+		$this->db = $DIC->database();
+	}
+
+	/**
 	 * Get type
 	 */
 	function getType()
@@ -32,8 +88,9 @@ class ilObjHelpSettingsGUI extends ilObject2GUI
 	 */
 	public function executeCommand()
 	{
-		global $rbacsystem, $ilErr, $ilAccess, $lng;
-		
+		$ilErr = $this->error;
+		$ilAccess = $this->access;
+		$lng = $this->lng;
 		$lng->loadLanguageModule("help");
 
 		$next_class = $this->ctrl->getNextClass($this);
@@ -72,7 +129,11 @@ class ilObjHelpSettingsGUI extends ilObject2GUI
 	*/
 	public function editSettings()
 	{
-		global $ilCtrl, $lng, $ilSetting, $ilTabs, $ilToolbar;
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
+		$ilSetting = $this->settings;
+		$ilTabs = $this->tabs;
+		$ilToolbar = $this->toolbar;
 		
 		$ilTabs->activateTab("settings");
 		
@@ -110,7 +171,7 @@ class ilObjHelpSettingsGUI extends ilObject2GUI
 		$ilToolbar->setFormAction($ilCtrl->getFormAction($this), true);
 		
 		include_once("./Services/Help/classes/class.ilHelpModuleTableGUI.php");
-		$tab = new ilHelpModuleTableGUI($this, "editSettings");
+		$tab = new ilHelpModuleTableGUI($this, "editSettings", $this->checkPermissionBool("write"));
 		
 		$this->tpl->setContent($tab->getHTML());
 	}
@@ -148,7 +209,8 @@ class ilObjHelpSettingsGUI extends ilObject2GUI
 	 */
 	function uploadHelpFile()
 	{
-		global $lng, $ilCtrl;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
 		
 		if ($this->checkPermissionBool("write"))
 		{
@@ -164,7 +226,11 @@ class ilObjHelpSettingsGUI extends ilObject2GUI
 	 */
 	function confirmHelpModulesDeletion()
 	{
-		global $ilCtrl, $tpl, $lng;
+		$ilCtrl = $this->ctrl;
+		$tpl = $this->tpl;
+		$lng = $this->lng;
+
+		$this->checkPermission("write");
 			
 		if (!is_array($_POST["id"]) || count($_POST["id"]) == 0)
 		{
@@ -197,7 +263,10 @@ class ilObjHelpSettingsGUI extends ilObject2GUI
 	 */
 	function deleteHelpModules()
 	{
-		global $ilDB, $ilCtrl;
+		$ilDB = $this->db;
+		$ilCtrl = $this->ctrl;
+
+		$this->checkPermission("write");
 		
 		if (is_array($_POST["id"]))
 		{
@@ -218,7 +287,11 @@ class ilObjHelpSettingsGUI extends ilObject2GUI
 	 */
 	function activateModule()
 	{
-		global $ilSetting, $lng, $ilCtrl;
+		$ilSetting = $this->settings;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
+
+		$this->checkPermission("write");
 		
 		$ilSetting->set("help_module", (int) $_GET["hm_id"]);
 		ilUtil::sendSuccess($lng->txt("msg_obj_modified"), true);
@@ -233,7 +306,11 @@ class ilObjHelpSettingsGUI extends ilObject2GUI
 	 */
 	function deactivateModule()
 	{
-		global $ilSetting, $lng, $ilCtrl;
+		$ilSetting = $this->settings;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
+
+		$this->checkPermission("write");
 		
 		if ($ilSetting->get("help_module") == (int) $_GET["hm_id"])
 		{
@@ -251,7 +328,11 @@ class ilObjHelpSettingsGUI extends ilObject2GUI
 	 */
 	function setMode()
 	{
-		global $lng, $ilCtrl, $ilSetting;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
+		$ilSetting = $this->settings;
+
+		$this->checkPermission("write");
 		
 		if ($this->checkPermissionBool("write"))
 		{

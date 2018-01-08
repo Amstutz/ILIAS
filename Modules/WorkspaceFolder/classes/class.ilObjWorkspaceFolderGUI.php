@@ -17,6 +17,33 @@ require_once "./Services/Object/classes/class.ilObject2GUI.php";
 */
 class ilObjWorkspaceFolderGUI extends ilObject2GUI
 {
+	/**
+	 * @var ilHelpGUI
+	 */
+	protected $help;
+
+	/**
+	 * @var ilTabsGUI
+	 */
+	protected $tabs;
+
+
+	/**
+	 * Constructor
+	 */
+	function __construct($a_id = 0, $a_id_type = self::REPOSITORY_NODE_ID, $a_parent_node_id = 0)
+	{
+		global $DIC;
+		parent::__construct($a_id, $a_id_type, $a_parent_node_id);
+
+		$this->lng = $DIC->language();
+		$this->help = $DIC["ilHelp"];
+		$this->tpl = $DIC["tpl"];
+		$this->user = $DIC->user();
+		$this->tabs = $DIC->tabs();
+		$this->ctrl = $DIC->ctrl();
+	}
+
 	function getType()
 	{
 		return "wfld";
@@ -24,7 +51,8 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 
 	function setTabs($a_show_settings = true)
 	{
-		global $lng, $ilHelp;
+		$lng = $this->lng;
+		$ilHelp = $this->help;
 
 		$ilHelp->setScreenIdComponent("wfld");
 		
@@ -124,7 +152,10 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 	*/
 	function render()
 	{
-		global $tpl, $ilUser, $ilTabs, $ilCtrl;
+		$tpl = $this->tpl;
+		$ilUser = $this->user;
+		$ilTabs = $this->tabs;
+		$ilCtrl = $this->ctrl;
 		
 		unset($_SESSION['clipboard']['wsp2repo']);
 		
@@ -144,34 +175,17 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 		$table = new ilObjWorkspaceFolderTableGUI($this, "render", $this->node_id, $this->getAccessHandler());
 		$tpl->setContent($table->getHTML());
 
-		include_once "Modules/WorkspaceFolder/classes/class.ilWorkspaceFolderExplorer.php";
-		$exp = new ilWorkspaceFolderExplorer($this->ctrl->getLinkTarget($this), $ilUser->getId());
-
-		if($this->node_id != $exp->getRoot())
+		include_once("./Services/PersonalWorkspace/classes/class.ilWorkspaceExplorerGUI.php");
+		$exp = new ilWorkspaceExplorerGUI($ilUser->getId(), $this, "render", $this, "", "wsp_id");
+		$exp->setTypeWhiteList(array("wsrt", "wfld"));
+		$exp->setSelectableTypes(array("wsrt", "wfld"));
+		$exp->setLinkToNodeClass(true);
+		$exp->setActivateHighlighting(true);
+		if ($exp->handleCommand())
 		{
-			$ilTabs->activateSubTab("content");
+			return;
 		}
-		
-		$left = "";
-
-		// sub-folders
-		if($this->node_id != $exp->getRoot() || $exp->hasFolders($this->node_id))
-		{
-			$exp->setTargetGet("wsp_id");
-			$exp->setSessionExpandVariable('wspexpand');
-			$exp->setExpand($this->node_id);
-			$exp->setExpandTarget($this->ctrl->getLinkTarget($this));
-
-			if ($_GET["wspexpand"] != "")
-			{
-				$exp->setExpand($_GET["wspexpand"]);
-			}
-
-			$exp->highlightNode($this->node_id);
-			$exp->setOutput(0);
-		
-			$left .= $exp->getOutput();
-		}
+		$left = $exp->getHTML();
 
 		$tpl->setLeftNavContent($left);
 	}
@@ -262,7 +276,7 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 	 */
 	function copy()
 	{
-		global $ilUser;
+		$ilUser = $this->user;
 		
 		if (!$_REQUEST["item_ref_id"])
 		{
@@ -351,7 +365,8 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 	 */
 	function showMoveIntoObjectTree()
 	{
-		global $ilTabs, $tree;
+		$ilTabs = $this->tabs;
+		$tree = $this->tree;
 		
 		$ilTabs->clearTargets();
 
@@ -376,21 +391,16 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 		// move/copy in personal workspace
 		if(!$_SESSION['clipboard']['wsp2repo'])
 		{
-			require_once 'Services/PersonalWorkspace/classes/class.ilWorkspaceExplorer.php';
-			$exp = new ilWorkspaceExplorer(ilWorkspaceExplorer::SEL_TYPE_RADIO, '', 
-				'paste_'.$mode.'_wspexpand', $this->tree, $this->getAccessHandler());
-			$exp->setTargetGet('wsp_id');
-
-			if($_GET['paste_'.$mode.'_wspexpand'] == '')
+			include_once("./Services/PersonalWorkspace/classes/class.ilWorkspaceExplorerGUI.php");
+			$exp = new ilWorkspaceExplorerGUI($this->user->getId(), $this, "showMoveIntoObjectTree", $this, "");
+			$exp->setTypeWhiteList(array("wsrt", "wfld"));
+			$exp->setSelectableTypes(array("wsrt", "wfld"));
+			$exp->setSelectMode("node", false);
+			if ($exp->handleCommand())
 			{
-				// not really used as session is already set [see above]
-				$expanded = $this->tree->readRootId();
+				return;
 			}
-			else
-			{
-				$expanded = $_GET['paste_'.$mode.'_wspexpand'];
-			}
-			
+			$this->tpl->setVariable('OBJECT_TREE', $exp->getHTML());
 		}
 		// move/copy to repository
 		else
@@ -408,15 +418,15 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 			{
 				$expanded = $_GET['paste_'.$mode.'_repexpand'];
 			}
+			$exp->setCheckedItems(array((int)$_POST['node']));
+			$exp->setExpandTarget($this->ctrl->getLinkTarget($this, 'showMoveIntoObjectTree'));
+			$exp->setPostVar('node');
+			$exp->setExpand($expanded);
+			$exp->setOutput(0);
+			$this->tpl->setVariable('OBJECT_TREE', $exp->getOutput());
 		}
 		
-		$exp->setCheckedItems(array((int)$_POST['node']));
-		$exp->setExpandTarget($this->ctrl->getLinkTarget($this, 'showMoveIntoObjectTree'));
-		$exp->setPostVar('node');
-		$exp->setExpand($expanded);
-		$exp->setOutput(0);
-					
-		$this->tpl->setVariable('OBJECT_TREE', $exp->getOutput());
+
 		unset($exp);
 
 		$this->tpl->setVariable('FORM_TARGET', '_top');
@@ -432,7 +442,7 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 	 */
 	function performPasteIntoMultipleObjects()
 	{
-		global $ilUser;
+		$ilUser = $this->user;
 		
 		$mode = $_SESSION['clipboard']['cmd'];
 		$source_node_id = $_SESSION['clipboard']['source_id'];
@@ -598,7 +608,7 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 	
 	function share($a_load_data = true)
 	{
-		global $tpl;
+		$tpl = $this->tpl;
 	
 		include_once "Services/PersonalWorkspace/classes/class.ilWorkspaceShareTableGUI.php";
 		$tbl = new ilWorkspaceShareTableGUI($this, "share", $this->getAccessHandler(), $this->node_id, $a_load_data);		
@@ -627,7 +637,9 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 	
 	protected function passwordForm($a_node_id, $form = null)
 	{
-		global $tpl, $lng, $ilTabs;
+		$tpl = $this->tpl;
+		$lng = $this->lng;
+		$ilTabs = $this->tabs;
 		
 		$tpl->setTitle($lng->txt("wsp_password_protected_resource"));
 		$tpl->setDescription($lng->txt("wsp_password_protected_resource_info"));
@@ -646,7 +658,8 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 	
 	protected function initPasswordForm($a_node_id)
 	{
-		global $ilCtrl, $lng;
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
 						
 		$this->ctrl->setParameter($this, "item_ref_id", $a_node_id);				
 		
@@ -671,7 +684,7 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 	
 	protected function checkPassword()
 	{
-		global $lng;
+		$lng = $this->lng;
 		
 		$node_id = $_REQUEST["item_ref_id"];
 		if(!$node_id)
@@ -725,7 +738,7 @@ class ilObjWorkspaceFolderGUI extends ilObject2GUI
 	 */
 	function listSharedResourcesOfOtherUser()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 
 		include_once "Services/PersonalWorkspace/classes/class.ilWorkspaceShareTableGUI.php";
 		$tbl = new ilWorkspaceShareTableGUI($this, "share", $this->getAccessHandler(), $this->node_id);

@@ -19,14 +19,6 @@ include_once("./Services/DataSet/classes/class.ilDataSet.php");
  */
 class ilSurveyDataSet extends ilDataSet
 {
-
-	/**
-	 * Constructor
-	 */
-	function __construct()
-	{
-	}
-
 	/**
 	 * Get supported versions
 	 *
@@ -97,7 +89,7 @@ class ilSurveyDataSet extends ilDataSet
 	 */
 	function readData($a_entity, $a_version, $a_ids, $a_field = "")
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		$this->data = array();
 
@@ -139,7 +131,7 @@ class ilSurveyDataSet extends ilDataSet
 	 */
 	protected function getDependencies($a_entity, $a_version, $a_rec, $a_ids)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		/*switch ($a_entity)
 		{

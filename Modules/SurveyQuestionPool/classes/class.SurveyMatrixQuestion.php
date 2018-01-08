@@ -34,6 +34,16 @@ include_once "./Modules/SurveyQuestionPool/classes/class.SurveyQuestion.php";
 */
 class SurveyMatrixQuestion extends SurveyQuestion 
 {
+	/**
+	 * @var ilObjUser
+	 */
+	protected $user;
+
+	/**
+	 * @var ilDB
+	 */
+	protected $db;
+
 /**
 * Columns contained in this question
 *
@@ -157,6 +167,10 @@ class SurveyMatrixQuestion extends SurveyQuestion
 */
 	function __construct($title = "", $description = "", $author = "", $questiontext = "", $owner = -1)
 	{
+		global $DIC;
+
+		$this->user = $DIC->user();
+		$this->db = $DIC->database();
 		parent::__construct($title, $description, $author, $questiontext, $owner);
 		
 		$this->subtype = 0;
@@ -405,8 +419,8 @@ class SurveyMatrixQuestion extends SurveyQuestion
 */
 	function addPhrase($phrase_id)
 	{
-		global $ilUser;
-		global $ilDB;
+		$ilUser = $this->user;
+		$ilDB = $this->db;
 
 		$result = $ilDB->queryF("SELECT svy_category.* FROM svy_category, svy_phrase_cat WHERE svy_phrase_cat.category_fi = svy_category.category_id AND svy_phrase_cat.phrase_fi = %s AND (svy_category.owner_fi = %s OR svy_category.owner_fi = %s) ORDER BY svy_phrase_cat.sequence",
 			array('integer', 'integer', 'integer'),
@@ -435,7 +449,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
 	*/
 	function getQuestionDataArray($id)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		$result = $ilDB->queryF("SELECT svy_question.*, " . $this->getAdditionalTableName() . ".* FROM svy_question, " . $this->getAdditionalTableName() . " WHERE svy_question.question_id = %s AND svy_question.question_id = " . $this->getAdditionalTableName() . ".question_fi",
 			array('integer'),
@@ -459,7 +473,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
 */
 	function loadFromDb($id) 
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		$result = $ilDB->queryF("SELECT svy_question.*, " . $this->getAdditionalTableName() . ".* FROM svy_question LEFT JOIN " . $this->getAdditionalTableName() . " ON " . $this->getAdditionalTableName() . ".question_fi = svy_question.question_id WHERE svy_question.question_id = %s",
 			array('integer'),
 			array($id)
@@ -552,7 +566,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
 */
 	function saveToDb($original_id = NULL, $withanswers = true)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		$affectedRows = parent::saveToDb($original_id);
 
@@ -603,7 +617,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
 		
 	function saveBipolarAdjectives($adjective1, $adjective2)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		$affectedRows = $ilDB->manipulateF("UPDATE " . $this->getAdditionalTableName() . " SET bipolar_adjective1 = %s, bipolar_adjective2 = %s WHERE question_fi = %s",
 			array('text', 'text', 'integer'),
@@ -621,7 +635,8 @@ class SurveyMatrixQuestion extends SurveyQuestion
 */
 	function saveColumnToDb($columntext, $neutral = 0)
 	{
-		global $ilUser, $ilDB;
+		$ilUser = $this->user;
+		$ilDB = $this->db;
 		
 		$result = $ilDB->queryF("SELECT title, category_id FROM svy_category WHERE title = %s AND neutral = %s AND owner_fi = %s",
 			array('text', 'text', 'integer'),
@@ -659,7 +674,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
 
 	function saveColumnsToDb($original_id = "")
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		// save columns
 		$question_id = $this->getId();
@@ -689,7 +704,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
 
 	function saveRowsToDb($original_id = "")
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		// save rows
 		$question_id = $this->getId();
@@ -908,8 +923,8 @@ class SurveyMatrixQuestion extends SurveyQuestion
 */
 	function savePhrase($title)
 	{
-		global $ilUser;
-		global $ilDB;
+		$ilUser = $this->user;
+		$ilDB = $this->db;
 
 		$next_id = $ilDB->nextId('svy_phrase');
 		$affectedRows = $ilDB->manipulateF("INSERT INTO svy_phrase (phrase_id, title, defaultvalue, owner_fi, tstamp) VALUES (%s, %s, %s, %s, %s)",
@@ -1062,7 +1077,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
 
 	function saveUserInput($post_data, $active_id, $a_return = false)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		$answer_data = array();
 
@@ -1118,10 +1133,18 @@ class SurveyMatrixQuestion extends SurveyQuestion
 			foreach ($answer_data as $item)
 			{						
 				$next_id = $ilDB->nextId('svy_answer');							
-				$affectedRows = $ilDB->manipulateF("INSERT INTO svy_answer (answer_id, question_fi, active_fi, value, textanswer, rowvalue, tstamp) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-					array('integer','integer','integer','float','text','integer','integer'),
-					array($next_id, $this->getId(), $active_id, $item['value'], $item['textanswer'], $item['rowvalue'], time())
-				);						
+				#20216
+				$fields = array();
+				$fields['answer_id'] = array("integer", $next_id);
+				$fields['question_fi'] = array("integer", $this->getId());
+				$fields['active_fi'] = array("integer", $active_id);
+				$fields['value'] = array("float", $item['value']);
+				$fields['textanswer'] = array("clob", $item['textanswer']);
+				$fields['rowvalue'] = array("integer", $item['rowvalue']);
+				$fields['tstamp'] = array("integer", time());
+
+				$affectedRows = $ilDB->insert("svy_answer", $fields);	
+
 			}			
 		}		
 	}
@@ -1136,7 +1159,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
 	{
 		parent::deleteAdditionalTableData($question_id);
 		
-		global $ilDB;
+		$ilDB = $this->db;
 		$affectedRows = $ilDB->manipulateF("DELETE FROM svy_qst_matrixrows WHERE question_fi = %s",
 			array('integer'),
 			array($question_id)
@@ -1408,7 +1431,7 @@ class SurveyMatrixQuestion extends SurveyQuestion
  **/
 	function saveLayout($percent_row, $percent_columns, $percent_bipolar_adjective1 = "", $percent_bipolar_adjective2 = "", $percent_neutral)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		$layout = array(
 			"percent_row" => $percent_row,

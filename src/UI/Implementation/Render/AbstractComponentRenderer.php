@@ -36,6 +36,10 @@ abstract class AbstractComponentRenderer implements ComponentRenderer {
 	 * @var	JavaScriptBinding
 	 */
 	private $js_binding;
+	/**
+	 * @var array
+	 */
+	private static $component_storage = [];
 
 	/**
 	 * Component renderers must only depend on a UI-Factory and a Template Factory.
@@ -75,6 +79,25 @@ abstract class AbstractComponentRenderer implements ComponentRenderer {
 	}
 
 	/**
+	 * Add language var to client side (il.Language)
+	 * @param $key
+	 */
+	final public function toJS($key) {
+		$this->lng->toJS($key);
+	}
+
+	/**
+	 * Get current language key
+	 *
+	 * @return string
+	 */
+	function getLangKey()
+	{
+		return $this->lng->getLangKey();
+	}
+
+
+	/**
 	 * @return JavaScriptBinding
 	 */
 	final protected function getJavascriptBinding() {
@@ -94,9 +117,19 @@ abstract class AbstractComponentRenderer implements ComponentRenderer {
 	 * @return	\ILIAS\UI\Implementation\Render\Template
 	 */
 	final protected function getTemplate($name, $purge_unfilled_vars, $purge_unused_blocks) {
-		$component = $this->getMyComponent();
-		$path = "src/UI/templates/default/$component/$name";
+		$path = $this->getTemplatePath($name);
 		return $this->tpl_factory->getTemplate($path, $purge_unfilled_vars, $purge_unused_blocks);
+	}
+
+	/**
+	 * Get the path to the template of this component.
+	 *
+	 * @param	string	$name
+	 * @return	string
+	 */
+	protected function getTemplatePath($name) {
+		$component = $this->getMyComponent();
+		return "src/UI/templates/default/$component/$name";
 	}
 
 	/**
@@ -109,11 +142,25 @@ abstract class AbstractComponentRenderer implements ComponentRenderer {
 	 * @return	string|null
 	 */
 	final protected function bindJavaScript(JavaScriptBindable $component) {
-        $binder = $component->getOnLoadCode();
+		if ($component instanceof Triggerer) {
+			$component = $this->addTriggererOnLoadCode($component);
+		}
+		return $this->bindOnloadCode($component);
+	}
+
+	/**
+	 * Bind the JavaScript onload-code.
+	 *
+	 * @param	JavaScriptBindable	$component
+	 * @return	string|null
+	 */
+	private function bindOnloadCode(JavaScriptBindable $component) {
+		$binder = $component->getOnLoadCode();
 		if ($binder === null) {
 			return null;
 		}
-		$id = $this->createId();
+
+		$id = $this->js_binding->createId();
 		$on_load_code = $binder($id);
 		if (!is_string($on_load_code)) {
 			throw new \LogicException(
@@ -121,35 +168,53 @@ abstract class AbstractComponentRenderer implements ComponentRenderer {
 				" (used component: ".get_class($component).")");
 		}
 		$this->js_binding->addOnLoadCode($on_load_code);
-        return $id;
-	}
-
-
-	/**
-	 * Create an ID
-	 *
-	 * @return string
-	 */
-	final protected function createId() {
-		$id = $this->js_binding->createId();
 		return $id;
 	}
 
 	/**
-	 * Renderers of components acting as triggerer can use this method to trigger the registered signals
+	 * Add onload-code for triggerer.
 	 *
-	 * @param Triggerer $triggerer
-	 * @param string $id The generated ID for the triggerer component
+	 * @param	Triggerer	$triggerer
+	 * @return 	Triggerer
 	 */
-	protected function triggerRegisteredSignals(Triggerer $triggerer, $id) {
-		foreach ($triggerer->getTriggeredSignals() as $triggered_signal) {
-			$signal = $triggered_signal->getSignal();
-			$event = $triggered_signal->getEvent();
-			$this->js_binding->addOnLoadCode("$('#{$id}').{$event}( function(event) { 
-					$('#{$id}').trigger('{$signal}');
-					if (typeof event.preventDefault === 'function') { event.preventDefault(); }
-				});");
+	private function addTriggererOnLoadCode(Triggerer $triggerer) {
+		$triggered_signals = $triggerer->getTriggeredSignals();
+		if (count($triggered_signals) == 0) {
+			return $triggerer;
 		}
+		return $triggerer->withAdditionalOnLoadCode(function($id) use ($triggered_signals) {
+			$code = "";
+			foreach ($triggered_signals as $triggered_signal) {
+				$signal = $triggered_signal->getSignal();
+				$event = $triggered_signal->getEvent();
+				$options = json_encode($signal->getOptions());
+				//Note this switch is necessary since $(#...).on('load', ...) could be fired before the binding of the event.
+				if($event == 'load'){
+					$code .=
+							"$(this).trigger('{$signal}',
+							{
+								'id' : '{$signal}', 'event' : '{$event}',
+								'triggerer' : $('#{$id}'),
+								'options' : JSON.parse('{$options}')
+							}
+						);";
+				}else{
+					$code .=
+					"$('#{$id}').on('{$event}', function(event) {
+						$(this).trigger('{$signal}',
+							{
+								'id' : '{$signal}', 'event' : '{$event}',
+								'triggerer' : $(this),
+								'options' : JSON.parse('{$options}')
+							}
+						);
+						return false;
+					});";
+				}
+
+			}
+			return $code;
+		});
 	}
 
 	/**
@@ -186,16 +251,21 @@ abstract class AbstractComponentRenderer implements ComponentRenderer {
 	 */
 	abstract protected function getComponentInterfaceName();
 
-	// TODO: We might want to cache this.
+
 	private function getMyComponent() {
 		$class = get_class($this);
+		if (isset(self::$component_storage[$class])) {
+			return self::$component_storage[$class];
+		}
 		$matches = array();
 		// Extract component
 		$re = "%ILIAS\\\\UI\\\\Implementation\\\\Component\\\\(\\w+)\\\\(\\w+)%";
+		preg_match($re, $class, $matches);
 		if (preg_match($re, $class, $matches) !== 1) {
-			throw new \LogicException(
-				"The Renderer needs to be located in ILIAS\\UI\\Implementation\\Component\\*.");
+			throw new \LogicException("The Renderer needs to be located in ILIAS\\UI\\Implementation\\Component\\*.");
 		}
-		return $matches[1];
+		self::$component_storage[$class] = $matches[1];
+
+		return self::$component_storage[$class];
 	}
 }

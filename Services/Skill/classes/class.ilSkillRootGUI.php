@@ -15,13 +15,45 @@ include_once("./Services/Skill/classes/class.ilSkillTreeNodeGUI.php");
  */
 class ilSkillRootGUI extends ilSkillTreeNodeGUI
 {
+	/**
+	 * @var ilCtrl
+	 */
+	protected $ctrl;
+
+	/**
+	 * @var ilTemplate
+	 */
+	protected $tpl;
+
+	/**
+	 * @var ilTabsGUI
+	 */
+	protected $tabs;
+
+	/**
+	 * @var ilToolbarGUI
+	 */
+	protected $toolbar;
+
+	/**
+	 * @var ilLanguage
+	 */
+	protected $lng;
+
 
 	/**
 	 * Constructor
 	 */
 	function __construct($a_node_id = 0)
 	{
-		global $ilCtrl;
+		global $DIC;
+
+		$this->ctrl = $DIC->ctrl();
+		$this->tpl = $DIC["tpl"];
+		$this->tabs = $DIC->tabs();
+		$this->toolbar = $DIC->toolbar();
+		$this->lng = $DIC->language();
+		$ilCtrl = $DIC->ctrl();
 		
 		$ilCtrl->saveParameter($this, "obj_id");
 		
@@ -41,7 +73,9 @@ class ilSkillRootGUI extends ilSkillTreeNodeGUI
 	 */
 	function executeCommand()
 	{
-		global $ilCtrl, $tpl, $ilTabs;
+		$ilCtrl = $this->ctrl;
+		$tpl = $this->tpl;
+		$ilTabs = $this->tabs;
 		
 		$next_class = $ilCtrl->getNextClass($this);
 		$cmd = $ilCtrl->getCmd();
@@ -59,7 +93,11 @@ class ilSkillRootGUI extends ilSkillTreeNodeGUI
 	 */
 	function listTemplates()
 	{
-		global $tpl, $ilToolbar, $ilCtrl, $lng, $ilTabs;
+		$tpl = $this->tpl;
+		$ilToolbar = $this->toolbar;
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
+		$ilTabs = $this->tabs;
 		
 		$skmg_set = new ilSetting("skmg");
 		$enable_skmg = $skmg_set->get("enable_skmg");
@@ -72,7 +110,10 @@ class ilSkillRootGUI extends ilSkillTreeNodeGUI
 		$ilTabs->activateTab("skill_templates");
 
 		include_once("./Services/Skill/classes/class.ilSkillTemplateCategoryGUI.php");
-		ilSkillTemplateCategoryGUI::addCreationButtons();
+		if ($this->checkPermissionBool("write"))
+		{
+			ilSkillTemplateCategoryGUI::addCreationButtons();
+		}
 		
 		include_once("./Services/Skill/classes/class.ilSkillCatTableGUI.php");
 		$table = new ilSkillCatTableGUI($this, "listTemplates", (int) $_GET["obj_id"],
@@ -86,7 +127,11 @@ class ilSkillRootGUI extends ilSkillTreeNodeGUI
 	 */
 	function listSkills()
 	{
-		global $tpl, $ilToolbar, $ilCtrl, $lng, $ilTabs;
+		$tpl = $this->tpl;
+		$ilToolbar = $this->toolbar;
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
+		$ilTabs = $this->tabs;
 
 		$skmg_set = new ilSetting("skmg");
 		$enable_skmg = $skmg_set->get("enable_skmg");
@@ -99,7 +144,10 @@ class ilSkillRootGUI extends ilSkillTreeNodeGUI
 		$ilTabs->activateTab("skills");
 		
 		include_once("./Services/Skill/classes/class.ilSkillCategoryGUI.php");
-		ilSkillCategoryGUI::addCreationButtons();
+		if ($this->checkPermissionBool("write"))
+		{
+			ilSkillCategoryGUI::addCreationButtons();
+		}
 		
 		include_once("./Services/Skill/classes/class.ilSkillCatTableGUI.php");
 		$table = new ilSkillCatTableGUI($this, "listSkills", (int) $_GET["obj_id"],
@@ -113,7 +161,7 @@ class ilSkillRootGUI extends ilSkillTreeNodeGUI
 	 */
 	function cancelDelete()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 
 		if ($_GET["tmpmode"])
 		{
@@ -130,7 +178,8 @@ class ilSkillRootGUI extends ilSkillTreeNodeGUI
 	 */
 	function showImportForm()
 	{
-		global $tpl, $ilTabs;
+		$tpl = $this->tpl;
+		$ilTabs = $this->tabs;
 
 		$ilTabs->activateTab("skills");
 		$tpl->setContent($this->initInputForm()->getHTML());
@@ -141,7 +190,8 @@ class ilSkillRootGUI extends ilSkillTreeNodeGUI
 	 */
 	public function initInputForm()
 	{
-		global $lng, $ilCtrl;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
 
 		include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
 		$form = new ilPropertyFormGUI();
@@ -167,7 +217,10 @@ class ilSkillRootGUI extends ilSkillTreeNodeGUI
 	 */
 	public function importSkills()
 	{
-		global $tpl, $lng, $ilCtrl, $ilTabs;
+		$tpl = $this->tpl;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
+		$ilTabs = $this->tabs;
 
 		$form = $this->initInputForm();
 		if ($form->checkInput())

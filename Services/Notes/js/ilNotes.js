@@ -1,12 +1,13 @@
+"use strict";
 
 /* Copyright (c) 1998-2011 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-ilNotes =
+var ilNotes =
 {
-	hash: '',
-	update_code: '',
+	hash: "",
+	update_code: "",
 	panel: false,
-	ajax_url: '',
+	ajax_url: "",
 	old: false,
 	
 	listNotes: function (e, hash, update_code)
@@ -44,12 +45,13 @@ ilNotes =
 	// init the notes editing panel
 	initPanel: function(comments, e)
 	{
-		t = ilNotes;
+		var head_str;
+		var t = ilNotes;
 
 		if (comments) {
-			head_str = il.Language.txt('notes_public_comments');
+			head_str = il.Language.txt("notes_public_comments");
 		} else {
-			head_str = il.Language.txt('private_notes');
+			head_str = il.Language.txt("private_notes");
 		}
 
 		if (t.old) {
@@ -169,6 +171,7 @@ ilNotes =
 	
 	sendAjaxGetRequestToUrl: function(url, par, args)
 	{
+		var k;
 		args.reg_type = "get";
 		args.url = url;
 		var cb =
@@ -203,6 +206,7 @@ ilNotes =
 
 	handleAjaxSuccess: function(o)
 	{
+		var t;
 		// perform page modification
 		if(o.responseText !== undefined)
 		{

@@ -16,6 +16,12 @@ define("IL_CRS_MEMBER",2);
 define('IL_GRP_ADMIN',4);
 define('IL_GRP_MEMBER',5);
 
+define('IL_SESS_MEMBER', 6);
+
+define("IL_ROLE_POSITION_ADMIN",1);
+define("IL_ROLE_POSITION_TUTOR",2);
+define("IL_ROLE_POSITION_MEMBER",3);
+
 
 abstract class ilParticipants
 {
@@ -27,6 +33,8 @@ abstract class ilParticipants
 	
 	protected $roles = array();
 	protected $role_data = array();
+	protected $roles_sorted = [];
+	protected $role_assignments = [];
 	
 	protected $participants = array();
 	protected $participants_status = array();
@@ -36,33 +44,72 @@ abstract class ilParticipants
 	
 	protected $subscribers = array();
 	
+	/**
+	 * @var ilDBInterface
+	 */
 	protected $ilDB;
+	
+	/**
+	 * @var ilLanguage
+	 */
 	protected $lng;
+	
+	/**
+	 *
+	 * @var ilLogger
+	 */
+	protected $logger = null;
 	
 
 	/**
 	 * Singleton Constructor
 	 *
 	 * @access public
+	 * @param string component definition e.g Modules/Course
 	 * @param int obj_id of container
 	 * 
 	 */
-	public function __construct($a_component_name, $a_obj_id)
+	public function __construct($a_component_name, $a_ref_id)
 	{
-	 	global $ilDB,$lng;
-	 	
-	 	$this->ilDB = $ilDB;
-	 	$this->lng = $lng;
+	 	$this->ilDB = $GLOBALS['DIC']->database();
+	 	$this->lng = $GLOBALS['DIC']->language();
+		$this->logger = $GLOBALS['DIC']->logger()->mem();
 	 
 		$this->component = $a_component_name;
 		
-	 	$this->obj_id = $a_obj_id;
-	 	$this->type = ilObject::_lookupType($a_obj_id);
-		$ref_ids = ilObject::_getAllReferences($this->obj_id);
-		$this->ref_id = current($ref_ids);
+		$this->ref_id = $a_ref_id;
+	 	$this->obj_id = ilObject::_lookupObjId($a_ref_id);
+	 	$this->type = ilObject::_lookupType($this->obj_id);
 	 	
 	 	$this->readParticipants();
 	 	$this->readParticipantsStatus();
+	}
+	
+	/**
+	 * Get instance by ref_id
+	 * @param int $a_ref_id
+	 * @return ilParticipants
+	 */
+	public static function getInstance($a_ref_id)
+	{
+		$obj_id = ilObject::_lookupObjId($a_ref_id);
+		$type = ilObject::_lookupType($obj_id);
+		
+		switch($type)
+		{
+			case 'crs':
+			case 'grp':
+				return self::getInstanceByObjId($obj_id);
+				
+			case 'sess':
+				include_once './Modules/Session/classes/class.ilSessionParticipants.php';
+				return ilSessionParticipants::getInstance($a_ref_id);
+				
+			default:
+				$GLOBALS['DIC']->logger()->mem()->logStack();
+				$GLOBALS['DIC']->logger()->mem()->warning('Invalid ref_id -> obj_id given: ' . $a_ref_id .' -> '. $obj_id);
+				throw new \InvalidArgumentException('Invalid obj_id given.');
+		}
 	}
 	
 	/**
@@ -71,6 +118,7 @@ abstract class ilParticipants
 	 * @param int $a_obj_id
 	 * @return ilParticipants
 	 * @throws InvalidArgumentException
+	 * @deprecated since version 5.4 use getInstance() (ref_id based)
 	 */
 	public static function getInstanceByObjId($a_obj_id)
 	{
@@ -111,6 +159,7 @@ abstract class ilParticipants
 	 * Check if (current) user has access to the participant list
 	 * @param type $a_obj
 	 * @param type $a_usr_id
+	 * @todo refactor remove
 	 */
 	public static function hasParticipantListAccess($a_obj_id, $a_usr_id = null)
 	{
@@ -211,7 +260,7 @@ abstract class ilParticipants
 	 */
 	public static function _isParticipant($a_ref_id,$a_usr_id)
 	{
-		global $rbacreview,$ilObjDataCache,$ilDB,$ilLog;
+		global $rbacreview;
 
 		$local_roles = $rbacreview->getRolesOfRoleFolder($a_ref_id,false);
         
@@ -391,7 +440,7 @@ abstract class ilParticipants
 		}
 		return 0;
 	}
-	
+		
 	/**
 	 * get current obj_id
 	 * @return type
@@ -859,7 +908,7 @@ abstract class ilParticipants
 	
 	
 	/**
-	 * Add user to course
+	 * Add user to object
 	 *
 	 * @access public
 	 * @param int user id
@@ -896,11 +945,14 @@ abstract class ilParticipants
 	 		case IL_GRP_MEMBER:
 	 			$this->members[] = $a_usr_id;
 	 			break;
+			
+			case IL_SESS_MEMBER:
+				$this->members[] = $a_usr_id;
+				break;
 	 	}
 		
 		$this->participants[] = $a_usr_id;
 		$rbacadmin->assignUser($this->role_data[$a_role],$a_usr_id);
-		$this->addDesktopItem($a_usr_id);
 		
 		// Delete subscription request
 		$this->deleteSubscriber($a_usr_id);
@@ -1037,47 +1089,71 @@ abstract class ilParticipants
 		$this->participants = array();
 		$this->members = $this->admins = $this->tutors = array();
 
+		$additional_roles = [];
+		$auto_generated_roles = [];
 		foreach($this->roles as $role_id)
 		{
 			$title = $ilObjDataCache->lookupTitle($role_id);
 			switch(substr($title,0,8))
 			{
 				case 'il_crs_m':
+					$auto_generated_roles[$role_id] = IL_ROLE_POSITION_MEMBER;
 					$this->role_data[IL_CRS_MEMBER] = $role_id;
 					$this->participants = array_unique(array_merge($assigned = $rbacreview->assignedUsers($role_id),$this->participants));
 					$this->members = array_unique(array_merge($assigned,$this->members));
+					$this->role_assignments[$role_id] = $assigned;
 					break;
 
 				case 'il_crs_a':
+					$auto_generated_roles[$role_id] = IL_ROLE_POSITION_ADMIN;
 					$this->role_data[IL_CRS_ADMIN] = $role_id;
 					$this->participants = array_unique(array_merge($assigned = $rbacreview->assignedUsers($role_id),$this->participants));
 					$this->admins = $rbacreview->assignedUsers($role_id);
+					$this->role_assignments[$role_id] = $assigned;
 					break;
 		
 				case 'il_crs_t':
+					$auto_generated_roles[$role_id] = IL_ROLE_POSITION_TUTOR;
 					$this->role_data[IL_CRS_TUTOR] = $role_id;
 					$this->participants = array_unique(array_merge($assigned = $rbacreview->assignedUsers($role_id),$this->participants));
 					$this->tutors = $rbacreview->assignedUsers($role_id);
+					$this->role_assignments[$role_id] = $assigned;
 					break;
 					
 				case 'il_grp_a':
+					$auto_generated_roles[$role_id] = IL_ROLE_POSITION_ADMIN;
 					$this->role_data[IL_GRP_ADMIN] = $role_id;
 					$this->participants = array_unique(array_merge($assigned = $rbacreview->assignedUsers($role_id),$this->participants));
 					$this->admins = $rbacreview->assignedUsers($role_id);
+					$this->role_assignments[$role_id] = $assigned;
 					break;
 					
 				case 'il_grp_m':
+					$auto_generated_roles[$role_id] = IL_ROLE_POSITION_MEMBER;
 					$this->role_data[IL_GRP_MEMBER] = $role_id;
 					$this->participants = array_unique(array_merge($assigned = $rbacreview->assignedUsers($role_id),$this->participants));
 					$this->members = $rbacreview->assignedUsers($role_id);
+					$this->role_assignments[$role_id] = $assigned;
 					break;
 				
+				case 'il_sess_':
+					$this->role_data[IL_SESS_MEMBER] = $role_id;
+					$this->participants = array_unique(array_merge($assigned = $rbacreview->assignedUsers($role_id),$this->participants));
+					$this->members = $rbacreview->assignedUsers($role_id);
+					break;
+					
+				
 				default:
+					$additional_roles[$role_id] = $title;
 					$this->participants = array_unique(array_merge($assigned = $rbacreview->assignedUsers($role_id),$this->participants));
 					$this->members = array_unique(array_merge($assigned,$this->members));
+					$this->role_assignments[$role_id] = $assigned;
 					break;
 			}
 		}
+		asort($auto_generated_roles);
+		asort($additional_roles);
+		$this->roles_sorted = $auto_generated_roles + $additional_roles;
 	}
 	
 	/**
@@ -1266,6 +1342,10 @@ abstract class ilParticipants
 		if($this instanceof ilGroupParticipants)
 		{
 			$this->add($tmp_obj->getId(),IL_GRP_MEMBER);
+		}
+		if($this instanceof ilSessionParticipants)
+		{
+			$this->register($tmp_obj->getId());
 		}
 		$this->deleteSubscriber($a_usr_id);
 		return true;
@@ -1560,5 +1640,24 @@ abstract class ilParticipants
 		return $res;
 	}
 
+	/**
+	 * Set role order position
+	 * @param  int $a_user_id
+	 * @return string
+	 */
+	public function setRoleOrderPosition($a_user_id)
+	{
+		$counter = 0;
+		$sortable_assignments = '9999999999';
+		foreach($this->roles_sorted as $role_id => $trash)
+		{
+			if(in_array($a_user_id,(array) $this->role_assignments[$role_id]))
+			{
+				$sortable_assignments = substr_replace($sortable_assignments,'1',$counter,1);
+			}
+			++$counter;
+		}
+		return $sortable_assignments;
+	}
 }
 ?>

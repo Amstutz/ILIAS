@@ -22,16 +22,25 @@ class ilIndividualAssessmentMembers implements Iterator, Countable {
 	const FIELD_EXAMINER_ID = 'examiner_id';
 	const FIELD_EXAMINER_FIRSTNAME = 'examiner_firstname';
 	const FIELD_EXAMINER_LASTNAME = 'examiner_lastname';
+	const FIELD_CHANGER_ID = "changer_id";
+	const FIELD_CHANGER_FIRSTNAME = "changer_firstname";
+	const FIELD_CHANGER_LASTNAME = "changer_lastname";
+	const FIELD_CHANGE_TIME = "change_time";
 	const FIELD_RECORD = 'record';
 	const FIELD_INTERNAL_NOTE = 'internal_note';
 	const FIELD_NOTIFY = 'notify';
 	const FIELD_FINALIZED = 'finalized';
 	const FIELD_NOTIFICATION_TS = 'notification_ts';
+	const FIELD_PLACE = "place";
+	const FIELD_EVENTTIME = "event_time";
+	const FIELD_FILE_NAME = "file_name";
+	const FIELD_USER_VIEW_FILE = "user_view_file";
 
 	const LP_NOT_ATTEMPTED = ilLPStatus::LP_STATUS_NOT_ATTEMPTED_NUM;
 	const LP_IN_PROGRESS = ilLPStatus::LP_STATUS_IN_PROGRESS_NUM;
 	const LP_COMPLETED = ilLPStatus::LP_STATUS_COMPLETED_NUM;
 	const LP_FAILED = ilLPStatus::LP_STATUS_FAILED_NUM;
+	const LP_ASSESSMENT_NOT_COMPLETED = "not_completed";
 
 	public function __construct(ilObjIndividualAssessment $iass) {
 		$this->iass = $iass;
@@ -167,7 +176,12 @@ class ilIndividualAssessmentMembers implements Iterator, Countable {
 			, self::FIELD_EXAMINER_FIRSTNAME	=> null
 			, self::FIELD_EXAMINER_LASTNAME		=> null
 			, self::FIELD_INTERNAL_NOTE			=> null
+			, self::FIELD_FILE_NAME				=> null
+			, self::FIELD_USER_VIEW_FILE		=> false
 			, self::FIELD_FINALIZED				=> 0
+			, self::FIELD_CHANGER_ID			=> null
+			, self::FIELD_CHANGER_FIRSTNAME		=> null
+			, self::FIELD_CHANGER_LASTNAME		=> null
 			);
 	}
 
@@ -186,6 +200,41 @@ class ilIndividualAssessmentMembers implements Iterator, Countable {
 			return $clone;
 		}
 		throw new ilIndividualAssessmentException('User not member or allready finished');
+	}
+
+	/**
+	 * Remove all users that do no exist in list of given ids.
+	 *
+	 * @param	int[]	$keep_users_ids
+	 * @return  self
+	 */
+	public function withOnlyUsersByIds($keep_users_ids) {
+		$clone = clone $this;
+
+		$remove = array_diff($this->membersIds(), $keep_users_ids);
+		foreach($remove as $id) {
+			unset($clone->member_records[$id]);
+		}
+
+		return $clone;
+	}
+
+	/**
+	 * Get a collection like this, but only including users that are visible according
+	 * to the supplied access handler.
+	 *
+	 * @param	ilOrgUnitPositionAndRBACAccessHandler $access_handler
+	 * @return	self
+	 */
+	public function withAccessHandling(ilOrgUnitPositionAndRBACAccessHandler $access_handler) {
+		return $this->withOnlyUsersByIds
+			( $access_handler->filterUserIdsByRbacOrPositionOfCurrentUser
+				( "read_learning_progress"
+				, "read_learning_progress"
+				, $this->referencedObject()->getRefId()
+				, $this->membersIds()
+				)
+			);
 	}
 
 

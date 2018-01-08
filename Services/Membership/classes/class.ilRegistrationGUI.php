@@ -70,6 +70,7 @@ abstract class ilRegistrationGUI
 		$this->lng->loadLanguageModule('crs');
 		$this->lng->loadLanguageModule('grp');
 		$this->lng->loadLanguageModule('ps');
+		$this->lng->loadLanguageModule('membership');
 		
 		$this->ctrl = $ilCtrl;
 		$this->tpl = $tpl;
@@ -262,7 +263,7 @@ abstract class ilRegistrationGUI
 				$tpl->setVariable('ITEM_TITLE');
 			}
 			$tpl->setCurrentBlock('items');
-			$tpl->setVariable('TYPE_ICON',ilObject::_getIcon($obj_id,tiny,$type));
+			$tpl->setVariable('TYPE_ICON',ilObject::_getIcon($obj_id,'tiny',$type));
 			$tpl->setVariable('ALT_ICON',$this->lng->txt('obj_'.$type));
 			$tpl->parseCurrentBlock();
 		}

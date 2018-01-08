@@ -208,7 +208,7 @@
 				display: block;
 				height: 14px;
 				width: 14px;
-				background: url("../../Services/OnScreenChat/templates/default/images/emoticons_trigger.png") no-repeat;
+				background: url("@{background-images-path}emoticons_trigger.png") no-repeat;
 				background-size: cover;
 				z-index: 1000;
 			}
@@ -352,12 +352,13 @@
 			color: #a0a0a0;
 
 			&.lastMessage {
+				width: 200px;
 				padding: 3px 3px 3px 0;
 				text-overflow: ellipsis;
-				overflow: hidden;
+				overflow-x: hidden;
 				color: #606060;
 			}
-			
+
 			a {
 				color: @link-color !important;
 			}

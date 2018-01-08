@@ -270,7 +270,7 @@ class ilTrQuery
 		$check_agreement = false, $privacy_fields = NULL)
 	{
 		global $ilDB;
-
+		
 		$fields = array("usr_data.usr_id", "login", "active");
 		$udf = self::buildColumns($fields, $a_additional_fields);
 		
@@ -280,11 +280,11 @@ class ilTrQuery
 		// users
 		$left = "";
 		$a_users = self::getParticipantsForObject($a_ref_id);
-
+		
 		$obj_id = ilObject::_lookupObjectId($a_ref_id);
 		self::refreshObjectsStatus(array($obj_id), $a_users);
 
-		if (is_array($a_users))
+		if(is_array($a_users))
 		{
 			$left = "LEFT";
 			$where[] = $ilDB->in("usr_data.usr_id", $a_users, false, "integer");
@@ -746,6 +746,7 @@ class ilTrQuery
 
 		// users
 		$a_users = self::getParticipantsForObject($a_ref_id);
+		
 		$left = "";
 		if (is_array($a_users)) // #14840
 		{
@@ -856,7 +857,7 @@ class ilTrQuery
 	 * Get participant ids for given object
 	 *
 	 * @param	int		$a_ref_id
-	 * @return	array
+	 * @return	mixed array or null if no users can bedetermined for object.
 	 */
 	public static function getParticipantsForObject($a_ref_id)
 	{
@@ -865,26 +866,28 @@ class ilTrQuery
 		$obj_id = ilObject::_lookupObjectId($a_ref_id);		
 		$obj_type = ilObject::_lookupType($obj_id);
 
+		$members = [];
+		
 		// try to get participants from (parent) course/group
+		$members_read = false;
 		switch($obj_type)
 		{
-			case "crs":
-				include_once "Modules/Course/classes/class.ilCourseParticipants.php";
-				$member_obj = ilCourseParticipants::_getInstanceByObjId($obj_id);
-				return $member_obj->getMembers();
-
-			case "grp":
-				include_once "Modules/Group/classes/class.ilGroupParticipants.php";
-				$member_obj = ilGroupParticipants::_getInstanceByObjId($obj_id);
-				return $member_obj->getMembers();
+			case 'crs':
+			case 'grp':
+				$members_read = true;
+				$member_obj = ilParticipants::getInstance($a_ref_id);
+				$members = $member_obj->getMembers();
+				break;
+			
 
 			/* Mantis 19296: Individual Assessment can be subtype of crs.
 		 	 * But for LP view only his own members should be displayed.
 		 	 * We need to return the members without checking the parent path. */
 			case "iass":
+				$members_read = true;
 				include_once("Modules/IndividualAssessment/classes/class.ilObjIndividualAssessment.php");
 				$iass = new ilObjIndividualAssessment($obj_id, false);
-				return $iass->loadMembers()->membersIds();
+				$members = $iass->loadMembers()->membersIds();
 				break;
 
 			default:				
@@ -896,10 +899,22 @@ class ilTrQuery
 					$type = ilObject::_lookupType($path_ref_id, true);
 					if($type == "crs" || $type == "grp")
 					{
-						return self::getParticipantsForObject($path_ref_id);
+						$members_read = true;
+						$members = self::getParticipantsForObject($path_ref_id);
 					}
 				}
 				break;
+		}
+
+		// begin-patch ouf
+		if($members_read)
+		{
+			return $GLOBALS['DIC']->access()->filterUserIdsByRbacOrPositionOfCurrentUser(
+				'read_learning_progress',
+				'read_learning_progress',
+				$a_ref_id,
+				$members
+			);
 		}
 		
 		$a_users = null;
@@ -958,11 +973,22 @@ class ilTrQuery
 				$a_users = $prg->getIdsOfUsersWithRelevantProgress();
 				break;
 			default:
-				// no sensible data: return null
+				// keep null
 				break;
 		}
 		
-		return $a_users;
+		if(is_null($a_users))
+		{
+			return $a_users;
+		}
+		
+		// begin-patch ouf
+		return $GLOBALS['DIC']->access()->filterUserIdsByRbacOrPositionOfCurrentUser(
+			'read_learning_progress',
+			'read_learning_progress',
+			$a_ref_id,
+			$a_users
+		);
 	}
 
 	/**

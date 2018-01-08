@@ -46,6 +46,7 @@ ILIAS is a powerful Open Source Learning Management System for developing and re
 1. [Upgrading ILIAS](#upgrading-ilias)
    1. [Minor Upgrade](#minor-upgrade)
    1. [Major Upgrade](#major-upgrade)
+   1. [Database Update](#database-update)
    1. [Information on Updates](#information-on-updates)
 1. [Upgrading Dependencies](#upgrading-dependencies)
    1. [PHP](#php)
@@ -91,7 +92,7 @@ For best results we RECOMMEND:
   * MySQL 5.5 / MariaDB
   * PHP 5.6+
   * Apache 2.2+ with mod_php
-  * ImageMagick 6.x+
+  * ImageMagick 6.8+
   * php5-gd, php5-xsl, php5-mysql
   * OpenJDK 7+
   * zip, unzip
@@ -213,9 +214,14 @@ systemctl restart httpd.service
 <a name="php-installationconfiguration"></a>
 ## PHP Installation/Configuration
 
-On Debian/Ubuntu execute: 
+On Debian/Ubuntu 14.04 execute:
 ```
 apt-get install libapache2-mod-php5
+```
+
+On Ubuntu 16.04 execute:
+```
+apt-get install libapache2-mod-php7.0
 ```
 
 On RHEL/CentOS execute: 
@@ -365,15 +371,30 @@ FromLineOverride=YES
 <a name="install-other-depedencies"></a>
 ## Install other Depedencies
 
-On Debian/Ubuntu execute: 
+On Debian/Ubuntu 14.04 execute:
 ```
-apt-get install zip unzip php5-gd php5-mysql php-xsl imagemagick openjdk-7-jdk
+apt-get install zip unzip php5-gd php5-mysql php-xsl imagemagick openjdk-7-jdk phantomjs
+```
+
+On Ubuntu 16.04 execute:
+```
+apt-get install zip unzip php7.0-gd php7.0-mysql php7.0-xsl php7.0-zip imagemagick openjdk-8-jdk phantomjs
 ```
 
 On RHEL/CentOS execute: 
 ```
-yum install zip unzip php-gd libxslt ImageMagick java-1.7.0-openjdk
+yum install zip unzip php-gd libxslt ImageMagick java-1.7.0-openjdk phantomjs
 ```
+
+Depending on your use case, you MAY want to install further dependencies (exact package names vary by distribution):
+* php-curl
+* php-xmlrpc
+* php-soap
+* php-ldap
+* php-mbstring
+* ffmpeg
+* mimetex
+
 <a name="installation-wizard"></a>
 ## Installation Wizard
 
@@ -405,7 +426,7 @@ IliasIniPath = /var/www/html/ilias/ilias.ini.php
 
 ILIAS can generate a proper configuration file via the Administration menu ("Administration -> General Settings -> Server -> Java-Server -> Create Configuration File"). Please note that the configuration file is not directly written to the file system, you MUST copy the displayed content and create the file manually.
 
-You MAY use the following systemd service description to start the RPC server. If you still use SysV-Initscripts you can find one in the [Lucene RPC-Server](../Services/WebServices/RPC/lib/README.txt) documentation.
+You MAY use the following systemd service description to start the RPC server. If you still use SysV-Initscripts you can find one in the [Lucene RPC-Server](../../Services/WebServices/RPC/lib/README.txt) documentation.
 
 ```
 [Unit]
@@ -424,7 +445,7 @@ ExecStop=/usr/bin/java $JAVA_OPTS -jar $ILSERVER_JAR $ILSERVER_INI stop
 WantedBy=multi-user.target
 ```
 
-At this point the RPC server will generate PDF certificates, but to use Lucence search further step are needed. See [Lucene RPC-Server](../Services/WebServices/RPC/lib/README.txt) for details.
+At this point the RPC server will generate PDF certificates, but to use Lucence search further step are needed. See [Lucene RPC-Server](../../Services/WebServices/RPC/lib/README.txt) for details.
 
 <a name="hardening-and-security-guidance"></a>
 # Hardening and Security Guidance
@@ -584,7 +605,7 @@ git pull
 
 In case of merge conflicts refer to [Resolving Conflicts - ILIAS Development Guide](http://www.ilias.de/docu/goto.php?target=pg_15604).
 
-Afterwards you MUST open the ILIAS Installation Wizard in your browser (e.g. http://yourservername.org/setup/setup.php) and check if your database needs updates or hotfixes.
+See [Database Update](#database-update) for details on how to complete the Upgrade by updating your database.
 
 <a name="major-upgrade"></a>
 ## Major Upgrade
@@ -600,9 +621,16 @@ Replace ```release_5-2``` with the branch or tag you actually want to upgrade to
 
 In case of merge conflicts refer to [Resolving Conflicts - ILIAS Development Guide](http://www.ilias.de/docu/goto.php?target=pg_15604).
   
-Afterwards you MUST open the ILIAS Installation Wizard in your browser (e.g. http://yourservername.org/setup/setup.php) and check if your database needs updates or hotfixes.
+See [Database Update](#database-update) for details on how to complete the Upgrade by updating your database.
 
 As a last step you should log in with a User using your custom skin. If everything works fine change back from Delos to your skin. If not refer to [Customizing ILIAS](#customizing-ilias) to modify your skin to match the new requirements.
+
+<a name="database-update"></a>
+## Database Update
+
+A Database Updates MUST be done for both minor and major updates. Open the ILIAS Installation Wizard (e.g. http://yourservername.org/setup/setup.php) to check and apply the needed updates and/or hotfixes.
+
+The update process usually will be splitted into several runs to avoid timeouts. Each update step can take quite some time without huge load peaks on your PHP/Database processes. To check which update step gets currently executed run the following SQL-Statement on your ILIAS database: ```SELECT * FROM `settings` WHERE keyword = "db_update_running"```
 
 <a name="information-on-updates"></a>
 ## Information on Updates
@@ -643,7 +671,7 @@ When you upgrade from rather old versions please make sure that the dependencies
 
 | ILIAS Version   | ImageMagick Version                   |
 |-----------------|---------------------------------------|
-| 4.2.x - 5.2.x   | 6.3.8-3 or higher                     |
+| 4.2.x - 5.2.x   | 6.8.9-9 or higher                     |
 | < 4.2.x         | No specific version requirements      |
 
 <a name="contribute"></a>
@@ -671,8 +699,8 @@ The ILIAS Testserver (http://ilias.de/test52) is currently configured as follows
 | Package        | Version                     |
 |----------------|-----------------------------|
 | Distribution   | Ubuntu 14.04.5 LTS          |
-| MySQL          | MySQL 5.5.54                |
-| PHP            | 7.0.17                      |
+| MySQL          | MySQL 5.5.58                |
+| PHP            | 5.5.9                       |
 | Apache         | 2.4.7                       |
 | Nginx          | 1.4.6                       |
 | zip            | 3.0                         |

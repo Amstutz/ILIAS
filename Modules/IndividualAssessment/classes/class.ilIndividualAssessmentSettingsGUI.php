@@ -6,6 +6,8 @@ class ilIndividualAssessmentSettingsGUI {
 	const PROP_RECORD_TEMPLATE = "record_template";
 	const PROP_TITLE = "title";
 	const PROP_DESCRIPTION = "description";
+	const PROP_EVENT_TIME_PLACE_REQUIRED = "event_time_place_required";
+	const PROP_FILE_REQUIRED = "file_required";
 
 	const PROP_INFO_CONTACT = "contact";
 	const PROP_INFO_RESPONSIBILITY = "responsibility";
@@ -20,12 +22,14 @@ class ilIndividualAssessmentSettingsGUI {
 		global $DIC;
 		$this->ctrl = $DIC['ilCtrl'];
 		$this->parent_gui = $a_parent_gui;
+		/** @var ilObjIndividualAssessment object */
 		$this->object = $a_parent_gui->object;
 		$this->ref_id = $a_ref_id;
 		$this->tpl = $DIC['tpl'];
 		$this->lng = $DIC['lng'];
 		$this->tabs_gui = $a_parent_gui->tabsGUI();
 		$this->getSubTabs($this->tabs_gui);
+		$this->iass_access = $this->object->accessHandler();
 	}
 	
 	protected function getSubTabs(ilTabsGUI $tabs) {
@@ -45,7 +49,7 @@ class ilIndividualAssessmentSettingsGUI {
 			case 'cancel':
 			case 'editInfo':
 			case 'updateInfo':
-				if(!$this->object->accessHandler()->checkAccessToObj($this->object,'write')) {
+				if(!$this->iass_access->mayEditObject()) {
 					$this->parent_gui->handleAccessViolation();
 				}
 				$this->$cmd();
@@ -102,8 +106,14 @@ class ilIndividualAssessmentSettingsGUI {
 			$this->object->setTitle($_POST[self::PROP_TITLE]);
 			$this->object->setDescription($_POST[self::PROP_DESCRIPTION]);
 			$this->object->getSettings()->setContent($_POST[self::PROP_CONTENT])
-								->setRecordTemplate($_POST[self::PROP_RECORD_TEMPLATE]);
+								->setRecordTemplate($_POST[self::PROP_RECORD_TEMPLATE])
+								->setEventTimePlaceRequired((bool)$_POST[self::PROP_EVENT_TIME_PLACE_REQUIRED])
+								->setFileRequired((bool)$_POST[self::PROP_FILE_REQUIRED]);
 			$this->object->update();
+			ilObjectServiceSettingsGUI::updateServiceSettingsForm(
+				$this->object->getId(),
+				$form,
+				[ilObjectServiceSettingsGUI::ORGU_POSITION_ACCESS]);
 			ilUtil::sendSuccess($this->lng->txt('iass_settings_saved'));
 		}
 		$this->renderForm($form);
@@ -111,7 +121,6 @@ class ilIndividualAssessmentSettingsGUI {
 
 
 	protected function initSettingsForm() {
-		include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
 		$form = new ilPropertyFormGUI();
 		$form->setFormAction($this->ctrl->getFormAction($this));
 		$form->setTitle($this->lng->txt('iass_edit'));
@@ -137,8 +146,26 @@ class ilIndividualAssessmentSettingsGUI {
 		$item->setInfo($this->lng->txt('iass_record_template_explanation'));
 		$form->addItem($item);
 
+		$option = new ilCheckboxInputGUI($this->lng->txt('iass_event_time_place_required'), self::PROP_EVENT_TIME_PLACE_REQUIRED);
+		$option->setInfo($this->lng->txt('iass_event_time_place_required_info'));
+		$form->addItem($option);
+
+		$option = new ilCheckboxInputGUI($this->lng->txt('iass_file_required'), self::PROP_FILE_REQUIRED);
+		$option->setInfo($this->lng->txt('iass_file_required_info'));
+		$form->addItem($option);
+
 		$form->addCommandButton('update', $this->lng->txt('save'));
 		$form->addCommandButton('cancel', $this->lng->txt('cancel'));
+
+		$sh = new ilFormSectionHeaderGUI();
+		$sh->setTitle($this->lng->txt("obj_features"));
+		$form->addItem($sh);
+
+		ilObjectServiceSettingsGUI::initServiceSettingsForm(
+			$this->object->getId(),
+			$form,
+			[ilObjectServiceSettingsGUI::ORGU_POSITION_ACCESS]);
+
 		return $form;
 	}
 
@@ -190,6 +217,9 @@ class ilIndividualAssessmentSettingsGUI {
 			, self::PROP_DESCRIPTION => $iass->getDescription()
 			, self::PROP_CONTENT => $settings->content()
 			, self::PROP_RECORD_TEMPLATE => $settings->recordTemplate()
+			, self::PROP_EVENT_TIME_PLACE_REQUIRED => $settings->eventTimePlaceRequired()
+			, self::PROP_FILE_REQUIRED => $settings->fileRequired()
+			, ilObjectServiceSettingsGUI::ORGU_POSITION_ACCESS => (bool) ilOrgUnitGlobalSettings::getInstance()->isPositionAccessActiveForObject($iass->getId())
 			));
 		return $a_form;
 	}

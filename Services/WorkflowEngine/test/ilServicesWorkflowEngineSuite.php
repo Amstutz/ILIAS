@@ -2,6 +2,7 @@
 /* Copyright (c) 1998-2012 ILIAS open source, Extended GPL, see docs/LICENSE */
 
 require_once 'libs/composer/vendor/autoload.php';
+$GLOBALS["DIC"] = new \ILIAS\DI\Container();
 
 /**
  * ilServicesWorkflowEngineSuite is part of the petri net based workflow engine.
@@ -16,8 +17,8 @@ require_once 'libs/composer/vendor/autoload.php';
  */
 class ilServicesWorkflowEngineSuite extends PHPUnit_Framework_TestSuite
 {
-    public static function suite()
-    {
+	public static function suite()
+	{
 		error_reporting(E_ALL ^ E_NOTICE);
 
 		chdir( dirname( __FILE__ ) );

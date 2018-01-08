@@ -99,11 +99,20 @@ class ilCertificate
 	
 	/**
 	* Returns the filesystem path of the background image
-	*
+	* @param  bool $asRelative
 	* @return string The filesystem path of the background image
 	*/
-	public function getBackgroundImagePath()
+	public function getBackgroundImagePath($asRelative = false)
 	{
+		if($asRelative)
+		{
+			return str_replace(
+				array(CLIENT_WEB_DIR, '//'),
+				array('[CLIENT_WEB_DIR]', '/'),
+				$this->getAdapter()->getCertificatePath() . $this->getBackgroundImageName()
+			);
+		}
+
 		return $this->getAdapter()->getCertificatePath() . $this->getBackgroundImageName();
 	}
 
@@ -218,9 +227,9 @@ class ilCertificate
 	/**
 	* Clone the certificate for another test object
 	*
-	* @param $newObject The new certificate object
+	* @param $newObject \ilCertificate The new certificate object
 	*/
-	public function cloneCertificate($newObject)
+	public function cloneCertificate(\ilCertificate $newObject)
 	{
 		$xsl = $this->getXSLPath();
 		$bgimage = $this->getBackgroundImagePath();
@@ -421,12 +430,17 @@ class ilCertificate
 			$pagewidth = $pageformats[$form_data["pageformat"]]["width"];
 		}
 		include_once "./Services/Certificate/classes/class.ilObjCertificateSettingsAccess.php";
-		$backgroundimage = $this->hasBackgroundImage() ? $this->getBackgroundImagePath() : ((ilObjCertificateSettingsAccess::hasBackgroundImage()) ? ilObjCertificateSettingsAccess::getBackgroundImagePath() : "");
+		$backgroundimage = $this->hasBackgroundImage() ? $this->getBackgroundImagePath(true) : ((ilObjCertificateSettingsAccess::hasBackgroundImage()) ? ilObjCertificateSettingsAccess::getBackgroundImagePath(true) : "");
 		$params = array(
-			"pageheight" => $pageheight, 
-			"pagewidth" => $pagewidth,
+			"pageheight"      => $pageheight,
+			"pagewidth"       => $pagewidth,
 			"backgroundimage" => $backgroundimage,
-			"marginbody" => $form_data["margin_body_top"] . " " . $form_data["margin_body_right"] . " " . $form_data["margin_body_bottom"] . " " . $form_data["margin_body_left"]
+			"marginbody"      => implode(' ', array(
+				$form_data["margin_body_top"],
+				$form_data["margin_body_right"],
+				$form_data["margin_body_bottom"],
+				$form_data["margin_body_left"]
+			))
 		);
 		$output = xslt_process($xh, "arg:/_xml", "arg:/_xsl", NULL, $args, $params);
 		xslt_error($xh);
@@ -446,16 +460,18 @@ class ilCertificate
 		if (count($insert_tags) == 0)
 		{
 			$insert_tags = $this->getAdapter()->getCertificateVariablesForPreview();
-			
 			foreach (self::getCustomCertificateFields() as $k => $f)
 			{
-				$insert_tags[$f["ph"]] = $f["name"];
+				$insert_tags[$f["ph"]] = ilUtil::prepareFormOutput($f["name"]);
 			}
 		}
 		foreach ($insert_tags as $var => $value)
 		{
 			$certificate_text = str_replace($var, $value, $certificate_text);
 		}
+
+		$certificate_text = str_replace('[CLIENT_WEB_DIR]', CLIENT_WEB_DIR, $certificate_text);
+
 		return $certificate_text;
 	}
 	
@@ -475,7 +491,7 @@ class ilCertificate
 		$cust_data = $cust_data->getAll();
 		foreach (self::getCustomCertificateFields() as $k => $f)
 		{
-			$insert_tags[$f["ph"]] = $cust_data["f_".$k];
+			$insert_tags[$f["ph"]] = ilUtil::prepareFormOutput($cust_data["f_".$k]);
 		}
 
 		$xslfo = file_get_contents($this->getXSLPath());
@@ -825,7 +841,13 @@ class ilCertificate
 						$xsl = file_get_contents($copydir . $file["entry"]);
 						// as long as we cannot make RPC calls in a given directory, we have
 						// to add the complete path to every url
-						$xsl = preg_replace("/url\([']{0,1}(.*?)[']{0,1}\)/", "url(" . $this->getAdapter()->getCertificatePath() . "\${1})", $xsl);
+						$xsl = preg_replace_callback("/url\([']{0,1}(.*?)[']{0,1}\)/", function(array $matches) {
+
+							$basePath = rtrim(dirname($this->getBackgroundImagePath(true)), '/');
+							$fileName = basename($matches[1]);
+							
+							return 'url(' . $basePath . '/' . $fileName . ')';
+						}, $xsl);
 						$this->saveCertificate($xsl);
 					}
 					else if (strpos($file["entry"], ".zip") !== FALSE)

@@ -108,10 +108,10 @@ abstract class ActiveRecord implements arStorageInterface {
 	 * @param arConnector $connector
 	 */
 	public function __construct($primary_key = 0, arConnector $connector = null) {
-		if ($connector == null) {
-			$connector = new arConnectorDB();
-		}
-		arConnectorMap::register($this, $connector);
+//		if ($connector == null) {
+//			$connector = new arConnectorDB();
+//		}
+//		arConnectorMap::register($this, $connector);
 
 		$arFieldList = arFieldCache::get($this);
 
@@ -242,11 +242,8 @@ abstract class ActiveRecord implements arStorageInterface {
 			return arObjectCache::get($class, $primary_value);
 		}
 		foreach ($array as $field_name => $value) {
-			if ($this->wakeUp($field_name, $value) === null) {
-				$this->{$field_name} = $value;
-			} else {
-				$this->{$field_name} = $this->wakeUp($field_name, $value);
-			}
+			$waked = $this->wakeUp($field_name, $value);
+			$this->{$field_name} = ($waked === null) ? $value : $waked;
 		}
 		arObjectCache::store($this);
 		$this->afterObjectLoad();
@@ -509,13 +506,11 @@ abstract class ActiveRecord implements arStorageInterface {
 		} elseif (count($records) == 0 AND $this->ar_safe_read == false) {
 			$this->is_new = true;
 		}
+		$records = is_array($records) ? $records : array();
 		foreach ($records as $rec) {
 			foreach ($this->getArrayForConnector() as $k => $v) {
-				if ($this->wakeUp($k, $rec->{$k}) === null) {
-					$this->{$k} = $rec->{$k};
-				} else {
-					$this->{$k} = $this->wakeUp($k, $rec->{$k});
-				}
+				$waked = $this->wakeUp($k, $rec->{$k});
+				$this->{$k} = ($waked === null) ? $rec->{$k} : $waked;
 			}
 			arObjectCache::store($this);
 			$this->afterObjectLoad();

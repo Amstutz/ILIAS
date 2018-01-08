@@ -1,10 +1,6 @@
 <?php
 /* Copyright (c) 1998-2010 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-require_once "./Services/Object/classes/class.ilObject2GUI.php";
-require_once "./Modules/File/classes/class.ilObjFile.php";
-require_once "./Modules/File/classes/class.ilObjFileAccess.php";
-
 /**
 * GUI class for file objects.
 *
@@ -20,6 +16,12 @@ require_once "./Modules/File/classes/class.ilObjFileAccess.php";
 */
 class ilObjFileGUI extends ilObject2GUI
 {
+
+	/**
+	 * @var \ilObjFile
+	 */
+	public $object;
+
 	protected $log = null;
 
 	/**
@@ -42,14 +44,19 @@ class ilObjFileGUI extends ilObject2GUI
 
 	function executeCommand()
 	{
-		global $ilNavigationHistory, $ilCtrl, $ilUser, $ilTabs, $ilAccess, $ilErr;
+		global $DIC;
+		$ilNavigationHistory = $DIC['ilNavigationHistory'];
+		$ilCtrl = $DIC['ilCtrl'];
+		$ilUser = $DIC['ilUser'];
+		$ilTabs = $DIC['ilTabs'];
+		$ilAccess = $DIC['ilAccess'];
+		$ilErr = $DIC['ilErr'];
 		
 		$next_class = $this->ctrl->getNextClass($this);
 		$cmd = $this->ctrl->getCmd();
 		
 		if($this->id_type == self::WORKSPACE_NODE_ID)
 		{
-			include_once "Services/Form/classes/class.ilFileInputGUI.php";
 			ilFileInputGUI::setPersonalWorkspaceQuotaCheck(true);
 		}
 
@@ -84,7 +91,6 @@ class ilObjFileGUI extends ilObject2GUI
 				
 				$ilTabs->activateTab("id_meta");
 
-				include_once 'Services/Object/classes/class.ilObjectMetaDataGUI.php';
 				$md_gui = new ilObjectMetaDataGUI($this->object);	
 				
 				// todo: make this work
@@ -96,21 +102,18 @@ class ilObjFileGUI extends ilObject2GUI
 			// repository permissions
 			case 'ilpermissiongui':
 				$ilTabs->activateTab("id_permissions");
-				include_once("Services/AccessControl/classes/class.ilPermissionGUI.php");
 				$perm_gui = new ilPermissionGUI($this);
 				$ret = $this->ctrl->forwardCommand($perm_gui);
 				break;
 		
 			case "ilexportgui":
 				$ilTabs->activateTab("export");
-				include_once("./Services/Export/classes/class.ilExportGUI.php");
 				$exp_gui = new ilExportGUI($this);
 				$exp_gui->addFormat("xml");
 				$ret = $this->ctrl->forwardCommand($exp_gui);
 				break;
 
 			case 'ilobjectcopygui':
-				include_once './Services/Object/classes/class.ilObjectCopyGUI.php';
 				$cp = new ilObjectCopyGUI($this);
 				$cp->setType('file');
 				$this->ctrl->forwardCommand($cp);
@@ -119,20 +122,17 @@ class ilObjFileGUI extends ilObject2GUI
 			// personal workspace permissions
 			case "ilworkspaceaccessgui";				
 				$ilTabs->activateTab("id_permissions");
-				include_once('./Services/PersonalWorkspace/classes/class.ilWorkspaceAccessGUI.php');
 				$wspacc = new ilWorkspaceAccessGUI($this->node_id, $this->getAccessHandler());
 				$this->ctrl->forwardCommand($wspacc);
 				break;
 			
 			case "ilcommonactiondispatchergui":
-				include_once("Services/Object/classes/class.ilCommonActionDispatcherGUI.php");
 				$gui = ilCommonActionDispatcherGUI::getInstanceFromAjaxCall();
 				$this->ctrl->forwardCommand($gui);
 				break;
 			
 			case "illearningprogressgui":
 				$ilTabs->activateTab('learning_progress');
-				require_once 'Services/Tracking/classes/class.ilLearningProgressGUI.php';
 				$new_gui = new ilLearningProgressGUI(
 					ilLearningProgressGUI::LP_CONTEXT_REPOSITORY,
 					$this->object->getRefId(),
@@ -178,7 +178,6 @@ class ilObjFileGUI extends ilObject2GUI
 			
 		if($this->id_type == self::WORKSPACE_NODE_ID)
 		{
-			include_once "Services/DiskQuota/classes/class.ilDiskQuotaHandler.php";
 			if(!ilDiskQuotaHandler::isUploadPossible())
 			{				
 				$this->lng->loadLanguageModule("file");
@@ -188,7 +187,6 @@ class ilObjFileGUI extends ilObject2GUI
 		}
 		
 		// use drag-and-drop upload if configured
-		require_once("Services/FileUpload/classes/class.ilFileUploadSettings.php");
 		if (ilFileUploadSettings::isDragAndDropUploadEnabled())
 		{
 			$forms[] = $this->initMultiUploadForm();
@@ -214,7 +212,8 @@ class ilObjFileGUI extends ilObject2GUI
 	*/
 	public function initSingleUploadForm()
 	{
-		global $lng;
+		global $DIC;
+		$lng = $DIC['lng'];
 		
 		include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
 		$single_form_gui = new ilPropertyFormGUI();
@@ -259,7 +258,8 @@ class ilObjFileGUI extends ilObject2GUI
 	*/
 	function save()
 	{
-		global $objDefinition, $ilUser;
+		global $DIC;
+		$ilUser = $DIC->user();
 
 		if (!$this->checkPermissionBool("create", "", "file"))
 		{
@@ -291,13 +291,12 @@ class ilObjFileGUI extends ilObject2GUI
 			}
 
 			// create and insert file in grp_tree
-			include_once("./Modules/File/classes/class.ilObjFile.php");
+
 			$fileObj = new ilObjFile();
 			$fileObj->setTitle($title);
 			$fileObj->setDescription($description);
 			$fileObj->setFileName($upload_file["name"]);
-			//$fileObj->setFileType($upload_file["type"]);
-			include_once("./Services/Utilities/classes/class.ilMimeTypeUtil.php");
+
 			$fileObj->setFileType(ilMimeTypeUtil::getMimeType(
 				"", $upload_file["name"], $upload_file["type"]));
 			$fileObj->setFileSize($upload_file["size"]);
@@ -313,7 +312,6 @@ class ilObjFileGUI extends ilObject2GUI
 			$this->handleAutoRating($fileObj);
 
 			// BEGIN ChangeEvent: Record write event.
-			require_once('Services/Tracking/classes/class.ilChangeEvent.php');
 			ilChangeEvent::_recordWriteEvent($fileObj->getId(), $ilUser->getId(), 'create');
 			// END ChangeEvent: Record write event.
 			
@@ -352,7 +350,8 @@ class ilObjFileGUI extends ilObject2GUI
 	*/
 	public function initZipUploadForm($a_mode = "create")
 	{
-		global $lng;
+		global $DIC;
+		$lng = $DIC['lng'];
 		
 		include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
 		$zip_form_gui = new ilPropertyFormGUI();
@@ -485,9 +484,10 @@ class ilObjFileGUI extends ilObject2GUI
 	*
 	* @access	public
 	*/
-	function update()
+	public function update()
 	{
-		global $ilTabs;
+		global $DIC;
+		$ilTabs = $DIC['ilTabs'];
 		
 		$form = $this->initPropertiesForm();
 		if(!$form->checkInput())
@@ -544,7 +544,8 @@ class ilObjFileGUI extends ilObject2GUI
 		if (!empty($data["name"]))
 		{
 			require_once('Services/Tracking/classes/class.ilChangeEvent.php');
-			global $ilUser;
+			global $DIC;
+			$ilUser = $DIC['ilUser'];
 			ilChangeEvent::_recordWriteEvent($this->object->getId(), $ilUser->getId(), 'update');
 			ilChangeEvent::_catchupWriteEvents($this->object->getId(), $ilUser->getId());			
 		}
@@ -554,9 +555,9 @@ class ilObjFileGUI extends ilObject2GUI
 		include_once 'Modules/File/classes/class.ilECSFileSettings.php';	
 		$ecs = new ilECSFileSettings($this->object);			
 		$ecs->handleSettingsUpdate();
-		
+
 		ilUtil::sendSuccess($this->lng->txt("msg_obj_modified"),true);
-		ilUtil::redirect($this->ctrl->getLinkTarget($this,'edit','',false,false));
+		ilUtil::redirect($this->ctrl->getLinkTarget($this,'versions','',false,false));
 	}
 	
 	/**
@@ -566,7 +567,9 @@ class ilObjFileGUI extends ilObject2GUI
 	*/
 	function edit()
 	{
-		global $ilTabs, $ilErr;
+		global $DIC;
+		$ilTabs = $DIC['ilTabs'];
+		$ilErr = $DIC['ilErr'];
 
 		if (!$this->checkPermissionBool("write"))
 		{
@@ -617,15 +620,13 @@ class ilObjFileGUI extends ilObject2GUI
 		$upload_possible = true;
 		if($this->id_type == self::WORKSPACE_NODE_ID)
 		{
-			include_once "Services/DiskQuota/classes/class.ilDiskQuotaHandler.php";
 			$upload_possible = ilDiskQuotaHandler::isUploadPossible();			
 		}
 		
 		if($upload_possible)
 		{
-			$file = new ilFileInputGUI($this->lng->txt('obj_file'),'file');
+			$file = new ilFileStandardDropzoneInputGUI($this->lng->txt('obj_file'), 'file');
 			$file->setRequired(false);
-	//		$file->enableFileNameSelection('title');
 			$form->addItem($file);
 
 			$group = new ilRadioGroupInputGUI('','replace');
@@ -667,18 +668,21 @@ class ilObjFileGUI extends ilObject2GUI
 	
 	function sendFile()
 	{
-		global $ilUser, $ilCtrl;
+		global $DIC;
+		$ilUser = $DIC['ilUser'];
 		
 		if(ANONYMOUS_USER_ID == $ilUser->getId() && isset($_GET['transaction']) )
 		{
-			$this->object->sendFile($_GET["hist_id"]);
+			$a_hist_entry_id = isset($_GET["hist_id"]) ? $_GET["hist_id"] : null;
+			$this->object->sendFile($a_hist_entry_id);
 		}
 
 		if ($this->checkPermissionBool("read"))
 		{
 			// BEGIN ChangeEvent: Record read event.
 			require_once('Services/Tracking/classes/class.ilChangeEvent.php');
-			global $ilUser;
+			global $DIC;
+			$ilUser = $DIC['ilUser'];
 			// Record read event and catchup with write events
 			ilChangeEvent::_recordReadEvent($this->object->getType(), $this->object->getRefId(),
 				$this->object->getId(), $ilUser->getId());			
@@ -687,7 +691,8 @@ class ilObjFileGUI extends ilObject2GUI
 			require_once 'Services/Tracking/classes/class.ilLPStatusWrapper.php';
 			ilLPStatusWrapper::_updateStatus($this->object->getId(), $ilUser->getId());
 
-			$this->object->sendFile($_GET["hist_id"]);
+			$a_hist_entry_id = isset($_GET["hist_id"]) ? $_GET["hist_id"] : null;
+			$this->object->sendFile($a_hist_entry_id);
 		}
 		else
 		{
@@ -704,7 +709,8 @@ class ilObjFileGUI extends ilObject2GUI
 	*/
 	function versions()
 	{
-		global $ilTabs;
+		global $DIC;
+		$ilTabs = $DIC['ilTabs'];
 		
 		$ilTabs->activateTab("id_versions");
 
@@ -742,7 +748,10 @@ class ilObjFileGUI extends ilObject2GUI
 	*/
 	function infoScreenForward()
 	{
-		global $ilTabs, $ilErr, $ilToolbar;
+		global $DIC;
+		$ilTabs = $DIC['ilTabs'];
+		$ilErr = $DIC['ilErr'];
+		$ilToolbar = $DIC['ilToolbar'];
 		
 		$ilTabs->activateTab("id_info");
 
@@ -802,19 +811,19 @@ class ilObjFileGUI extends ilObject2GUI
 		
 		// standard meta data
 		$info->addMetaDataSections($this->object->getId(),0, $this->object->getType());
-		
+
+		// File Info
 		$info->addSection($this->lng->txt("file_info"));
-		$info->addProperty($this->lng->txt("filename"),
-			$this->object->getFileName());
-		// BEGIN WebDAV Guess file type.
-		$info->addProperty($this->lng->txt("type"),
-				$this->object->guessFileType());
-		// END WebDAV Guess file type.
-		$info->addProperty($this->lng->txt("size"),
-			ilUtil::formatSize(ilObjFile::_lookupFileSize($this->object->getId()),'long'));
-		$info->addProperty($this->lng->txt("version"),
-			$this->object->getVersion());
-		
+		$info->addProperty($this->lng->txt("filename"), $this->object->getFileName());
+		$info->addProperty($this->lng->txt("type"), $this->object->guessFileType());
+
+		$info->addProperty($this->lng->txt("size"), ilUtil::formatSize(ilObjFile::_lookupFileSize($this->object->getId()),'long'));
+		$info->addProperty($this->lng->txt("version"), $this->object->getVersion());
+
+		if($this->object->getPageCount() > 0) {
+			$info->addProperty($this->lng->txt("page_count"), $this->object->getPageCount());
+		}
+
 		// using getVersions function instead of ilHistory direct
 		$uploader = $this->object->getVersions();
 		$uploader = array_shift($uploader);
@@ -873,7 +882,10 @@ class ilObjFileGUI extends ilObject2GUI
 	// get tabs
 	function setTabs()
 	{
-		global $ilTabs, $lng, $ilHelp;
+		global $DIC;
+		$ilTabs = $DIC['ilTabs'];
+		$lng = $DIC['lng'];
+		$ilHelp = $DIC['ilHelp'];
 		
 		$ilHelp->setScreenIdComponent("file");
 
@@ -938,7 +950,10 @@ class ilObjFileGUI extends ilObject2GUI
 
 	public static function _goto($a_target, $a_additional = null)
 	{
-		global $ilErr, $lng, $ilAccess;
+		global $DIC;
+		$ilErr = $DIC['ilErr'];
+		$lng = $DIC['lng'];
+		$ilAccess = $DIC['ilAccess'];
 		
 		if($a_additional && substr($a_additional, -3) == "wsp")
 		{
@@ -976,7 +991,8 @@ class ilObjFileGUI extends ilObject2GUI
 	*/
 	function addLocatorItems()
 	{
-		global $ilLocator;
+		global $DIC;
+		$ilLocator = $DIC['ilLocator'];
 		
 		if (is_object($this->object))
 		{
@@ -1098,7 +1114,8 @@ class ilObjFileGUI extends ilObject2GUI
 	 */
 	protected function handleFileUpload($file_upload) 
 	{
-		global $ilUser;
+		global $DIC;
+		$ilUser = $DIC['ilUser'];
 
 		// file upload params
 		$filename = ilUtil::stripSlashes($file_upload["name"]);
@@ -1233,13 +1250,11 @@ class ilObjFileGUI extends ilObject2GUI
 			}
 			
 			// create and insert file in grp_tree
-			include_once("./Modules/File/classes/class.ilObjFile.php");
 			$fileObj = new ilObjFile();
 			$fileObj->setTitle($title);
 			$fileObj->setDescription($description);
 			$fileObj->setFileName($filename);
-			
-			include_once("./Services/Utilities/classes/class.ilMimeTypeUtil.php");
+
 			$fileObj->setFileType(ilMimeTypeUtil::getMimeType("", $filename, $type));
 			$fileObj->setFileSize($size);
 			$this->object_id = $fileObj->create();
@@ -1258,11 +1273,8 @@ class ilObjFileGUI extends ilObject2GUI
 			$fileObj->getUploadFile($temp_name, $filename);
 			
 			$this->handleAutoRating($fileObj);
-			
-			// BEGIN ChangeEvent: Record write event.
-			require_once('./Services/Tracking/classes/class.ilChangeEvent.php');
+
 			ilChangeEvent::_recordWriteEvent($fileObj->getId(), $ilUser->getId(), 'create');
-			// END ChangeEvent: Record write event.    
 		}
 		
 		return $response;
@@ -1273,7 +1285,9 @@ class ilObjFileGUI extends ilObject2GUI
 	 */
 	function deleteVersions()
 	{
-		global $ilTabs, $ilLocator;
+		global $DIC;
+		$ilTabs = $DIC['ilTabs'];
+		$ilLocator = $DIC['ilLocator'];
 		
 		// get ids either from GET (if single item was clicked) or 
 		// from POST (if multiple items were selected)
@@ -1331,7 +1345,8 @@ class ilObjFileGUI extends ilObject2GUI
 	 */
 	function confirmDeleteVersions()
 	{
-		global $ilTabs;
+		global $DIC;
+		$ilTabs = $DIC['ilTabs'];
 		
 		// has the user the rights to delete versions?
 		if (!$this->checkPermissionBool("write"))
@@ -1414,7 +1429,8 @@ class ilObjFileGUI extends ilObject2GUI
 	 */
 	function rollbackVersion()
 	{
-		global $ilTabs;
+		global $DIC;
+		$ilTabs = $DIC['ilTabs'];
 		
 		// has the user the rights to delete the file?
 		if (!$this->checkPermissionBool("write"))

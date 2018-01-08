@@ -11,16 +11,23 @@
 */
 class ilTabsGUI
 {
+
+	/**
+	 * @var ilCtrl
+	 */
+	protected $ctrl;
+
 	var $target_script;
 	var $obj_type;
 	var $tpl;
 	var $lng;
 	var $tabs;
-	var $objDefinition;
 	var $target = array();
 	var $sub_target = array();
 	var $non_tabbed_link = array();
 	var $setup_mode = false;
+
+	protected $force_one_tab = false;
 
 	/**
 	* Constructor
@@ -28,11 +35,14 @@ class ilTabsGUI
 	*/
 	function __construct()
 	{
-		global $tpl, $objDefinition, $lng;
+		global $DIC;
+
+		$this->ctrl = $DIC->ctrl();
+		$tpl = $DIC["tpl"];
+		$lng = $DIC->language();
 
 		$this->tpl = $tpl;
 		$this->lng = $lng;
-		$this->objDefinition = $objDefinition;
 		$this->manual_activation = false;
 		$this->subtab_manual_activation = false;
 		$this->temp_var = "TABS";
@@ -82,7 +92,26 @@ class ilTabsGUI
 		$this->back_2_target = $a_target;
 		$this->back_2_frame = $a_frame;
 	}
-	
+
+	/**
+	 * Set force presentation of single tab
+	 *
+	 * @param bool $a_val force presentation of single tab
+	 */
+	function setForcePresentationOfSingleTab($a_val)
+	{
+		$this->force_one_tab = $a_val;
+	}
+
+	/**
+	 * Get force presentation of single tab
+	 *
+	 * @return bool force presentation of single tab
+	 */
+	function getForcePresentationOfSingleTab()
+	{
+		return $this->force_one_tab;
+	}
 
 	/**
 	* @deprecated since version 5.0
@@ -209,7 +238,13 @@ class ilTabsGUI
 	*/
 	function clearTargets()
 	{
-		global $ilHelp;
+		global $DIC;
+
+		$ilHelp = null;
+		if (isset($DIC["ilHelp"]))
+		{
+			$ilHelp = $DIC["ilHelp"];
+		}
 		
 		if (!$this->getSetupMode())
 		{
@@ -397,7 +432,26 @@ class ilTabsGUI
 	 */
 	function __getHTML($a_get_sub_tabs,$a_manual, $a_after_tabs_anchor = false)
 	{
-		global $ilCtrl, $lng, $ilUser, $ilPluginAdmin, $ilHelp;
+		global $DIC;
+
+		$ilHelp = null;
+		if (isset($DIC["ilHelp"]))
+		{
+			$ilHelp = $DIC["ilHelp"];
+		}
+
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
+		$ilUser = null;
+		if (isset($DIC["ilUser"]))
+		{
+			$ilUser = $DIC->user();
+		}
+		$ilPluginAdmin = null;
+		if (isset($DIC["ilPluginAdmin"]))
+		{
+			$ilPluginAdmin = $DIC["ilPluginAdmin"];
+		}
 
 		// user interface hook [uihk]
 		if (!$this->getSetupMode())
@@ -466,7 +520,7 @@ class ilTabsGUI
 		$i=0;
 		
         // do not display one tab only
-        if ((count($targets) > 1) || ($this->back_title != "" && !$a_get_sub_tabs)
+        if ((count($targets) > 1 || $this->force_one_tab) || ($this->back_title != "" && !$a_get_sub_tabs)
         	|| (count($this->non_tabbed_link) > 0 && !$a_get_sub_tabs))
 		{
 			foreach ($targets as $target)

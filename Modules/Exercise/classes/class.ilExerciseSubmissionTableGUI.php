@@ -16,6 +16,11 @@ include_once("./Services/UIComponent/Modal/classes/class.ilModalGUI.php");
  */
 abstract class ilExerciseSubmissionTableGUI extends ilTable2GUI
 {	
+	/**
+	 * @var ilAccessHandler
+	 */
+	protected $access;
+
 	protected $exc; // [ilObjExercise]
 	protected $mode; // [int]
 	protected $filter; // [array]
@@ -26,7 +31,7 @@ abstract class ilExerciseSubmissionTableGUI extends ilTable2GUI
 	
 	// needs PH P5.6 for array support
 	protected $cols_mandatory = array("name", "status");
-	protected $cols_default = array("image", "login", "submission_date", "idl");
+	protected $cols_default = array("login", "submission_date", "idl");
  	protected $cols_order = array("image", "name", "login", "team_members", 
 			"sent_time", "submission", "idl", "status", "mark", "status_time", 
 			"feedback_time", "comment", "notice");
@@ -42,7 +47,15 @@ abstract class ilExerciseSubmissionTableGUI extends ilTable2GUI
 	 */
 	function __construct($a_parent_obj, $a_parent_cmd, ilObjExercise $a_exc, $a_item_id)
 	{
-		global $ilCtrl;
+		global $DIC;
+
+		$this->ctrl = $DIC->ctrl();
+		$this->access = $DIC->access();
+		$this->tpl = $DIC["tpl"];
+		$this->lng = $DIC->language();
+
+
+		$ilCtrl = $DIC->ctrl();
 		
 		$this->exc = $a_exc;
 		
@@ -86,7 +99,14 @@ abstract class ilExerciseSubmissionTableGUI extends ilTable2GUI
 		$this->addMultiCommand("saveStatusSelected", $this->lng->txt("exc_save_selected"));
 			
 		$this->setFormName("ilExcIDlForm");
-		$this->addMultiCommand("setIndividualDeadline", $this->lng->txt("exc_individual_deadline_action"));
+
+		// see 0021530 and parseRow here with similar action per user
+		if ($this->mode == self::MODE_BY_ASSIGNMENT &&
+			$this->ass->hasActiveIDl() &&
+			!$this->ass->hasReadOnlyIDl())
+		{
+			$this->addMultiCommand("setIndividualDeadline", $this->lng->txt("exc_individual_deadline_action"));
+		}
 	
 		if($this->exc->hasTutorFeedbackMail() &&
 			$this->mode == self::MODE_BY_ASSIGNMENT)
@@ -210,7 +230,8 @@ abstract class ilExerciseSubmissionTableGUI extends ilTable2GUI
 	
 	protected function parseRow($a_user_id, ilExAssignment $a_ass, array $a_row)
 	{
-		global $ilCtrl, $ilAccess;
+		$ilCtrl = $this->ctrl;
+		$ilAccess = $this->access;
 		
 		$has_no_team_yet = ($a_ass->hasTeam() &&
 			!ilExAssignmentTeam::getTeamId($a_ass->getId(), $a_user_id));
@@ -386,17 +407,17 @@ abstract class ilExerciseSubmissionTableGUI extends ilTable2GUI
 					}
 					// fallthrough
 					
-				case "notice":	
-					$this->tpl->setVariable("VAL_".strtoupper($col), $a_row[$col]
-						? ilUtil::prepareFormOutput(trim($a_row[$col]))
-						: "");
+				case "notice":
+					// see #22076
+					$this->tpl->setVariable("VAL_".strtoupper($col), ilUtil::prepareFormOutput(trim($a_row[$col])));
 					break;
 					
 				case "comment":							
 					// for js-updating
-					$this->tpl->setVariable("LCOMMENT_ID", $comment_id."_snip");		
-		
-					$this->tpl->setVariable("VAL_".strtoupper($col), $a_row[$col]
+					$this->tpl->setVariable("LCOMMENT_ID", $comment_id."_snip");
+
+					// see #22076
+					$this->tpl->setVariable("VAL_".strtoupper($col), (trim($a_row[$col]) !== "")
 						? nl2br(trim($a_row[$col]))
 						: "&nbsp;");
 					break;
@@ -583,7 +604,9 @@ abstract class ilExerciseSubmissionTableGUI extends ilTable2GUI
 		
 	public function render()
 	{
-		global $ilCtrl, $tpl;
+		global $DIC;
+		$ilCtrl = $this->ctrl;
+		$tpl = $DIC->ui()->mainTemplate();
 		
 		$url = $ilCtrl->getLinkTarget($this->getParentObject(), "saveCommentForLearners", "", true, false);		
 		

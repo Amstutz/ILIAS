@@ -1,7 +1,6 @@
 <?php
 /* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
-require_once("./Services/DataSet/classes/class.ilDataSet.php");
-require_once('class.ilObjBibliographic.php');
+
 /**
  * Bibliographic dataset class
  *
@@ -19,7 +18,8 @@ class ilBibliographicDataSet extends ilDataSet {
 	 */
 	protected $data = array();
 	/**
-	 * Maps a given record_field ID (key) to the correct table where the value is stored (il_dcl_stloc(1|2|3)_value)
+	 * Maps a given record_field ID (key) to the correct table where the value is stored
+	 * (il_dcl_stloc(1|2|3)_value)
 	 *
 	 * @var array
 	 */
@@ -79,14 +79,11 @@ class ilBibliographicDataSet extends ilDataSet {
 	 * @param string          $a_schema_version
 	 */
 	public function importRecord($a_entity, $a_types, $a_rec, $a_mapping, $a_schema_version) {
-		global $DIC;
-		$ilDB = $DIC['ilDB'];
 		switch ($a_entity) {
 			case 'bibl':
-				if($new_id = $a_mapping->getMapping('Services/Container','objs',$a_rec['id']))
-				{
+				if ($new_id = $a_mapping->getMapping('Services/Container', 'objs', $a_rec['id'])) {
 					// container content
-					$new_obj = ilObjectFactory::getInstanceByObjId($new_id,false);
+					$new_obj = ilObjectFactory::getInstanceByObjId($new_id, false);
 				} else {
 					$new_obj = new ilObjBibliographic();
 				}
@@ -117,11 +114,11 @@ class ilBibliographicDataSet extends ilDataSet {
 		switch ($a_entity) {
 			case 'bibl':
 				return array(
-					"id" => "integer",
-					"title" => "text",
+					"id"          => "integer",
+					"title"       => "text",
 					"description" => "text",
-					"filename" => "text",
-					'is_online' => 'integer',
+					"filename"    => "text",
+					'is_online'   => 'integer',
 				);
 			default:
 				return array();
@@ -130,7 +127,8 @@ class ilBibliographicDataSet extends ilDataSet {
 
 
 	/**
-	 * Return dependencies form entities to other entities (in our case these are all the DB relations)
+	 * Return dependencies form entities to other entities (in our case these are all the DB
+	 * relations)
 	 *
 	 * @param string $a_entity
 	 * @param string $a_version
@@ -153,7 +151,7 @@ class ilBibliographicDataSet extends ilDataSet {
 	 */
 	public function readData($a_entity, $a_version, $a_ids) {
 		$this->data = array();
-		if (! is_array($a_ids)) {
+		if (!is_array($a_ids)) {
 			$a_ids = array( $a_ids );
 		}
 		$this->_readData($a_entity, $a_ids);
@@ -173,11 +171,11 @@ class ilBibliographicDataSet extends ilDataSet {
 					if (ilObject::_lookupType($bibl_id) == 'bibl') {
 						$obj = new ilObjBibliographic($bibl_id);
 						$data = array(
-							'id' => $bibl_id,
-							'title' => $obj->getTitle(),
+							'id'          => $bibl_id,
+							'title'       => $obj->getTitle(),
 							'description' => $obj->getDescription(),
-							'fileName' => $obj->getFilename(),
-							'is_online' => $obj->getOnline(),
+							'fileName'    => $obj->getFilename(),
+							'is_online'   => $obj->getOnline(),
 						);
 						$this->data[] = $data;
 					}
@@ -194,7 +192,8 @@ class ilBibliographicDataSet extends ilDataSet {
 	 */
 	public function exportLibraryFile($a_id) {
 		$obj = new ilObjBibliographic($a_id);
-		copy($obj->getFileAbsolutePath(), $this->absolute_export_dir . "/" . $obj->getFilename());
+		$fileAbsolutePath = $obj->getLegacyAbsolutePath();
+		copy($fileAbsolutePath, $this->absolute_export_dir . "/" . $obj->getFilename());
 	}
 
 
@@ -202,8 +201,8 @@ class ilBibliographicDataSet extends ilDataSet {
 	 * @param ilImportMapping $a_mapping
 	 */
 	public function importLibraryFile($a_mapping) {
-		$import_path = $this->getImportDirectory()
-			. "/Modules/Bibliographic/set_1/expDir_1/" . $this->import_bib_object->getFilename();
+		$import_path = $this->getImportDirectory() . "/Modules/Bibliographic/set_1/expDir_1/"
+		               . $this->import_bib_object->getFilename();
 		$new_id = $this->import_bib_object->getId();
 		$new_path = ilUtil::getDataDir() . "/bibl/" . $new_id;
 		mkdir($new_path);

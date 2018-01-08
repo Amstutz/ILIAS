@@ -30,7 +30,11 @@ class ilSCORM2004PageGUI extends ilPageObjectGUI
 	function __construct($a_parent_type, $a_id = 0, $a_old_nr = 0, $a_slm_id = 0,
 		$a_glo_id = 0)
 	{
-		global $tpl, $ilCtrl;
+		global $DIC;
+
+		$this->tpl = $DIC["tpl"];
+		$this->ctrl = $DIC->ctrl();
+		$ilCtrl = $DIC->ctrl();
 
 		$this->glo_id = $a_glo_id;
 		$this->slm_id = $a_slm_id;
@@ -40,9 +44,6 @@ class ilSCORM2004PageGUI extends ilPageObjectGUI
 		parent::__construct($a_parent_type, $a_id, $a_old_nr);
 		$this->getPageObject()->setGlossaryId($this->glo_id);
 		
-		$this->setIntLinkReturn(
-			$ilCtrl->getLinkTargetByClass("ilobjscorm2004learningmodulegui", "showTree",
-			"", false, false));
 		include_once("./Modules/ScormAicc/classes/class.ilObjSAHSLearningModule.php");
 		$this->enableNotes(true, $this->slm_id);
 	}
@@ -73,8 +74,12 @@ class ilSCORM2004PageGUI extends ilPageObjectGUI
 	*/
 	function executeCommand()
 	{
-		global $ilCtrl;
-		
+		$ilCtrl = $this->ctrl;
+
+		$this->setIntLinkReturn(
+			$ilCtrl->getLinkTargetByClass("ilobjscorm2004learningmodulegui", "showTree",
+				"", false, false));
+
 		$next_class = $this->ctrl->getNextClass($this);
 		$cmd = $this->ctrl->getCmd();
 
@@ -139,6 +144,7 @@ die("ilSCORM2004PageGUI forwarding to ilpageobjectgui error.");
 			{
 				include_once("./Modules/TestQuestionPool/classes/class.assQuestionGUI.php");
 				$q_gui = assQuestionGUI::_getQuestionGUI("", $q_id);
+				$q_gui->setRenderPurpose(assQuestionGUI::RENDER_PURPOSE_PREVIEW);
 				$q_gui->outAdditionalOutput();				
 				$html[$q_id] = $q_gui->getPreview(TRUE);
 			}
@@ -183,7 +189,8 @@ die("ilSCORM2004PageGUI forwarding to ilpageobjectgui error.");
 	*/
 	function showPage($a_mode = "preview")
 	{
-		global $tpl, $ilCtrl;
+		$tpl = $this->tpl;
+		$ilCtrl = $this->ctrl;
 		
 		$this->scorm_mode = $a_mode;
 						

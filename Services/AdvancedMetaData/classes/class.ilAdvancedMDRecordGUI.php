@@ -16,7 +16,8 @@ class ilAdvancedMDRecordGUI
 	const MODE_EDITOR = 1;
 	const MODE_SEARCH = 2;
 	const MODE_INFO = 3;
-	
+	const MODE_APP_PRESENTATION = 8;
+
 	// glossary
 	const MODE_REC_SELECTION = 4;		// record selection (per object)
 	const MODE_FILTER = 5;				// filter (as used e.g. in tables)
@@ -29,6 +30,7 @@ class ilAdvancedMDRecordGUI
 	private $obj_type;
 	private $sub_type;
 	private $obj_id;
+	private $ref_id = null;
 	
 	private $form;
 	private $search_values = array();
@@ -53,6 +55,23 @@ class ilAdvancedMDRecordGUI
 	 	$this->obj_id = $a_obj_id;
 	 	$this->sub_type = $a_sub_type;
 	 	$this->sub_id = $a_sub_id;
+		
+		if($a_obj_id)
+		{
+			$refs = ilObject::_getAllReferences($a_obj_id);
+			$this->ref_id = end($refs);
+		}
+		
+	}
+	
+	/**
+	 * Set ref_id for context. In case of object creations this is the reference id 
+	 * of the parent container.
+	 * @param int ref_id
+	 */
+	public function setRefId($a_ref_id)
+	{
+		$this->ref_id = $a_ref_id;
 	}
 	
 	/**
@@ -110,7 +129,10 @@ class ilAdvancedMDRecordGUI
 	 		
 	 		case self::MODE_INFO:
 	 			return $this->parseInfoPage();
-	 			
+
+			case self::MODE_APP_PRESENTATION:
+				return $this->parseAppointmentPresentation();
+
 	 		case self::MODE_REC_SELECTION:
 	 			return $this->parseRecordSelection();
 	 			
@@ -350,11 +372,10 @@ class ilAdvancedMDRecordGUI
 		$this->search_form_values = $a_values;
 	}
 	
-	
-	//
-	// infoscreen
-	//
-	
+	/**
+	 * Presentation for info page
+	 * @return void
+	 */
 	private function parseInfoPage()
 	{				
 		include_once('Services/AdvancedMetaData/classes/class.ilAdvancedMDValues.php');
@@ -378,9 +399,55 @@ class ilAdvancedMDRecordGUI
 				}
 			}
 		}						
-	} 
-	
-					
+	}
+
+	/**
+	 * Presentation for calendar agenda list.
+	 * @return void
+	 */
+	private function parseAppointmentPresentation()
+	{
+		$sub = ilAdvancedMDSubstitution::_getInstanceByObjectType($this->obj_type);
+
+		$definitions = ilAdvancedMDFieldDefinition::getInstancesByObjType($this->obj_type);
+		$definitions = $sub->sortDefinitions($definitions);
+
+		$positions = array();
+		foreach ($definitions as $position => $value)
+		{
+			$positions[$value->getFieldId()] = $position;
+		}
+
+		$array_elements = array();
+		foreach(ilAdvancedMDValues::getInstancesForObjectId($this->obj_id, $this->obj_type, $this->sub_type, $this->sub_id) as $record_id => $a_values)
+		{
+			// this correctly binds group and definitions
+			$a_values->read();
+
+			$defs = $a_values->getDefinitions();
+			foreach($a_values->getADTGroup()->getElements() as $element_id => $element)
+			{
+				if(!$element->isNull())
+				{
+					$presentation_bridge = ilADTFactory::getInstance()->getPresentationBridgeForInstance($element);
+					#21615
+					if(get_class($element) == 'ilADTLocation')
+					{
+						$presentation_bridge->setSize("100%","200px");
+					}
+					$array_elements[$positions[$element_id]] =
+						[
+							"title" => $defs[$element_id]->getTitle(),
+							"value" => $presentation_bridge->getHTML()
+						];
+				}
+			}
+		}
+
+		ksort($array_elements);
+		return $array_elements;
+	}
+
 	//
 	// :TODO: ECS
 	// 
@@ -404,27 +471,6 @@ class ilAdvancedMDRecordGUI
 			return false;
 		}
 		return false;
-		/*
-		$mapping = ilECSDataMappingSettings::_getInstance();
-		
-		if($mapping->getMappingByECSName(ilECSDataMappingSetting::MAPPING_IMPORT_RCRS, 'begin') == $a_definition->getFieldId())
-		{
-			$this->showECSStart($a_definition);
-			return true;
-		}
-		if($mapping->getMappingByECSName(ilECSDataMappingSetting::MAPPING_IMPORT_RCRS, 'end') == $a_definition->getFieldId())
-		{
-			return true;
-		}
-		if($mapping->getMappingByECSName(ilECSDataMappingSetting::MAPPING_IMPORT_RCRS, 'cycle') == $a_definition->getFieldId())
-		{
-			return true;
-		}
-		if($mapping->getMappingByECSName(ilECSDataMappingSetting::MAPPING_IMPORT_RCRS, 'room') == $a_definition->getFieldId())
-		{
-			return true;
-		}
-		*/
 	}
 	
 	/**
@@ -639,7 +685,7 @@ class ilAdvancedMDRecordGUI
 	protected function getActiveRecords()
 	{
 		include_once('Services/AdvancedMetaData/classes/class.ilAdvancedMDRecord.php');
-		return ilAdvancedMDRecord::_getSelectedRecordsByObject($this->obj_type, $this->obj_id, $this->sub_type);
+		return ilAdvancedMDRecord::_getSelectedRecordsByObject($this->obj_type, $this->ref_id, $this->sub_type);
 	}
 	
 	/**

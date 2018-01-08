@@ -88,6 +88,7 @@ class ilObjUser extends ilObject
 	var $phone_mobile;
 	var $fax;
 	var $email;
+	protected $second_email = null;
 	var $hobby;
 	var $matriculation;
 	var $referral_comment;
@@ -372,6 +373,7 @@ class ilObjUser extends ilObject
 		$this->setFax($a_data["fax"]);
 		$this->setMatriculation($a_data["matriculation"]);
 		$this->setEmail($a_data["email"]);
+		$this->setSecondEmail($a_data["second_email"]);
 		$this->setHobby($a_data["hobby"]);
 		$this->setClientIP($a_data["client_ip"]);
 		$this->setPasswordEncodingType($a_data['passwd_enc_type']);
@@ -471,6 +473,7 @@ class ilObjUser extends ilObject
 			"title" => array("text", $this->utitle),
 			"gender" => array("text", $this->gender),
 			"email" => array("text", trim($this->email)),
+			"second_email" => array("text", trim($this->second_email)),
 			"hobby" => array("text", (string) $this->hobby),
 			"institution" => array("text", $this->institution),
 			"department" => array("text", $this->department),
@@ -564,6 +567,7 @@ class ilObjUser extends ilObject
 			"firstname" => array("text", $this->firstname),
 			"lastname" => array("text", $this->lastname),
 			"email" => array("text", trim($this->email)),
+			"second_email" => array("text", trim($this->second_email)),
 			"birthday" => array('date', $this->getBirthday()),
 			"hobby" => array("text", $this->hobby),
 			"institution" => array("text", $this->institution),
@@ -711,6 +715,16 @@ class ilObjUser extends ilObject
 	static function _lookupEmail($a_user_id)
 	{
 		return ilObjUser::_lookup($a_user_id, "email");
+	}
+	
+	/**
+	 * Lookup second e-mail
+	 * @param $a_user_id
+	 * @return null|string
+	 */
+	static function _lookupSecondEmail($a_user_id)
+	{
+		return ilObjUser::_lookup($a_user_id, "second_email");
 	}
 
 	/**
@@ -1894,7 +1908,23 @@ class ilObjUser extends ilObject
 	{
 		return $this->email;
 	}
-
+	
+	/**
+	 * @return null|string
+	 */
+	public function getSecondEmail()
+	{
+		return $this->second_email;
+	}
+	
+	/**
+	 * @param null|string $second_email
+	 */
+	public function setSecondEmail($second_email)
+	{
+		$this->second_email = $second_email;
+	}
+	
 	/**
 	* set hobby
 	* @access	public
@@ -1980,7 +2010,10 @@ class ilObjUser extends ilObject
 
 	public static function _lookupLanguage($a_usr_id)
 	{
-		global $ilDB;
+		global $DIC;
+
+		$ilDB = $DIC->database();
+		$lng = $DIC->language();
 
 		$q = "SELECT value FROM usr_pref WHERE usr_id= ".
 			$ilDB->quote($a_usr_id, "integer")." AND keyword = ".
@@ -1990,6 +2023,10 @@ class ilObjUser extends ilObject
 		while($row = $ilDB->fetchAssoc($r))
 		{
 			return $row['value'];
+		}
+		if (is_object($lng))
+		{
+			return $lng->getDefaultLanguage();
 		}
 		return 'en';
 	}
@@ -2328,28 +2365,31 @@ class ilObjUser extends ilObject
 		else return false;
     }
 
-    public function isPasswordExpired()
-    {
-		//error_reporting(E_ALL);
-		if($this->id == ANONYMOUS_USER_ID) return false;
+	public function isPasswordExpired()
+	{
+		if ($this->id == ANONYMOUS_USER_ID) {
+			return false;
+		}
 
-    	require_once('./Services/PrivacySecurity/classes/class.ilSecuritySettings.php');
-    	$security = ilSecuritySettings::_getInstance();
-    	if( $this->getLastPasswordChangeTS() > 0 )
-    	{
-    		$max_pass_age = $security->getPasswordMaxAge();
-    		if( $max_pass_age > 0 )
-    		{
-	    		$max_pass_age_ts = ( $max_pass_age * 86400 );
-				$pass_change_ts = $this->getLastPasswordChangeTS();
-		   		$current_ts = time();
+		require_once('./Services/PrivacySecurity/classes/class.ilSecuritySettings.php');
+		$security = ilSecuritySettings::_getInstance();
+		if ($this->getLastPasswordChangeTS() > 0) {
+			$max_pass_age = $security->getPasswordMaxAge();
+			if ($max_pass_age > 0) {
+				$max_pass_age_ts = ($max_pass_age * 86400);
+				$pass_change_ts  = $this->getLastPasswordChangeTS();
+				$current_ts      = time();
 
-				if( ($current_ts - $pass_change_ts) > $max_pass_age_ts )
-					return true;
-    		}
-     	}
-    	return false;
-    }
+				if (($current_ts - $pass_change_ts) > $max_pass_age_ts) {
+					if (!ilAuthUtils::_needsExternalAccountByAuthMode($this->getAuthMode(true))) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
 
     public function getPasswordAge()
     {
@@ -3722,47 +3762,53 @@ class ilObjUser extends ilObject
 	*
 	* @static
 	*/
-	public static function _checkExternalAuthAccount($a_auth, $a_account)
+	public static function _checkExternalAuthAccount($a_auth, $a_account, $tryFallback = true)
 	{
-		global $ilDB,$ilSetting;
+		$db       = $GLOBALS['DIC']->database();
+		$settings = $GLOBALS['DIC']->settings();
 
 		// Check directly with auth_mode
-		$r = $ilDB->queryF("SELECT * FROM usr_data WHERE ".
+		$r = $db->queryF("SELECT * FROM usr_data WHERE ".
 			" ext_account = %s AND auth_mode = %s",
 			array("text", "text"),
 			array($a_account, $a_auth));
-		if ($usr = $ilDB->fetchAssoc($r))
+		if ($usr = $db->fetchAssoc($r))
 		{
 			return $usr["login"];
 		}
 
+		if(!$tryFallback)
+		{
+			return false;
+		}
+
 		// For compatibility, check for login (no ext_account entry given)
-		$res = $ilDB->queryF("SELECT login FROM usr_data ".
+		$res = $db->queryF("SELECT login FROM usr_data ".
 			"WHERE login = %s AND auth_mode = %s AND ext_account IS NULL ",
 			array("text", "text"),
 			array($a_account, $a_auth));
-		if($usr = $ilDB->fetchAssoc($res))
+		if($usr = $db->fetchAssoc($res))
 		{
 			return $usr['login'];
 		}
 
 		// If auth_default == $a_auth => check for login
-		if(ilAuthUtils::_getAuthModeName($ilSetting->get('auth_mode')) == $a_auth)
+		if(ilAuthUtils::_getAuthModeName($settings->get('auth_mode')) == $a_auth)
 		{
-			$res = $ilDB->queryF("SELECT login FROM usr_data WHERE ".
+			$res = $db->queryF("SELECT login FROM usr_data WHERE ".
 				" ext_account = %s AND auth_mode = %s",
 				array("text", "text"),
 				array($a_account, "default"));
-			if ($usr = $ilDB->fetchAssoc($res))
+			if ($usr = $db->fetchAssoc($res))
 			{
 				return $usr["login"];
 			}
 			// Search for login (no ext_account given)
-			$res = $ilDB->queryF("SELECT login FROM usr_data ".
+			$res = $db->queryF("SELECT login FROM usr_data ".
 				"WHERE login = %s AND (ext_account IS NULL OR ext_account = '') AND auth_mode = %s",
 				array("text", "text"),
 				array($a_account, "default"));
-			if($usr = $ilDB->fetchAssoc($res))
+			if($usr = $db->fetchAssoc($res))
 			{
 				return $usr["login"];
 			}
@@ -3891,16 +3937,24 @@ class ilObjUser extends ilObject
 	public static function _getPersonalPicturePath($a_usr_id,$a_size = "small", $a_force_pic = false,
 		$a_prevent_no_photo_image = false)
 	{
-		global $ilDB;
+		global $DIC;
 
-		// BEGIN DiskQuota: Fetch all user preferences in a single query
-		$res = $ilDB->queryF("SELECT * FROM usr_pref WHERE ".
-			"keyword IN (%s,%s) ".
-			"AND usr_id = %s",
-			array("text", "text", "integer"),
-			array('public_upload', 'public_profile', $a_usr_id));
-		while ($row = $ilDB->fetchAssoc($res))
+		$login = $firstname = $lastname = '';
+		$upload = $profile              = false;
+
+		$in  = $DIC->database()->in('usr_pref.keyword', array('public_upload', 'public_profile'), false, 'text');
+		$res = $DIC->database()->queryF("
+			SELECT usr_pref.*, ud.login, ud.firstname, ud.lastname
+			FROM usr_data ud LEFT JOIN usr_pref ON usr_pref.usr_id = ud.usr_id AND $in
+			WHERE ud.usr_id = %s",
+			array("integer"),
+			array($a_usr_id));
+		while ($row = $DIC->database()->fetchAssoc($res))
 		{
+			$login     = $row['login'];
+			$firstname = $row['firstname'];
+			$lastname  = $row['lastname'];
+
 			switch ($row['keyword'])
 			{
 				case 'public_upload' :
@@ -3946,8 +4000,23 @@ class ilObjUser extends ilObject
 				if($a_size == "small" || $a_size == "big")
 				{
 					$a_size = "xsmall";
-				}				
-				$file = ilUtil::getImagePath("no_photo_".$a_size.".jpg");
+				}
+
+				if($profile)
+				{
+					$short = ilStr::subStr($firstname, 0, 1) . ilStr::subStr($lastname, 0, 1);
+				}
+				else
+				{
+					$short = ilStr::subStr($login, 0, 2);
+				}
+
+				/** @var $avatar ilUserAvatarBase */
+				$avatar = $DIC["user.avatar.factory"]->avatar($a_size);
+				$avatar->setName($short);
+				$avatar->setUsrId($a_usr_id);
+
+				return $avatar->getUrl();
 			}
 		}
 
@@ -4232,6 +4301,10 @@ class ilObjUser extends ilObject
 		if(strlen($this->getEmail()))
 		{
 			$body .= ($language->txt("email").": ".$this->getEmail()."\n");
+		}
+		if(strlen($this->getSecondEmail()))
+		{
+			$body .= ($language->txt("second_email").": ".$this->getSecondEmail()."\n");
 		}
 		if(strlen($this->getHobby()))
 		{
@@ -4536,16 +4609,10 @@ class ilObjUser extends ilObject
 	{
 		global $rbacadmin, $rbacreview, $ilDB;
 
-		// quote all ids
-		$ids = array();
-		foreach ($a_mem_ids as $mem_id) {
-			$ids [] = $ilDB->quote($mem_id);
-		}
-
 		$query = "SELECT usr_data.*, usr_pref.value AS language
 		          FROM usr_data
 		          LEFT JOIN usr_pref ON usr_pref.usr_id = usr_data.usr_id AND usr_pref.keyword = %s
-		          WHERE ".$ilDB->in("usr_data.usr_id", $ids, false, "integer")."
+		          WHERE ".$ilDB->in("usr_data.usr_id", $a_mem_ids, false, "integer")."
 					AND usr_data.usr_id != %s";
 		$values[] = "language";
 		$types[] = "text";
@@ -4825,14 +4892,14 @@ class ilObjUser extends ilObject
 		$where = 'WHERE ' . implode(' AND ', $where);
 
 		$r = $ilDB->queryF("
-			SELECT COUNT(user_id) num, user_id, firstname, lastname, title, login, last_login, MAX(ctime) ctime
+			SELECT COUNT(user_id) num, user_id, firstname, lastname, title, login, last_login, MAX(ctime) ctime, context
 			FROM usr_session
 			LEFT JOIN usr_data u
 				ON user_id = u.usr_id
 			LEFT JOIN usr_pref p
 				ON (p.usr_id = u.usr_id AND p.keyword = %s)
 			{$where}
-			GROUP BY user_id, firstname, lastname, title, login, last_login
+			GROUP BY user_id, firstname, lastname, title, login, last_login, context
 			ORDER BY lastname, firstname
 			",
 			array('text'),
@@ -5759,5 +5826,57 @@ class ilObjUser extends ilObject
 		
 		return $res;
 	}
+
+	/**
+	 * Get profile status
+	 *
+	 * @param array[int] $a_user_ids user ids
+	 * @return array[] 	array["global"] => all user ids having their profile global (www) activated,
+	 * 					array["local"] => all user ids having their profile only locally (logged in users) activated,
+	 * 					array["public"] => all user ids having their profile either locally or globally activated,
+	 * 					array["not_public"] => all user ids having their profile deactivated
+	 */
+	static function getProfileStatusOfUsers($a_user_ids)
+	{
+		global $DIC;
+
+		$ilDB = $DIC->database();
+
+		$set = $ilDB->query("SELECT * FROM usr_pref ".
+				" WHERE keyword = ".$ilDB->quote("public_profile", "text").
+				" AND ".$ilDB->in("usr_id",$a_user_ids , false, "integer")
+			);
+		$r = array(
+			"global" => array(),
+			"local" => array(),
+			"public" => array(),
+			"not_public" => array()
+		);
+		while ($rec = $ilDB->fetchAssoc($set))
+		{
+			if ($rec["value"] == "g")
+			{
+				$r["global"][] = $rec["usr_id"];
+				$r["public"][] = $rec["usr_id"];
+			}
+			if ($rec["value"] == "y")
+			{
+				$r["local"][] = $rec["usr_id"];
+				$r["public"][] = $rec["usr_id"];
+			}
+		}
+		foreach ($a_user_ids as $id)
+		{
+			if (!in_array($id, $r["public"]))
+			{
+				$r["not_public"][] = $id;
+			}
+		}
+
+		return $r;
+	}
+
+
+
 } // END class ilObjUser
 ?>

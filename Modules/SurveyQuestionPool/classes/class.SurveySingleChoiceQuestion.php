@@ -56,6 +56,11 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 	*/
 	function __construct($title = "", $description = "", $author = "", $questiontext = "", $owner = -1, $orientation = 1)
 	{
+		global $DIC;
+
+		$this->db = $DIC->database();
+		$this->user = $DIC->user();
+		$this->lng = $DIC->language();
 		parent::__construct($title, $description, $author, $questiontext, $owner);
 		
 		include_once "./Modules/SurveyQuestionPool/classes/class.SurveyCategories.php";
@@ -72,7 +77,7 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 	*/
 	function &getCategoriesForPhrase($phrase_id)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		$categories = array();
 		$result = $ilDB->queryF("SELECT svy_category.* FROM svy_category, svy_phrase_cat WHERE svy_phrase_cat.category_fi = svy_category.category_id AND svy_phrase_cat.phrase_fi = %s ORDER BY svy_phrase_cat.sequence",
 			array('integer'),
@@ -100,8 +105,8 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 	*/
 	function addPhrase($phrase_id)
 	{
-		global $ilUser;
-		global $ilDB;
+		$ilUser = $this->user;
+		$ilDB = $this->db;
 		
 		$result = $ilDB->queryF("SELECT svy_category.* FROM svy_category, svy_phrase_cat WHERE svy_phrase_cat.category_fi = svy_category.category_id AND svy_phrase_cat.phrase_fi = %s AND (svy_category.owner_fi = 0 OR svy_category.owner_fi = %s) ORDER BY svy_phrase_cat.sequence",
 			array('integer', 'integer'),
@@ -130,7 +135,7 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 	*/
 	function getQuestionDataArray($id)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 		
 		$result = $ilDB->queryF("SELECT svy_question.*, " . $this->getAdditionalTableName() . ".* FROM svy_question, " . $this->getAdditionalTableName() . " WHERE svy_question.question_id = %s AND svy_question.question_id = " . $this->getAdditionalTableName() . ".question_fi",
 			array('integer'),
@@ -154,7 +159,7 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 	*/
 	function loadFromDb($id) 
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		$result = $ilDB->queryF("SELECT svy_question.*, " . $this->getAdditionalTableName() . ".* FROM svy_question LEFT JOIN " . $this->getAdditionalTableName() . " ON " . $this->getAdditionalTableName() . ".question_fi = svy_question.question_id WHERE svy_question.question_id = %s",
 			array('integer'),
@@ -223,7 +228,7 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 	*/
 	function saveToDb($original_id = "")
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		$affectedRows = parent::saveToDb($original_id);
 		if ($affectedRows == 1) 
@@ -248,7 +253,7 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 
 	function saveCategoriesToDb()
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		$this->log->debug("DELETE from svy_variable before the INSERT into svy_variable. if scale > 0  we get scale value else we get null");
 
@@ -418,8 +423,8 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 	*/
 	function savePhrase($title)
 	{
-		global $ilUser;
-		global $ilDB;
+		$ilUser = $this->user;
+		$ilDB = $this->db;
 
 		$next_id = $ilDB->nextId('svy_phrase');
 		$affectedRows = $ilDB->manipulateF("INSERT INTO svy_phrase (phrase_id, title, defaultvalue, owner_fi, tstamp) VALUES (%s, %s, %s, %s, %s)",
@@ -545,7 +550,7 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 
 	function saveUserInput($post_data, $active_id, $a_return = false)
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		$entered_value = $post_data[$this->getId() . "_value"];
 		
@@ -557,10 +562,16 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 		if (strlen($entered_value) == 0) return;
 		
 		$next_id = $ilDB->nextId('svy_answer');
-		$affectedRows = $ilDB->manipulateF("INSERT INTO svy_answer (answer_id, question_fi, active_fi, value, textanswer, tstamp) VALUES (%s, %s, %s, %s, %s, %s)",
-			array('integer','integer','integer','float','text','integer'),
-			array($next_id, $this->getId(), $active_id, (strlen($entered_value)) ? $entered_value : NULL, ($post_data[$this->getId() . "_" . $entered_value . "_other"]) ? $post_data[$this->getId() . "_" . $entered_value . "_other"] : null, time())
-		);
+		#20216
+		$fields = array();
+		$fields['answer_id'] = array("integer", $next_id);
+		$fields['question_fi'] = array("integer", $this->getId());
+		$fields['active_fi'] = array("integer", $active_id);
+		$fields['value'] = array("float", (strlen($entered_value)) ? $entered_value : NULL);
+		$fields['textanswer'] = array("clob", ($post_data[$this->getId() . "_" . $entered_value . "_other"]) ? $post_data[$this->getId() . "_" . $entered_value . "_other"] : null);
+		$fields['tstamp'] = array("integer", time());
+		
+		$affectedRows = $ilDB->insert("svy_answer", $fields);
 
 		$debug_value = (strlen($entered_value)) ? $entered_value : "NULL";
 		$debug_answer = ($post_data[$this->getId() . "_" . $entered_value . "_other"]) ? $post_data[$this->getId() . "_" . $entered_value . "_other"] : "NULL";
@@ -621,7 +632,7 @@ class SurveySingleChoiceQuestion extends SurveyQuestion
 	*/
 	public function getPreconditionOptions()
 	{
-		global $lng;
+		$lng = $this->lng;
 		
 		$options = array();
 		for ($i = 0; $i < $this->categories->getCategoryCount(); $i++)

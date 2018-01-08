@@ -16,6 +16,31 @@ require_once("./Services/COPage/classes/class.ilPageContentGUI.php");
 */
 class ilPCFileListGUI extends ilPageContentGUI
 {
+	/**
+	 * @var ilObjUser
+	 */
+	protected $user;
+
+	/**
+	 * @var ilTabsGUI
+	 */
+	protected $tabs;
+
+	/**
+	 * @var ilTree
+	 */
+	protected $tree;
+
+	/**
+	 * @var ilToolbarGUI
+	 */
+	protected $toolbar;
+
+	/**
+	 * @var ilSetting
+	 */
+	protected $settings;
+
 
 	/**
 	* Constructor
@@ -23,6 +48,16 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function __construct(&$a_pg_obj, &$a_content_obj, $a_hier_id, $a_pc_id = "")
 	{
+		global $DIC;
+
+		$this->user = $DIC->user();
+		$this->tabs = $DIC->tabs();
+		$this->ctrl = $DIC->ctrl();
+		$this->tpl = $DIC["tpl"];
+		$this->tree = $DIC->repositoryTree();
+		$this->lng = $DIC->language();
+		$this->toolbar = $DIC->toolbar();
+		$this->settings = $DIC->settings();
 		parent::__construct($a_pg_obj, $a_content_obj, $a_hier_id, $a_pc_id);
 		$this->setCharacteristics(array("FileListItem" => $this->lng->txt("cont_FileListItem")));
 	}
@@ -53,9 +88,10 @@ class ilPCFileListGUI extends ilPageContentGUI
 	/**
 	* insert new file list form
 	*/
-	function insert()
+	function insert($a_form = null)
 	{
-		global $ilUser, $ilTabs;
+		$ilUser = $this->user;
+		$ilTabs = $this->tabs;
 
 		if ($_GET["subCmd"] == "insertNew")
 		{
@@ -93,8 +129,15 @@ class ilPCFileListGUI extends ilPageContentGUI
 				$ilTabs->setSubTabActive("cont_new_file");
 				
 				$this->displayValidationError();
-				
-				$form = $this->initEditForm("create");
+
+				if ($a_form != null)
+				{
+					$form = $a_form;
+				}
+				else
+				{
+					$form = $this->initEditForm("create");
+				}
 				$this->tpl->setContent($form->getHTML());
 				break;
 		}
@@ -106,7 +149,8 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function selectFile()
 	{
-		global $ilTabs, $ilUser;
+		$ilTabs = $this->tabs;
+		$ilUser = $this->user;
 		
 		$this->setTabs();
 		$ilTabs->setSubTabActive("cont_file_from_repository");
@@ -122,7 +166,9 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function insertFromRepository($a_cmd = "insert")
 	{
-		global $ilTabs, $tree, $ilCtrl, $tpl;
+		$ilTabs = $this->tabs;
+		$ilCtrl = $this->ctrl;
+		$tpl = $this->tpl;
 
 		if ($a_cmd == "insert")
 		{
@@ -134,41 +180,15 @@ class ilPCFileListGUI extends ilPageContentGUI
 		}
 
 		$ilTabs->setSubTabActive("cont_file_from_repository");
-		
-		include_once "./Services/COPage/classes/class.ilFileSelectorGUI.php";
-
-		$exp = new ilFileSelectorGUI($this->ctrl->getLinkTarget($this, $a_cmd));
-
-		if ($_GET["expand"] == "")
-		{
-			$expanded = $tree->readRootId();
-		}
-		else
-		{
-			$expanded = $_GET["expand"];
-		}
-		$exp->setExpand($expanded);
-
-		$exp->setTargetGet("sel_id");
-		//$this->ctrl->setParameter($this, "target_type", $a_type);
 		$ilCtrl->setParameter($this, "subCmd", "insertFromRepository");
-		$exp->setParamsGet($this->ctrl->getParameterArray($this, $a_cmd));
-		
-		// filter
-		$exp->setFiltered(true);
-		$exp->setFilterMode(IL_FM_POSITIVE);
-		$exp->addFilter("root");
-		$exp->addFilter("cat");
-		$exp->addFilter("grp");
-		$exp->addFilter("fold");
-		$exp->addFilter("crs");
-		$exp->addFilter("file");
 
-		$sel_types = array('file');
-
-		$exp->setOutput(0);
-
-		$tpl->setContent($exp->getOutput());
+		include_once("./Services/COPage/classes/class.ilPCFileItemFileSelectorGUI.php");
+		$exp = new ilPCFileItemFileSelectorGUI($this, $a_cmd,
+			$this, $a_cmd, "file_ref_id");
+		if (!$exp->handleCommand())
+		{
+			$tpl->setContent($exp->getHTML());
+		}
 	}
 	
 	/**
@@ -176,7 +196,11 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function insertFromWorkspace($a_cmd = "insert")
 	{
-		global $ilTabs, $tree, $ilCtrl, $tpl, $ilUser;
+		$ilTabs = $this->tabs;
+		$tree = $this->tree;
+		$ilCtrl = $this->ctrl;
+		$tpl = $this->tpl;
+		$ilUser = $this->user;
 
 		if ($a_cmd == "insert")
 		{
@@ -189,50 +213,18 @@ class ilPCFileListGUI extends ilPageContentGUI
 
 		$ilTabs->setSubTabActive("cont_file_from_workspace");
 		
-		// get ws tree
-		include_once "Services/PersonalWorkspace/classes/class.ilWorkspaceTree.php";
-		$tree = new ilWorkspaceTree($ilUser->getId());
-		
-		// get access handler
-		include_once("./Services/PersonalWorkspace/classes/class.ilWorkspaceAccessHandler.php");
-		$acc_handler = new ilWorkspaceAccessHandler($tree);
-		
-		// get es explorer
-		include_once("./Services/PersonalWorkspace/classes/class.ilWorkspaceExplorer.php");
-		$exp = new ilWorkspaceExplorer(ilWorkspaceExplorer::SEL_TYPE_RADIO, '', 
-			'filelist_wspexpand', $tree, $acc_handler);
-		$exp->setTargetGet('fl_wsp_id');
-		$exp->setFiltered(false);
-		$exp->removeAllFormItemTypes();
-		
-		// select link 
-		$exp->setTypeClickable("file");
+		include_once("./Services/PersonalWorkspace/classes/class.ilWorkspaceExplorerGUI.php");
+		$exp = new ilWorkspaceExplorerGUI($ilUser->getId(), $this, $a_cmd, $this, $a_cmd, "fl_wsp_id");
 		$ilCtrl->setParameter($this, "subCmd", "selectFile");
 		$exp->setCustomLinkTarget($ilCtrl->getLinkTarget($this, $a_cmd));
-		
-		// filter
-		$exp->setFiltered(true);
-		$exp->setFilterMode(IL_FM_POSITIVE);
-		$exp->addFilter("wsrt");
-		$exp->addFilter("wfld");
-		$exp->addFilter("file");
-	
-		// expand link
 		$ilCtrl->setParameter($this, "subCmd", "insertFromWorkspace");
-		$exp->setParamsGet($ilCtrl->getParameterArray($this, $a_cmd));		
-
-		if($_GET['filelist_wspexpand'] == '')
+		$exp->setTypeWhiteList(array("wsrt", "wfld", "file"));
+		$exp->setSelectableTypes(array("file"));
+		if ($exp->handleCommand())
 		{
-			$expanded = $tree->readRootId();
+			return;
 		}
-		else
-		{
-			$expanded = $_GET['filelist_wspexpand'];
-		}
-		$exp->setExpand($expanded);
-		$exp->setOutput(0);
-		
-		$tpl->setContent($exp->getOutput());
+		$tpl->setContent($exp->getHTML());
 	}
 	
 	/**
@@ -242,8 +234,16 @@ class ilPCFileListGUI extends ilPageContentGUI
 	{
 		include_once("./Modules/File/classes/class.ilObjFile.php");
 
-		$form = $this->initEditForm("create");
-		$form->checkInput();
+		$mode = ($_POST["file_ref_id"] != "")
+			? "select_file"
+			: "create";
+		$form = $this->initEditForm($mode);
+		if (!$form->checkInput())
+		{
+			$form->setValuesByPost();
+			$this->insert($form);
+			return;
+		}
 
 		// from personal workspace
 		if(substr($_POST["file_ref_id"], 0, 4) == "wsp_")
@@ -311,7 +311,9 @@ class ilPCFileListGUI extends ilPageContentGUI
 	 */
 	public function initEditForm($a_mode = "edit")
 	{
-		global $lng, $ilCtrl, $ilUser;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
+		$ilUser = $this->user;
 	
 		include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
 		$form = new ilPropertyFormGUI();
@@ -446,7 +448,10 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function editFiles()
 	{
-		global $tpl, $ilToolbar, $ilCtrl, $lng;
+		$tpl = $this->tpl;
+		$ilToolbar = $this->toolbar;
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
 		
 		$this->setTabs(false);
 		
@@ -463,7 +468,10 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function setTabs($a_create = true)
 	{
-		global $ilTabs, $ilCtrl, $lng, $ilSetting;
+		$ilTabs = $this->tabs;
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
+		$ilSetting = $this->settings;
 
 		if ($a_create)
 		{
@@ -509,7 +517,7 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function addFileItem()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 		
 		$files = $this->content_obj->getFileList();
 
@@ -532,7 +540,7 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function deleteFileItem()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 		
 		if (is_array($_POST["fid"]))
 		{
@@ -552,7 +560,7 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function savePositions()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 		
 		if (is_array($_POST["position"]))
 		{
@@ -567,7 +575,7 @@ class ilPCFileListGUI extends ilPageContentGUI
 	*/
 	function savePositionsAndClasses()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 		
 		if (is_array($_POST["position"]))
 		{
@@ -618,7 +626,7 @@ class ilPCFileListGUI extends ilPageContentGUI
 	 */
 	function newFileItem()
 	{
-		global $ilTabs;
+		$ilTabs = $this->tabs;
 
 		if ($_GET["subCmd"] == "insertNew")
 		{
@@ -668,7 +676,7 @@ class ilPCFileListGUI extends ilPageContentGUI
 	 */
 	function insertNewFileItem($a_file_ref_id = 0)
 	{
-		global $ilUser;
+		$ilUser = $this->user;
 		
 		// from personal workspace
 		if(isset($_GET["fl_wsp_id"]))
@@ -713,7 +721,7 @@ class ilPCFileListGUI extends ilPageContentGUI
 	 */
 	function createFileItem()
 	{
-		global $lng;
+		$lng = $this->lng;
 
 		if ($_FILES["file"]["name"] == "")
 		{
@@ -750,7 +758,9 @@ class ilPCFileListGUI extends ilPageContentGUI
 	 */
 	function setItemTabs($a_cmd = "")
 	{
-		global $ilTabs, $ilCtrl, $ilSetting;
+		$ilTabs = $this->tabs;
+		$ilCtrl = $this->ctrl;
+		$ilSetting = $this->settings;
 
 		$ilTabs->addTarget("cont_back",
 			$this->ctrl->getParentReturn($this), "",

@@ -75,7 +75,7 @@ class ilCourseParticipantsTableGUI extends ilParticipantTableGUI
 		$this->setFormName('participants');
 
 		$this->addColumn('', 'f', "1");
-		$this->addColumn($this->lng->txt('name'), 'lastname', '20%');
+		$this->addColumn($this->lng->txt('name'), 'name', '20%');
 		
 		$all_cols = $this->getSelectableColumns();
 		foreach($this->getSelectedColumns() as $col)
@@ -109,7 +109,7 @@ class ilCourseParticipantsTableGUI extends ilParticipantTableGUI
 
 		$this->setRowTemplate("tpl.show_participants_row.html", "Modules/Course");
 
-		$this->setDefaultOrderField('lastname');
+		$this->setDefaultOrderField('roles');
 		$this->enable('sort');
 		$this->enable('header');
 		$this->enable('numinfo');
@@ -245,7 +245,7 @@ class ilCourseParticipantsTableGUI extends ilParticipantTableGUI
 				
 				case 'roles':
 					$this->tpl->setCurrentBlock('custom_fields');
-					$this->tpl->setVariable('VAL_CUST', (string) $a_set['roles']);
+					$this->tpl->setVariable('VAL_CUST', (string) $a_set['roles_label']);
 					$this->tpl->parseCurrentBlock();
 					break;
 					
@@ -298,8 +298,20 @@ class ilCourseParticipantsTableGUI extends ilParticipantTableGUI
 		}
 		
 		$this->tpl->setVariable('VAL_POSTNAME', 'participants');
-		$this->tpl->setVariable('VAL_PASSED_ID',$a_set['usr_id']);
-		$this->tpl->setVariable('VAL_PASSED_CHECKED',($a_set['passed'] ? 'checked="checked"' : ''));
+
+		if ($ilAccess->checkAccess("grade", "", $this->rep_object->getRefId()))
+		{
+			$this->tpl->setCurrentBlock('grade');
+			$this->tpl->setVariable('VAL_PASSED_ID', $a_set['usr_id']);
+			$this->tpl->setVariable('VAL_PASSED_CHECKED', ($a_set['passed'] ? 'checked="checked"' : ''));
+			$this->tpl->parseCurrentBlock();
+		}
+		else
+		{
+			$this->tpl->setVariable('VAL_PASSED_TXT', ($a_set['passed']
+				? $this->lng->txt("yes")
+				: $this->lng->txt("no")));
+		}
 		
 		if(
 			$this->getParticipants()->isAdmin($a_set['usr_id']) || 
@@ -384,6 +396,15 @@ class ilCourseParticipantsTableGUI extends ilParticipantTableGUI
 		unset($additional_fields['org_units']);
 		
 		$part = $this->participants->getParticipants();
+		
+		$part = $GLOBALS['DIC']->access()->filterUserIdsByRbacOrPositionOfCurrentUser(
+			'manage_members', 
+			'manage_members', 
+			$this->getRepositoryObject()->getRefId(), 
+			$part
+		);			
+		
+		
 		if(!$part)
 		{
 			$this->setData(array());
@@ -470,7 +491,9 @@ class ilCourseParticipantsTableGUI extends ilParticipantTableGUI
 			{
 				$ud = array();
 			}
-			
+						
+			$a_user_data[$user_id] = array_merge($ud,$course_user_data[$user_id]);
+
 
 			$roles = array();			
 			foreach($local_roles as $role_id => $role_name)
@@ -481,8 +504,11 @@ class ilCourseParticipantsTableGUI extends ilParticipantTableGUI
 					$roles[] = $role_name;
 				}
 			}
-			$a_user_data[$user_id] = array_merge($ud,$course_user_data[$user_id]);
-			$a_user_data[$user_id]['roles'] = implode('<br />', $roles);
+
+			$a_user_data[$user_id]['name'] = ($a_user_data[$user_id]['lastname'].', '.$a_user_data[$user_id]['firstname']);
+			$a_user_data[$user_id]['roles_label'] = implode('<br />', $roles);
+			$a_user_data[$user_id]['roles'] = $this->participants->setRoleOrderPosition($user_id);
+			
 			
 			if($this->show_lp_status_sync)
 			{								
@@ -595,7 +621,14 @@ class ilCourseParticipantsTableGUI extends ilParticipantTableGUI
 				}
 			}
 		}
-		#$this->setMaxCount($usr_data['cnt'] ? $usr_data['cnt'] : 0);
+		
+		// always sort by name first
+		$a_user_data = ilUtil::sortArray(
+			$a_user_data,
+			'name',
+			$this->getOrderDirection()
+		);
+		
 		return $this->setData($a_user_data);
 	}
 	

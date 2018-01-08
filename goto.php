@@ -62,7 +62,7 @@ include_once("Services/Init/classes/class.ilStartUpGUI.php");
 if(!ilStartUpGUI::_checkGoto($_GET["target"]))
 {
 	// if anonymous: go to login page
-	if($ilUser->getId() == ANONYMOUS_USER_ID)
+	if(!$ilUser->getId() || $ilUser->isAnonymous())
 	{
 		ilUtil::redirect("login.php?target=".$orig_target."&cmd=force_login&lang=".$ilUser->getCurrentLanguage());
 	}
@@ -230,6 +230,12 @@ switch($target_type)
 	case 'cert':
 		require_once('./Services/Certificate/classes/class.ilCertificate.php');
 		ilCertificate::_goto($target_id);
+		break;
+
+	// links to the documentation of the kitchen sink in the administration
+	case 'stys':
+		require_once('./Services/Style/System/classes/class.ilSystemStyleMainGUI.php');
+		ilSystemStyleMainGUI::_goto($target_id,$target_arr);
 		break;
 
 	//

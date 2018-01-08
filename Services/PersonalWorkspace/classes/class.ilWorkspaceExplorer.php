@@ -11,6 +11,11 @@ require_once 'Services/Repository/classes/class.ilRepositoryExplorer.php';
  */
 class ilWorkspaceExplorer extends ilRepositoryExplorer
 {
+	/**
+	 * @var ilLanguage
+	 */
+	protected $lng;
+
 	const SEL_TYPE_CHECK = 1;
 	const SEL_TYPE_RADIO = 2;
 	
@@ -34,10 +39,14 @@ class ilWorkspaceExplorer extends ilRepositoryExplorer
 	* @param	string	$a_session_variable session_variable
 	* @param	ilWorkspaceTree	$a_tree workspace tree
 	* @param	ilWorkspaceAccessHandler	$a_access_handler workspace access handler
+	 * @deprecated use class ilWorkspaceExplorerGUI instead
 	*/
 	public function __construct($a_type, $a_target, $a_session_variable, ilWorkspaceTree $a_tree, ilWorkspaceAccessHandler $a_access_handler)
 	{
-		global $ilCtrl;
+		global $DIC;
+
+		$this->lng = $DIC->language();
+		$ilCtrl = $DIC->ctrl();
 
 		$this->ctrl = $ilCtrl;
 		$this->type = $a_type;
@@ -153,7 +162,7 @@ class ilWorkspaceExplorer extends ilRepositoryExplorer
 	
 	function formatObject($tpl, $a_node_id, $a_option, $a_obj_id = 0)
 	{		
-		global $lng;
+		$lng = $this->lng;
 		
 		if (!isset($a_node_id) or !is_array($a_option))
 		{
@@ -272,7 +281,7 @@ class ilWorkspaceExplorer extends ilRepositoryExplorer
 	*/
 	function formatHeader($tpl, $a_obj_id,$a_option)
 	{
-		global $lng;
+		$lng = $this->lng;
 		
 		// custom icons
 		$path = ilObject::_getIcon($a_obj_id, "small", "wsrt");

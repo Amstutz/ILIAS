@@ -17,6 +17,16 @@
 */
 class ilTableGUI
 {
+	/**
+	 * @var ilTemplate
+	 */
+	protected $tpl;
+
+	/**
+	 * @var ilLanguage
+	 */
+	protected $lng;
+
 	var $title;					// table title name
 	var $icon;					// table title icon
 	var $icon_alt;				// table title icon alt text
@@ -86,10 +96,12 @@ class ilTableGUI
 	*/
 	function __construct($a_data = 0,$a_global_tpl = true)
 	{
-		global $ilias, $tpl, $lng;
+		global $DIC;
+
+		$tpl = $DIC["tpl"];
+		$lng = $DIC->language();
 
 		$this->global_tpl = $a_global_tpl;
-		$this->ilias = $ilias;
 		$this->header_vars = array();
 		$this->header_params = array();
 		$this->enabled["form"] = true;
@@ -652,7 +664,7 @@ class ilTableGUI
 		if ($this->enabled["footer"] && $this->max_count > 0)
 		{
 			$this->tpl->setCurrentBlock("tbl_footer");
-			$this->tpl->setVariable("FOOTER_COLUMN_COUNT",$this->column_count);
+			$this->tpl->setVariable("COLUMN_COUNT",$this->column_count);
 			$this->tpl->parseCurrentBlock();
 		}
 
@@ -669,7 +681,7 @@ class ilTableGUI
 			$this->tpl->setCurrentBlock("tbl_action_row");
 			$this->tpl->setVariable("IMG_ARROW", ilUtil::getImagePath("arrow_downright.svg"));
 			$this->tpl->setVariable("ALT_ARROW", $this->lng->txt("arrow_downright.svg"));
-			$this->tpl->setVariable("COLUMN_COUNTS", $this->getColumnCount());
+			$this->tpl->setVariable("COLUMN_COUNT", $this->getColumnCount());
 			$this->tpl->parseCurrentBlock();
 		}
 

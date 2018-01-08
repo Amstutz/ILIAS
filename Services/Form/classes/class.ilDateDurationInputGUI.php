@@ -13,6 +13,16 @@ include_once 'Services/Table/interfaces/interface.ilTableFilterItem.php';
 */
 class ilDateDurationInputGUI extends ilSubEnabledFormPropertyGUI implements ilTableFilterItem
 {
+	/**
+	 * @var ilLanguage
+	 */
+	protected $lng;
+
+	/**
+	 * @var ilObjUser
+	 */
+	protected $user;
+
 	protected $start = null;
 	protected $startyear = null;	
 	protected $start_text = null;
@@ -32,6 +42,10 @@ class ilDateDurationInputGUI extends ilSubEnabledFormPropertyGUI implements ilTa
 	*/
 	public function __construct($a_title = "", $a_postvar = "")
 	{
+		global $DIC;
+
+		$this->lng = $DIC->language();
+		$this->user = $DIC->user();
 		parent::__construct($a_title, $a_postvar);
 		$this->setType("dateduration");
 	}
@@ -228,10 +242,11 @@ class ilDateDurationInputGUI extends ilSubEnabledFormPropertyGUI implements ilTa
 	*/
 	public function setValueByArray($a_values)
 	{		
-		$incoming = $a_values[$this->getPostVar()];				
+		$incoming = $a_values[$this->getPostVar()];
 		if(is_array($incoming))
 		{
-			$format = $this->getDatePickerTimeFormat();
+			$format = $incoming['tgl'] ?  0 : $this->getDatePickerTimeFormat();
+			$this->toggle_fulltime_checked = (bool) $incoming['tgl'];
 			$this->setStart(ilCalendarUtil::parseIncomingDate($incoming["start"], $format));
 			$this->setEnd(ilCalendarUtil::parseIncomingDate($incoming["end"], $format));
 		}
@@ -249,7 +264,7 @@ class ilDateDurationInputGUI extends ilSubEnabledFormPropertyGUI implements ilTa
 	*/	
 	public function checkInput()
 	{
-		global $lng;
+		$lng = $this->lng;
 		
 		if($this->getDisabled())
 		{
@@ -339,19 +354,11 @@ class ilDateDurationInputGUI extends ilSubEnabledFormPropertyGUI implements ilTa
 			$this->setAlert($lng->txt("form_msg_wrong_date"));
 		}	
 		else
-		{			
-			if($this->getStart() &&
-				$this->getEnd())
-			{
-				// getInput() should return a generic format	
-				$post_format = $format
-					? IL_CAL_DATETIME
-					: IL_CAL_DATE;			
-				$_POST[$this->getPostVar()]["start"] = $this->getStart()->get($post_format);
-				$_POST[$this->getPostVar()]["end"] = $this->getEnd()->get($post_format);				
-				unset($_POST[$this->getPostVar()]["tgl"]);		
-			}
-			else
+		{
+			if(
+				!$this->getStart() ||
+				!$this->getEnd()
+			)
 			{
 				$_POST[$this->getPostVar()]["start"] = null;
 				$_POST[$this->getPostVar()]["end"] = null;
@@ -396,7 +403,8 @@ class ilDateDurationInputGUI extends ilSubEnabledFormPropertyGUI implements ilTa
 	*/
 	public function render()
 	{
-		global $ilUser, $lng;
+		$ilUser = $this->user;
+		$lng = $this->lng;
 		
 		$tpl = new ilTemplate("tpl.prop_datetime_duration.html", true, true, "Services/Form");
 		

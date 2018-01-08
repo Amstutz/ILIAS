@@ -15,26 +15,47 @@ include_once("./Services/Table/classes/class.ilTable2GUI.php");
 class ilSkillProfileTableGUI extends ilTable2GUI
 {
 	/**
+	 * @var ilCtrl
+	 */
+	protected $ctrl;
+
+	/**
+	 * @var ilAccessHandler
+	 */
+	protected $access;
+
+	/**
 	 * Constructor
 	 */
-	function __construct($a_parent_obj, $a_parent_cmd)
+	function __construct($a_parent_obj, $a_parent_cmd, $a_write_permission = false)
 	{
-		global $ilCtrl, $lng, $ilAccess, $lng;
-		
+		global $DIC;
+
+		$this->ctrl = $DIC->ctrl();
+		$this->lng = $DIC->language();
+		$this->access = $DIC->access();
+		$ilCtrl = $DIC->ctrl();
+		$lng = $DIC->language();
+		$ilAccess = $DIC->access();
+		$lng = $DIC->language();
+
 		parent::__construct($a_parent_obj, $a_parent_cmd);
 		$this->setData($this->getProfiles());
 		$this->setTitle($lng->txt("skmg_skill_profiles"));
-		
+
 		$this->addColumn("", "", "1px", true);
 		$this->addColumn($this->lng->txt("title"), "title");
 		$this->addColumn($this->lng->txt("users"));
 		$this->addColumn($this->lng->txt("actions"));
-		
+
 		$this->setFormAction($ilCtrl->getFormAction($a_parent_obj));
 		$this->setRowTemplate("tpl.skill_profile_row.html", "Services/Skill");
 
 		$this->addMultiCommand("exportProfiles", $lng->txt("export"));
-		$this->addMultiCommand("confirmDeleteProfiles", $lng->txt("delete"));
+		if ($a_write_permission)
+		{
+			$this->addMultiCommand("confirmDeleteProfiles", $lng->txt("delete"));
+		}
 		//$this->addCommandButton("", $lng->txt(""));
 	}
 	
@@ -55,7 +76,8 @@ class ilSkillProfileTableGUI extends ilTable2GUI
 	 */
 	protected function fillRow($a_set)
 	{
-		global $lng, $ilCtrl;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
 
 		$this->tpl->setCurrentBlock("cmd");
 		$this->tpl->setVariable("CMD", $lng->txt("edit"));

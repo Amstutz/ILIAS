@@ -6,6 +6,7 @@ require_once 'Modules/IndividualAssessment/classes/Members/class.ilIndividualAss
 /**
  * Edit the record of a user, set LP.
  * @author	Denis Klöpfer <denis.kloepfer@concepts-and-training.de>
+ * @author	Stefan Hecken <stefan.hecken@concepts-and-training.de>
  */
 class ilIndividualAssessmentMember {
 	protected $iass;
@@ -18,9 +19,12 @@ class ilIndividualAssessmentMember {
 	protected $finalized;
 	protected $notification_ts;
 	protected $lp_status;
+	protected $place;
+	protected $event_time;
+	protected $changer_id;
+	protected $change_time;
 
 	public function __construct(ilObjIndividualAssessment $iass, ilObjUser $usr, array $data) {
-
 		$this->record = $data[ilIndividualAssessmentMembers::FIELD_RECORD];
 		$this->internal_note = $data[ilIndividualAssessmentMembers::FIELD_INTERNAL_NOTE];
 		$this->examiner_id = $data[ilIndividualAssessmentMembers::FIELD_EXAMINER_ID];
@@ -28,6 +32,12 @@ class ilIndividualAssessmentMember {
 		$this->finalized = $data[ilIndividualAssessmentMembers::FIELD_FINALIZED] ? true : false;
 		$this->lp_status = $data[ilIndividualAssessmentMembers::FIELD_LEARNING_PROGRESS];
 		$this->notification_ts = $data[ilIndividualAssessmentMembers::FIELD_NOTIFICATION_TS];
+		$this->place = $data[ilIndividualAssessmentMembers::FIELD_PLACE];
+		$this->event_time = new ilDateTime($data[ilIndividualAssessmentMembers::FIELD_EVENTTIME], IL_CAL_UNIX);
+		$this->changer_id = $data[ilIndividualAssessmentMembers::FIELD_CHANGER_ID];
+		$this->file_name = $data[ilIndividualAssessmentMembers::FIELD_FILE_NAME];
+		$this->view_file = $data[ilIndividualAssessmentMembers::FIELD_USER_VIEW_FILE];
+		$this->change_time = new ilDateTime($data[ilIndividualAssessmentMembers::FIELD_CHANGE_TIME], IL_CAL_DATETIME);
 		$this->iass = $iass;
 		$this->usr = $usr;
 	}
@@ -53,6 +63,24 @@ class ilIndividualAssessmentMember {
 	 */
 	public function examinerId() {
 		return $this->examiner_id;
+	}
+
+	/**
+	 * Get the user id of the changer
+	 *
+	 * @return	int
+	 */
+	public function changerId() {
+		return $this->changer_id;
+	}
+
+	/**
+	 * Get the datetime of change
+	 *
+	 * @return ilDateTime
+	 */
+	public function changeTime() {
+		return $this->change_time;
 	}
 
 	/**
@@ -127,6 +155,9 @@ class ilIndividualAssessmentMember {
 	 * @return	bool
 	 */
 	public function mayBeFinalized() {
+		if($this->iass->getSettings()->fileRequired() && (string)$this->file_name === '') {
+			return false;
+		}
 		return ((string)$this->lp_status === (string)ilIndividualAssessmentMembers::LP_COMPLETED
 				||(string)$this->lp_status === (string)ilIndividualAssessmentMembers::LP_FAILED)
 				&& !$this->finalized();
@@ -140,12 +171,9 @@ class ilIndividualAssessmentMember {
 	 */
 	public function withRecord($record) {
 		assert('is_string($record) || $record === null');
-		if(!$this->finalized()) {
-			$clone = clone $this;
-			$clone->record = $record;
-			return $clone;
-		}
-		throw new ilIndividualAssessmentException('user allready finalized');
+		$clone = clone $this;
+		$clone->record = $record;
+		return $clone;
 	}
 
 	/**
@@ -156,12 +184,37 @@ class ilIndividualAssessmentMember {
 	 */
 	public function withInternalNote($internal_note) {
 		assert('is_string($internal_note) || $internal_note === null');
-		if(!$this->finalized()) {
-			$clone = clone $this;
-			$clone->internal_note = $internal_note;
-			return $clone;
-		}
-		throw new ilIndividualAssessmentException('user allready finalized');
+		$clone = clone $this;
+		$clone->internal_note = $internal_note;
+		return $clone;
+	}
+
+	/**
+	 * Clone this object and set an internal note
+	 *
+	 * @param	string	$place
+	 * @return	ilManualAssessmentMember
+	 */
+	public function withPlace($place)
+	{
+		assert('is_string($place) || is_null($place)');
+		$clone = clone $this;
+		$clone->place = $place;
+		return $clone;
+	}
+
+	/**
+	 * Clone this object and set an internal note
+	 *
+	 * @param	ilDateTime | null	$internal_note
+	 * @return	ilManualAssessmentMember
+	 */
+	public function withEventTime($event_time)
+	{
+		assert('$event_time instanceof ilDateTime || is_null($event_time)');
+		$clone = clone $this;
+		$clone->event_time = $event_time;
+		return $clone;
 	}
 
 	/**
@@ -172,13 +225,38 @@ class ilIndividualAssessmentMember {
 	 */
 	public function withExaminerId($examiner_id) {
 		assert('is_numeric($examiner_id)');
-		if(!$this->finalized()) {
-			assert('ilObjUser::_exists($examiner_id)');
-			$clone = clone $this;
-			$clone->examiner_id = $examiner_id;
-			return $clone;
-		}
-		throw new ilIndividualAssessmentException('user allready finalized');
+		assert('ilObjUser::_exists($examiner_id)');
+		$clone = clone $this;
+		$clone->examiner_id = $examiner_id;
+		return $clone;
+	}
+
+	/**
+	 * Clone this object and set an changer_id
+	 *
+	 * @param	int|string	$changer_id
+	 * @return	ilIndividualAssessmentMember
+	 */
+	public function withChangerId($changer_id) {
+		assert('is_numeric($changer_id)');
+		assert('ilObjUser::_exists($changer_id)');
+		$clone = clone $this;
+		$clone->changer_id = $changer_id;
+		return $clone;
+	}
+
+	/**
+	 * Clone this object and set an change time
+	 *
+	 * @param	ilDateTime | null	$change_time
+	 * @return	ilManualAssessmentMember
+	 */
+	public function withChangeTime($change_time)
+	{
+		assert('$change_time instanceof ilDateTime || is_null($change_time)');
+		$clone = clone $this;
+		$clone->change_time = $change_time;
+		return $clone;
 	}
 
 	/**
@@ -189,12 +267,9 @@ class ilIndividualAssessmentMember {
 	 */
 	public function withNotify($notify) {
 		assert('is_bool($notify)');
-		if(!$this->finalized()) {
-			$clone = clone $this;
-			$clone->notify = (bool)$notify;
-			return $clone;
-		}
-		throw new ilIndividualAssessmentException('user allready finalized');
+		$clone = clone $this;
+		$clone->notify = (bool)$notify;
+		return $clone;
 	}
 
 	protected function LPStatusValid($lp_status) {
@@ -211,7 +286,7 @@ class ilIndividualAssessmentMember {
 	 * @return	ilIndividualAssessmentMember
 	 */
 	public function withLPStatus($lp_status) {
-		if(!$this->finalized() && $this->LPStatusValid($lp_status)) {
+		if($this->LPStatusValid($lp_status)) {
 			$clone = clone $this;
 			$clone->lp_status = $lp_status;
 			return $clone;
@@ -285,5 +360,74 @@ class ilIndividualAssessmentMember {
 	 */
 	public function notificationTS() {
 		return $this->notification_ts;
+	}
+
+	/**
+	 * Get place where ia was held
+	 *
+	 * @return string
+	 */
+	public function place()
+	{
+		return $this->place;
+	}
+
+	/**
+	 * Get date when ia was
+	 *
+	 * @return ilDateTime
+	 */
+	public function eventTime()
+	{
+		return $this->event_time;
+	}
+		/**
+	 * Get the name of the uploaded file
+	 *
+	 * @return string
+	 */
+	public function fileName()
+	{
+		return $this->file_name;
+	}
+
+	/**
+	 * Set the name of the file
+	 *
+	 * @param string 	$file_name
+	 *
+	 * @return ilManualAssessmentMember
+	 */
+	public function withFileName($file_name)
+	{
+		assert('is_string($file_name)');
+		$clone = clone $this;
+		$clone->file_name = $file_name;
+		return $clone;
+	}
+
+	/**
+	 * Can user see the uploaded file
+	 *
+	 * @return boolean
+	 */
+	public function viewFile()
+	{
+		return $this->view_file;
+	}
+
+	/**
+	 * Set user can view uploaded file
+	 *
+	 * @param boolean 	$view_file
+	 *
+	 * @return ilManualAssessmentMember
+	 */
+	public function withViewFile($view_file)
+	{
+		assert('is_bool($view_file)');
+		$clone = clone $this;
+		$clone->view_file = $view_file;
+		return $clone;
 	}
 }

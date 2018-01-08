@@ -152,6 +152,17 @@ square, this may be all that is needed. Probably you want to change the file fav
 .ico in ILIAS' root directory too. For non-square Icons you may refer to:
 http://www.ilias.de/docu/goto_docu_pg_68691_367.html
 
+### Migration
+There might be changes you need to consider if updating to a new ILIAS version.
+
+Note that this changelog was introduced for ILIAS 5.3. If migrating to a lower version
+you might find helpful information by consulting: https://www.ilias.de/docu/goto_docu_pg_68693_367.html.
+
+#### ILIAS 5.3
+* The icon-font-path for glyphs has changed due to a move from the bootstrap library to 
+ the new location for external libraries. The new location is:
+ "../../../../libs/bower/bower_components/bootstrap/fonts/". If a 5.2 style is imported,
+ the variable "icon-font-path" must be adapted accordingly.
 
 ## Less Guideline
 Less is a CSS pre-processor, meaning that it extends the CSS language, adding features
@@ -212,6 +223,13 @@ section.  Later those values can be reassigned to other variables, but the value
   **il-modal-bg: darken(@il-primary-container-bg, 15%)** or similar.
 * Shortforms MUST be used in less and CSS. E.g. **#efe**, instead of **#eeffee**.
 * Only use lowercase for color codes in less and CSS. E.g. **#efe**, instead of **#EFE**.
+* You SHOULD use the extended color variants (see variables.less) to generate colors
+for components displaying areas or labels that need to be differentiated by colors such as
+charts.
+* You MAY use the given less variables to generate own classes or you MAY use the
+classes given in colors.less. If generating own classes you MAY use colors.less as an
+example on how to use mixins in less to reduce the amount of code needed to generate
+such classes in less.
 
 #### Customize
 * Note that custom variables in a custom variables.less file have the be included after

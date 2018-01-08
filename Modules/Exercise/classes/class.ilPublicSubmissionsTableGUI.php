@@ -21,7 +21,12 @@ class ilPublicSubmissionsTableGUI extends ilTable2GUI
 	*/
 	function __construct($a_parent_obj, $a_parent_cmd, ilExAssignment $a_ass)
 	{
-		global $ilCtrl, $lng;
+		global $DIC;
+
+		$this->ctrl = $DIC->ctrl();
+		$this->lng = $DIC->language();
+		$ilCtrl = $DIC->ctrl();
+		$lng = $DIC->language();
 		
 		$this->ass = $a_ass;
 		
@@ -51,13 +56,14 @@ class ilPublicSubmissionsTableGUI extends ilTable2GUI
 	*/
 	protected function fillRow($member)
 	{
-		global $lng, $ilCtrl;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
 
 		include_once "./Services/Object/classes/class.ilObjectFactory.php";		
 		$member_id = $member["usr_id"];
 		if(!($mem_obj = ilObjectFactory::getInstanceByObjId($member_id,false)))
 		{
-			continue;
+			return;
 		}
 
 		// name and login

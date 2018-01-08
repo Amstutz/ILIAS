@@ -1,8 +1,5 @@
 <?php
 /* Copyright (c) 1998-2013 ILIAS open source, Extended GPL, see docs/LICENSE */
-require_once("./Services/Search/classes/class.ilRepositorySearchGUI.php");
-require_once("class.ilOrgUnitStaffTableGUI.php");
-require_once("class.ilOrgUnitOtherRolesTableGUI.php");
 /**
  * Class ilOrgUnitStaffGUI
  *
@@ -95,19 +92,8 @@ class ilOrgUnitStaffGUI {
 
 		switch ($next_class) {
 			case 'ilrepositorysearchgui':
-				switch ($cmd) {
-					case 'addUserFromAutoComplete':
-						if ($_GET['addusertype'] == "staff") {
-							$this->addStaff();
-						} elseif ($_GET['addusertype'] == "other") {
-							$this->addOtherRoles();
-						}
-						break;
-					default:
-						$repo = new ilRepositorySearchGUI();
-						$this->ctrl->forwardCommand($repo);
-						break;
-				}
+				$repo = new ilRepositorySearchGUI();
+				$this->ctrl->forwardCommand($repo);
 				break;
 			default:
 				switch ($cmd) {
@@ -430,4 +416,3 @@ class ilOrgUnitStaffGUI {
 	}
 
 }
-?>

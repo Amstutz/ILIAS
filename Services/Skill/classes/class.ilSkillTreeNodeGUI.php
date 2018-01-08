@@ -14,9 +14,42 @@ include_once("./Services/Skill/classes/class.ilSkillTreeNode.php");
  */
 class ilSkillTreeNodeGUI
 {
+	/**
+	 * @var ilCtrl
+	 */
+	protected $ctrl;
+
+	/**
+	 * @var ilLanguage
+	 */
+	protected $lng;
+
+	/**
+	 * @var ilLocatorGUI
+	 */
+	protected $locator;
+
+	/**
+	 * @var ilTemplate
+	 */
+	protected $tpl;
+
+	/**
+	 * @var ilObjUser
+	 */
+	protected $user;
+
 	var $node_object;
 	var $in_use = false;
 	var $use_checked = false;
+	/**
+	 * @var ilAccessHandler
+	 */
+	var $access;
+	/**
+	 * @var int
+	 */
+	var $ref_id;
 
 	/**
 	* constructor
@@ -25,7 +58,18 @@ class ilSkillTreeNodeGUI
 	*/
 	function __construct($a_node_id = 0)
 	{
+		global $DIC;
+
+		$this->ctrl = $DIC->ctrl();
+		$this->lng = $DIC->language();
+		$this->locator = $DIC["ilLocator"];
+		$this->tpl = $DIC["tpl"];
+		$this->user = $DIC->user();
+		$ilAccess = $DIC->access();
+
 		$this->node_object = null;
+		$this->access = $ilAccess;
+		$this->ref_id = (int) $_GET["ref_id"];
 
 		if ($a_node_id > 0 &&
 			$this->getType() == ilSkillTreeNode::_lookupType($a_node_id))
@@ -57,12 +101,22 @@ class ilSkillTreeNodeGUI
 		if (count($usages) > 0)
 		{
 			$this->in_use = true;
-		}
-		else
+		} else
 		{
 			$this->in_use = false;
 		}
 		return $this->in_use;
+	}
+
+	/**
+	 * Check permission pool
+	 *
+	 * @param string $a_perm
+	 * @return bool
+	 */
+	function checkPermissionBool($a_perm)
+	{
+		return $this->access->checkAccess($a_perm, "", $this->ref_id);
 	}
 
 
@@ -100,7 +154,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function saveAllTitles()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 		
 		$this->getParentGUI()->saveAllTitles(false);
 		$ilCtrl->redirect($this, "showOrganization");
@@ -111,7 +165,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function deleteNodes()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 
 		$ilCtrl->setParameter($this, "backcmd", $_GET["backcmd"]);
 		$this->getParentGUI()->deleteNodes($this);
@@ -122,7 +176,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function cutItems()
 	{
-		global $ilCtrl, $lng;
+		$lng = $this->lng;
 
 		include_once("./Services/Skill/classes/class.ilSkillTreeNode.php");
 
@@ -169,7 +223,8 @@ class ilSkillTreeNodeGUI
 	 */
 	function copyItems()
 	{
-		global $ilCtrl, $lng;
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
 
 		if (!is_array($_POST["id"]) || count($_POST["id"]) == 0)
 		{
@@ -211,7 +266,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function cancelDelete()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 		
 		$this->redirectToParent();
 	}
@@ -221,8 +276,13 @@ class ilSkillTreeNodeGUI
 	 */
 	function confirmedDelete()
 	{
-		global $ilCtrl;
-		
+		$ilCtrl = $this->ctrl;
+
+		if (!$this->checkPermissionBool("write"))
+		{
+			return;
+		}
+
 		$this->getParentGUI()->confirmedDelete(false);
 		ilSkillTreeNode::saveChildsOrder((int) $_GET["obj_id"], array(),
 			$_GET["tmpmode"]);
@@ -235,7 +295,9 @@ class ilSkillTreeNodeGUI
 	 */
 	function setLocator()
 	{
-		global $ilLocator, $tpl, $ilCtrl;
+		$ilLocator = $this->locator;
+		$tpl = $this->tpl;
+		$ilCtrl = $this->ctrl;
 		
 		$ilLocator->addRepositoryItems($_GET["ref_id"]);
 		$this->getParentGUI()->addLocatorItems();
@@ -280,7 +342,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function setSkillNodeDescription()
 	{
-		global $tpl;
+		$tpl = $this->tpl;
 		
 		if (is_object($this->node_object))
 		{
@@ -306,7 +368,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function create()
 	{
-		global $tpl;
+		$tpl = $this->tpl;
 		
 		$this->initForm("create");
 		$tpl->setContent($this->form->getHTML());
@@ -319,7 +381,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function addStatusInput(ilPropertyFormGUI $a_form)
 	{
-		global $lng;
+		$lng = $this->lng;
 
 		// status
 		$radg = new ilRadioGroupInputGUI($lng->txt("skmg_status"), "status");
@@ -336,7 +398,8 @@ class ilSkillTreeNodeGUI
 	 */
 	function editProperties()
 	{
-		global $tpl, $lng;
+		$tpl = $this->tpl;
+		$lng = $this->lng;
 
 		if ($this->isInUse())
 		{
@@ -369,8 +432,15 @@ class ilSkillTreeNodeGUI
 	 */
 	public function save()
 	{
-		global $tpl, $lng, $ilCtrl;
-	
+		$tpl = $this->tpl;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
+
+		if (!$this->checkPermissionBool("write"))
+		{
+			return;
+		}
+
 		$this->initForm("create");
 		if ($this->form->checkInput())
 		{
@@ -402,8 +472,15 @@ class ilSkillTreeNodeGUI
 	 */
 	public function update()
 	{
-		global $tpl, $lng, $ilCtrl;
-	
+		$tpl = $this->tpl;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
+
+		if (!$this->checkPermissionBool("write"))
+		{
+			return;
+		}
+
 		$this->initForm("edit");
 		if ($this->form->checkInput())
 		{
@@ -423,7 +500,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function afterUpdate()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 		
 		$ilCtrl->redirect($this, "editProperties");
 	}
@@ -435,7 +512,8 @@ class ilSkillTreeNodeGUI
 	 */
 	public function initForm($a_mode = "edit")
 	{
-		global $lng, $ilCtrl;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
 	
 		include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
 		$this->form = new ilPropertyFormGUI();
@@ -449,24 +527,33 @@ class ilSkillTreeNodeGUI
 		
 		// order nr
 		$ni = new ilNumberInputGUI($lng->txt("skmg_order_nr"), "order_nr");
+		$ni->setInfo($lng->txt("skmg_order_nr_info"));
 		$ni->setMaxLength(6);
 		$ni->setSize(6);
 		$ni->setRequired(true);
+		if ($a_mode == "create")
+		{
+			include_once("./Services/Skill/classes/class.ilSkillTree.php");
+			$tree = new ilSkillTree();
+			$max = $tree->getMaxOrderNr((int)$_GET["obj_id"]);
+			$ni->setValue($max + 10);
+		}
 		$this->form->addItem($ni);
 		
 		// save and cancel commands
-		if ($a_mode == "create")
+		if ($this->checkPermissionBool("write"))
 		{
-			$this->form->addCommandButton("save", $lng->txt("save"));
-			$this->form->addCommandButton("cancelSave", $lng->txt("cancel"));
-			$this->form->setTitle($lng->txt("skmg_create_".$this->getType()));
+			if ($a_mode == "create")
+			{
+				$this->form->addCommandButton("save", $lng->txt("save"));
+				$this->form->addCommandButton("cancelSave", $lng->txt("cancel"));
+				$this->form->setTitle($lng->txt("skmg_create_" . $this->getType()));
+			} else
+			{
+				$this->form->addCommandButton("update", $lng->txt("save"));
+				$this->form->setTitle($lng->txt("skmg_edit_" . $this->getType()));
+			}
 		}
-		else
-		{
-			$this->form->addCommandButton("update", $lng->txt("save"));
-			$this->form->setTitle($lng->txt("skmg_edit_".$this->getType()));
-		}
-
 		
 		$ilCtrl->setParameter($this, "obj_id", $_GET["obj_id"]);
 		$this->form->setFormAction($ilCtrl->getFormAction($this));
@@ -492,7 +579,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function redirectToParent($a_tmp_mode = false)
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 		
 		if ($_GET["tmpmode"])
 		{
@@ -533,8 +620,14 @@ class ilSkillTreeNodeGUI
 	 */
 	function saveOrder()
 	{
-		global $ilCtrl, $lng;
-		
+		$ilCtrl = $this->ctrl;
+		$lng = $this->lng;
+
+		if (!$this->checkPermissionBool("write"))
+		{
+			return;
+		}
+
 		ilSkillTreeNode::saveChildsOrder((int) $_GET["obj_id"], $_POST["order"],
 			(int) $_GET["tmpmode"]);
 		ilUtil::sendSuccess($lng->txt("msg_obj_modified"), true);
@@ -546,7 +639,8 @@ class ilSkillTreeNodeGUI
 	 */
 	function insertBasicSkillClip()
 	{
-		global $ilCtrl, $ilUser;
+		$ilCtrl = $this->ctrl;
+		$ilUser = $this->user;
 
 		include_once("./Services/Skill/classes/class.ilSkillTreeNode.php");
 		$nodes = ilSkillTreeNode::insertItemsFromClip("skll", (int) $_GET["obj_id"]);
@@ -558,7 +652,8 @@ class ilSkillTreeNodeGUI
 	 */
 	function insertSkillCategoryClip()
 	{
-		global $ilCtrl, $ilUser;
+		$ilCtrl = $this->ctrl;
+		$ilUser = $this->user;
 
 		include_once("./Services/Skill/classes/class.ilSkillTreeNode.php");
 		$nodes = ilSkillTreeNode::insertItemsFromClip("scat", (int) $_GET["obj_id"]);
@@ -570,7 +665,8 @@ class ilSkillTreeNodeGUI
 	 */
 	function insertTemplateReferenceClip()
 	{
-		global $ilCtrl, $ilUser;
+		$ilCtrl = $this->ctrl;
+		$ilUser = $this->user;
 
 		include_once("./Services/Skill/classes/class.ilSkillTreeNode.php");
 		$nodes = ilSkillTreeNode::insertItemsFromClip("sktr", (int) $_GET["obj_id"]);
@@ -582,7 +678,8 @@ class ilSkillTreeNodeGUI
 	 */
 	function insertSkillTemplateClip()
 	{
-		global $ilCtrl, $ilUser;
+		$ilCtrl = $this->ctrl;
+		$ilUser = $this->user;
 
 		include_once("./Services/Skill/classes/class.ilSkillTreeNode.php");
 		$nodes = ilSkillTreeNode::insertItemsFromClip("sktp", (int) $_GET["obj_id"]);
@@ -594,7 +691,8 @@ class ilSkillTreeNodeGUI
 	 */
 	function insertTemplateCategoryClip()
 	{
-		global $ilCtrl, $ilUser;
+		$ilCtrl = $this->ctrl;
+		$ilUser = $this->user;
 
 		include_once("./Services/Skill/classes/class.ilSkillTreeNode.php");
 		$nodes = ilSkillTreeNode::insertItemsFromClip("sctp", (int) $_GET["obj_id"]);
@@ -606,7 +704,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function setTitleIcon()
 	{
-		global $tpl;
+		$tpl = $this->tpl;
 		
 		$obj_id = (is_object($this->node_object))
 			? $this->node_object->getId()
@@ -629,7 +727,8 @@ class ilSkillTreeNodeGUI
 	 */
 	function addUsageTab($a_tabs)
 	{
-		global $lng, $ilCtrl;
+		$lng = $this->lng;
+		$ilCtrl = $this->ctrl;
 
 		$a_tabs->addTab("usage",
 			$lng->txt("skmg_usage"),
@@ -642,7 +741,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function showUsage()
 	{
-		global $tpl;
+		$tpl = $this->tpl;
 
 		$this->setTabs("usage");
 
@@ -669,7 +768,7 @@ class ilSkillTreeNodeGUI
 	 */
 	function exportSelectedNodes()
 	{
-		global $ilCtrl;
+		$ilCtrl = $this->ctrl;
 
 		if (!is_array($_POST["id"]) || count($_POST["id"]) == 0)
 		{

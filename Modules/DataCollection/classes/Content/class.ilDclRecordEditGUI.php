@@ -1,15 +1,6 @@
 <?php
 /* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-require_once("./Modules/DataCollection/classes/Fields/Base/class.ilDclBaseRecordModel.php");
-require_once("./Modules/DataCollection/classes/Fields/Base/class.ilDclBaseFieldModel.php");
-require_once("./Modules/DataCollection/classes/Table/class.ilDclTable.php");
-require_once("./Modules/DataCollection/classes/Fields/Base/class.ilDclDatatype.php");
-require_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
-require_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
-require_once('./Services/Utilities/classes/class.ilConfirmationGUI.php');
-require_once('./Services/UIComponent/Overlay/classes/class.ilOverlayGUI.php');
-require_once('./Modules/DataCollection/classes/Helpers/class.ilDclPropertyFormGUI.php');
 
 /**
  * Class ilDclRecordEditGUI
@@ -385,7 +376,7 @@ class ilDclRecordEditGUI {
 
 			if (($record_field instanceof ilDclFileuploadRecordFieldModel || $record_field instanceof ilDclMobRecordFieldModel)
 				&& $record_field->getValue() == null) {
-				$empty_fileuploads['field_'.$field->getId()] = array();
+				$empty_fileuploads['field_'.$field->getId()] = array("name" => "", "type" => "", "tmp_name" => "", "error" => 4, "size" => 0);
 			}
 			$record_representation = ilDclFieldFactory::getRecordRepresentationInstance($record_field);
 

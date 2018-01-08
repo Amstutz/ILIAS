@@ -21,9 +21,9 @@ class ilContext
 	const CONTEXT_RSS = "ilContextRss";
 	const CONTEXT_ICAL = "ilContextIcal";
 	const CONTEXT_SOAP = "ilContextSoap";
+	const CONTEXT_SOAP_NO_AUTH = 'ilContextSoapNoAuth';
 	const CONTEXT_WEBDAV = "ilContextWebdav";
 	const CONTEXT_RSS_AUTH = "ilContextRssAuth";
-	const CONTEXT_WEB_ACCESS_CHECK = "ilContextWebAccessCheck";
 	const CONTEXT_SESSION_REMINDER = "ilContextSessionReminder";
 	const CONTEXT_SOAP_WITHOUT_CLIENT = "ilContextSoapWithoutClient";
 	const CONTEXT_UNITTEST = "ilContextUnitTest";
@@ -32,6 +32,8 @@ class ilContext
 	const CONTEXT_WAC = "ilContextWAC";
 	const CONTEXT_APACHE_SSO = 'ilContextApacheSSO';
 	const CONTEXT_SHIBBOLETH = 'ilContextShibboleth';
+	const CONTEXT_LTI_PROVIDER = 'ilContextLTIProvider';
+	const CONTEXT_SAML = 'ilContextSaml';
 	
 	
 	/**
@@ -49,6 +51,25 @@ class ilContext
 		return true;
 	}
 	
+	/**
+	 * Call context method directly without internal handling
+	 * 
+	 * @param int $a_type
+	 * @return mixed
+	 */
+	public static function directCall($a_type, $a_method)
+	{
+		$class_name = $a_type;
+		if($class_name)
+		{
+			include_once "Services/Context/classes/class.".$class_name.".php";
+			if(method_exists($class_name, $a_method))
+			{
+				return call_user_func(array($class_name, $a_method));
+			}
+		}
+	}
+
 	/**
 	 * Call current content
 	 * 
@@ -71,7 +92,13 @@ class ilContext
 	 */
 	public static function supportsRedirects()
 	{
-		global $ilCtrl;
+		global $DIC;
+
+		$ilCtrl = null;
+		if (isset($DIC["ilCtrl"]))
+		{
+			$ilCtrl = $DIC->ctrl();
+		}
 		
 		// asynchronous calls must never be redirected
 		if($ilCtrl && $ilCtrl->isAsynch())
@@ -140,6 +167,16 @@ class ilContext
 	public static function doAuthentication()
 	{
 		return (bool)self::callContext("doAuthentication");	
+	}
+	
+	/**
+	 * Supports push messages
+	 *
+	 * @return bool
+	 */
+	public static function supportsPushMessages()
+	{
+		return (bool)self::callContext("supportsPushMessages");	
 	}
 	
 	/**

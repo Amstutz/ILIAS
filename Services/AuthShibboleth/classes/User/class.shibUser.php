@@ -125,6 +125,19 @@ class shibUser extends ilObjUser {
 
 
 	public function create() {
+		$c = shibConfig::getInstance();
+		if($c->isActivateNew()) {
+			$this->setActive(false);
+			require_once('./Services/Registration/classes/class.ilRegistrationMailNotification.php');
+			require_once('./Services/Registration/classes/class.ilRegistrationSettings.php');
+			$ilRegistrationSettings = new ilRegistrationSettings();
+			$mail = new ilRegistrationMailNotification();
+			$mail->setType(ilRegistrationMailNotification::TYPE_NOTIFICATION_CONFIRMATION);
+			$mail->setRecipients($ilRegistrationSettings->getApproveRecipients());
+			$mail->setAdditionalInformation(array('usr' => $this));
+			$mail->send();
+		}
+
 		if ($this->getLogin() != '' AND $this->getLogin() != '.') {
 			parent::create();
 		} else {
@@ -163,24 +176,9 @@ class shibUser extends ilObjUser {
 	 * @return mixed
 	 */
 	protected static function cleanName($name) {
-		$upas = array(
-			'ä'  => 'ae',
-			'ü'  => 'ue',
-			'ö'  => 'oe',
-			'Ä'  => 'Ae',
-			'Ü'  => 'Ue',
-			'Ö'  => 'Oe',
-			'é'  => 'e',
-			'è'  => 'e',
-			'ê'  => 'e',
-			'Á'  => 'A',
-			'\'' => '',
-			' '  => '',
-			'-'  => '',
-			'.'  => '',
-		);
+		$name = strtolower(strtr(utf8_decode($name), utf8_decode('ŠŒŽšœžŸ¥µÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýÿ'), 'SOZsozYYuAAAAAAACEEEEIIIIDNOOOOOOUUUUYsaaaaaaaceeeeiiiionoooooouuuuyy'));
 
-		return strtolower(strtr($name, $upas));
+		return $name;
 	}
 
 

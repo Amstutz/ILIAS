@@ -63,7 +63,7 @@ class ilAuthProviderFactory
 	
 	/**
 	 * Get provider by auth mode
-	 * @return \ilAuthProvider
+	 * @return \ilAuthProvide
 	 */
 	public function getProviderByAuthMode(ilAuthCredentials $credentials, $a_authmode)
 	{
@@ -95,11 +95,34 @@ class ilAuthProviderFactory
 				include_once './Services/AuthShibboleth/classes/class.ilAuthProviderShibboleth.php';
 				return new ilAuthProviderShibboleth($credentials);
 				
+			case AUTH_LTI_PROVIDER:
+				$this->getLogger()->debug('Using lti provider authentication.');
+				include_once './Services/LTI/classes/InternalProvider/class.ilAuthProviderLTI.php';
+				return new ilAuthProviderLTI($credentials);
+
 			case AUTH_ECS:
 				$this->getLogger()->debug('Using ecs authentication.');
 				include_once './Services/WebServices/ECS/classes/class.ilAuthProviderECS.php';
 				return new ilAuthProviderECS($credentials);
+
+			case AUTH_SAML:
+				$saml_info = explode('_', $a_authmode);
+				$this->getLogger()->debug('Using apache authentication.');
+				require_once 'Services/Saml/classes/class.ilAuthProviderSaml.php';
+				require_once 'Services/Saml/classes/class.ilSamlIdp.php';
+				return new ilAuthProviderSaml($credentials, ilSamlIdp::getIdpIdByAuthMode($saml_info[1]));
 				
+			default:
+				$this->getLogger('Plugin authentication: '. $a_authmode);
+				foreach(ilAuthUtils::getAuthPlugins() as $pl)
+				{
+					$provider = $pl->getProvider($credentials, $a_authmode);
+					if($provider instanceof ilAuthProviderInterface)
+					{
+						return $provider;
+					}
+				}
+				break;
 		}
 		return null;
 	}

@@ -7,10 +7,15 @@ require_once("libs/composer/vendor/autoload.php");
 require_once(__DIR__."/Renderer/ilIndependentTemplate.php");
 require_once(__DIR__."/../../Services/Language/classes/class.ilLanguage.php");
 
+use ILIAS\UI\Component\Component;
 use ILIAS\UI\Implementation\Render\TemplateFactory;
 use ILIAS\UI\Implementation\Render\ResourceRegistry;
 use ILIAS\UI\Implementation\Render\JavaScriptBinding;
+use ILIAS\UI\Implementation\Render\DefaultRendererFactory;
 use ILIAS\UI\Implementation\DefaultRenderer;
+use ILIAS\UI\Implementation\ComponentRendererFSLoader;
+use ILIAS\UI\Implementation\Render;
+use ILIAS\UI\Component\Component as IComponent;
 use ILIAS\UI\Factory;
 
 class ilIndependentTemplateFactory implements TemplateFactory {
@@ -30,6 +35,17 @@ class NoUIFactory implements Factory {
 	public function legacy($content) {}
 	public function panel() {}
 	public function modal() {}
+	public function dropzone() {}
+	public function popover() {}
+	public function divider() {}
+	public function link() {}
+	public function dropdown() {}
+	public function item() {}
+	public function icon() {}
+	public function viewControl() {}
+	public function breadcrumbs(array $crumbs) {}
+	public function chart() {}
+	public function input() {}
 }
 
 class LoggingRegistry implements ResourceRegistry {
@@ -47,6 +63,8 @@ class ilLanguageMock extends \ilLanguage {
 		$this->requested[] = $a_topic;
 		return $a_topic;
 	}
+	public function toJS($a_key, ilTemplate $a_tpl = NULL) {
+	}
 }
 
 class LoggingJavaScriptBinding implements JavaScriptBinding {
@@ -61,6 +79,34 @@ class LoggingJavaScriptBinding implements JavaScriptBinding {
 	public $on_load_code = array();
 	public function addOnLoadCode($code) {
 		$this->on_load_code[] = $code;
+	}
+	public function getOnLoadCodeAsync() {
+	}
+}
+
+class TestDefaultRenderer extends DefaultRenderer {
+	public function _getRendererFor(IComponent $component) {
+		return $this->getRendererFor($component);
+	}
+	public function _getContexts() {
+		return $this->getContexts();
+	}
+}
+
+class IncrementalSignalGenerator extends \ILIAS\UI\Implementation\Component\SignalGenerator {
+
+	protected $id = 0;
+
+	protected function createId() {
+		return 'signal_' . ++$this->id;
+	}
+}
+
+class SignalGeneratorMock extends \ILIAS\UI\Implementation\Component\SignalGenerator {}
+
+class DummyComponent implements IComponent {
+	public function getCanonicalName() {
+		return "DummyComponent";
 	}
 }
 
@@ -98,14 +144,30 @@ abstract class ILIAS_UI_TestBase extends PHPUnit_Framework_TestCase {
 		return new LoggingJavaScriptBinding();
 	}
 
-	public function getDefaultRenderer() {
+	public function getDefaultRenderer(JavaScriptBinding $js_binding = null) {
 		$ui_factory = $this->getUIFactory();
 		$tpl_factory = $this->getTemplateFactory();
 		$resource_registry = $this->getResourceRegistry();
 		$lng = $this->getLanguage();
-		$js_binding = $this->getJavaScriptBinding();
-		return new DefaultRenderer(
-				$ui_factory, $tpl_factory, $resource_registry, $lng, $js_binding);
+		if(!$js_binding){
+			$js_binding = $this->getJavaScriptBinding();
+		}
+
+		$component_renderer_loader
+			= new Render\LoaderCachingWrapper
+				( new Render\LoaderResourceRegistryWrapper
+					( $resource_registry
+					, new Render\FSLoader
+						( new DefaultRendererFactory
+							( $ui_factory
+							, $tpl_factory
+							, $lng
+							, $js_binding
+							)
+						)
+					)
+				);
+		return new TestDefaultRenderer($component_renderer_loader);
 	}
 
 	public function normalizeHTML($html) {

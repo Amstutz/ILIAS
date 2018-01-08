@@ -22,13 +22,12 @@ class ilForumAppEventListener
 	static function handleEvent($a_component, $a_event, $a_parameter)
 	{
 		/**
-		 * @var $ilSetting ilSetting
 		 * @var $post ilForumPost
 		 */
-		global $ilSetting;
+		global $DIC;
 
 		// 0 = no notifications, 1 = direct, 2 = cron job
-		$immediate_notifications_enabled = $ilSetting->get('forum_notification', 0) == 1;
+		$immediate_notifications_enabled = $DIC->settings()->get('forum_notification', 0) == 1;
 
 		switch($a_component)
 		{
@@ -77,9 +76,27 @@ class ilForumAppEventListener
 						}
 						break;
 
+					case 'activatedPost':
+						require_once 'Modules/Forum/classes/class.ilForumMailNotification.php';
+						require_once 'Modules/Forum/classes/class.ilObjForumNotificationDataProvider.php';
+						require_once 'Services/Cron/classes/class.ilCronManager.php';
+						
+						$post = $a_parameter['post'];
+						if($immediate_notifications_enabled && $post->isActivated())
+						{
+							$provider = new ilObjForumNotificationDataProvider($post, $a_parameter['ref_id']);
+							self::delegateNotification($provider, ilForumMailNotification::TYPE_POST_NEW);
+						}
+						break;
+
 					case 'updatedPost':
 						require_once 'Modules/Forum/classes/class.ilForumMailNotification.php';
 						require_once 'Modules/Forum/classes/class.ilObjForumNotificationDataProvider.php';
+						
+						if(!$a_parameter['old_status_was_active'])
+						{
+							return;
+						}
 
 						$post              = $a_parameter['post'];
 						$notify_moderators = $a_parameter['notify_moderators'];

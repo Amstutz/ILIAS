@@ -173,6 +173,7 @@ class ilLearningModuleDataSet extends ilDataSet
 						"Depth" => "integer",
 						"Type" => "text",
 						"Title" => "text",
+						"ShortTitle" => "text",
 						"PublicAccess" => "text",
 						"Active" => "text",
 						"Layout" => "text",
@@ -205,7 +206,8 @@ class ilLearningModuleDataSet extends ilDataSet
 					return array(
 						"Id" => "integer",
 						"Lang" => "text",
-						"Title" => "text"
+						"Title" => "text",
+						"ShortTitle" => "text"
 					);
 			}
 		}
@@ -220,7 +222,7 @@ class ilLearningModuleDataSet extends ilDataSet
 	 */
 	function readData($a_entity, $a_version, $a_ids, $a_field = "")
 	{
-		global $ilDB;
+		$ilDB = $this->db;
 
 		if (!is_array($a_ids))
 		{
@@ -275,16 +277,17 @@ class ilLearningModuleDataSet extends ilDataSet
 				case "5.1.0":
 					// the order by lft is very important, this ensures that parent nodes are written before
 					// their childs and that the import can add nodes simply with a "add at last child" target
-					$q = "SELECT lm_tree.lm_id, child, parent, depth, type, title, public_access, active, layout, import_id".
+					$q = "SELECT lm_tree.lm_id, child, parent, depth, type, title, short_title, public_access, active, layout, import_id".
 						" FROM lm_tree JOIN lm_data ON (lm_tree.child = lm_data.obj_id)".
 						" WHERE ".$ilDB->in("lm_tree.lm_id", $a_ids, false, "integer").
 						" ORDER BY lft";
 
 					$set = $ilDB->query($q);
 					$this->data = array();
+					$obj_ids = array();
 					while ($rec  = $ilDB->fetchAssoc($set))
 					{
-						$set2 = $ilDB->query("SELECT for_translation FROM content_object WHERE id = ".$ilDB->quote($rec["lm_id"], true));
+						$set2 = $ilDB->query("SELECT for_translation FROM content_object WHERE id = ".$ilDB->quote($rec["lm_id"], "integer"));
 						$rec2 = $ilDB->fetchAssoc($set2);
 						if (!$rec2["for_translation"])
 						{
@@ -297,8 +300,33 @@ class ilLearningModuleDataSet extends ilDataSet
 								= $v;
 						}
 						$rec = $tmp;
-
+						$obj_ids[] = $rec["Child"];
 						$this->data[] = $rec;
+					}
+
+					// add free pages #18976
+					$set3 = $ilDB->query($q = "SELECT lm_id, type, title, short_title, public_access, active, layout, import_id, obj_id child FROM lm_data ".
+						"WHERE ".$ilDB->in("lm_id", $a_ids, false, "integer").
+						" AND ".$ilDB->in("obj_id", $obj_ids, true, "integer").
+						" AND type = ".$ilDB->quote("pg", "text"));
+					while ($rec3 = $ilDB->fetchAssoc($set3))
+					{
+						$set2 = $ilDB->query("SELECT for_translation FROM content_object WHERE id = ".$ilDB->quote($rec3["lm_id"], "integer"));
+						$rec2 = $ilDB->fetchAssoc($set2);
+						if (!$rec2["for_translation"])
+						{
+							$rec3["import_id"] = "il_".IL_INST_ID."_pg_".$rec3["child"];
+						}
+						$rec3["type"] = "free_pg";
+						$rec3["depth"] = 0;
+						$rec3["parent"] = 0;
+						$tmp = array();
+						foreach ($rec3 as $k => $v)
+						{
+							$tmp[$this->convertToLeadingUpper($k)]
+								= $v;
+						}
+						$this->data[] = $tmp;
 					}
 					break;
 			}
@@ -321,7 +349,7 @@ class ilLearningModuleDataSet extends ilDataSet
 			switch ($a_version)
 			{
 				case "5.1.0":
-					$this->getDirectDataFromQuery("SELECT id, lang, title".
+					$this->getDirectDataFromQuery("SELECT id, lang, title, short_title".
 						" FROM lm_data_transl ".
 						" WHERE ".$ilDB->in("id", $a_ids, false, "integer"));
 					break;
@@ -398,7 +426,7 @@ class ilLearningModuleDataSet extends ilDataSet
 				$newObj->setLayout($a_rec["DefaultLayout"]);
 				$newObj->setPageHeader($a_rec["PageHeader"]);
 				$newObj->setActiveTOC(ilUtil::yn2tf($a_rec["TocActive"]));
-				$newObj->setActiveLMMenu(ilUtil::yn2tf($a_rec["LMMenuActive"]));
+				$newObj->setActiveLMMenu(ilUtil::yn2tf($a_rec["LmMenuActive"]));
 				$newObj->setTOCMode($a_rec["TOCMode"]);
 				$newObj->setActivePrintView(ilUtil::yn2tf($a_rec["PrintViewActive"]));
 				$newObj->setActiveNumbering(ilUtil::yn2tf($a_rec["Numbering"]));
@@ -452,6 +480,7 @@ class ilLearningModuleDataSet extends ilDataSet
 							$st_obj->setType("st");
 							$st_obj->setLMId($this->current_obj->getId());
 							$st_obj->setTitle($a_rec["Title"]);
+							$st_obj->setShortTitle($a_rec["ShortTitle"]);
 							$st_obj->setImportId($a_rec["ImportId"]);
 							$st_obj->create(true);
 							ilLMObject::putInTree($st_obj, $parent, IL_LAST_NODE);
@@ -467,9 +496,28 @@ class ilLearningModuleDataSet extends ilDataSet
 							$pg_obj->setType("pg");
 							$pg_obj->setLMId($this->current_obj->getId());
 							$pg_obj->setTitle($a_rec["Title"]);
+							$pg_obj->setShortTitle($a_rec["ShortTitle"]);
 							$pg_obj->setImportId($a_rec["ImportId"]);
 							$pg_obj->create(true, true);
 							ilLMObject::putInTree($pg_obj, $parent, IL_LAST_NODE);
+							$a_mapping->addMapping("Modules/LearningModule", "lm_tree", $a_rec["Child"],
+								$pg_obj->getId());
+							$a_mapping->addMapping("Modules/LearningModule", "pg", $a_rec["Child"], $pg_obj->getId());
+							$a_mapping->addMapping("Services/COPage", "pg", "lm:".$a_rec["Child"],
+								"lm:".$pg_obj->getId());
+							$a_mapping->addMapping("Services/MetaData", "md",
+								$a_rec["LmId"].":".$a_rec["Child"].":pg", $this->current_obj->getId().":".$pg_obj->getId().":pg");
+							break;
+
+						// add free pages #18976
+						case "free_pg":
+							$pg_obj = new ilLMPageObject($this->current_obj);
+							$pg_obj->setType("pg");
+							$pg_obj->setLMId($this->current_obj->getId());
+							$pg_obj->setTitle($a_rec["Title"]);
+							$pg_obj->setShortTitle($a_rec["ShortTitle"]);
+							$pg_obj->setImportId($a_rec["ImportId"]);
+							$pg_obj->create(true, true);
 							$a_mapping->addMapping("Modules/LearningModule", "lm_tree", $a_rec["Child"],
 								$pg_obj->getId());
 							$a_mapping->addMapping("Modules/LearningModule", "pg", $a_rec["Child"], $pg_obj->getId());
@@ -543,6 +591,7 @@ class ilLearningModuleDataSet extends ilDataSet
 					{
 						$t = new ilLMObjTranslation($lm_obj_id, $a_rec["Lang"]);
 						$t->setTitle($a_rec["Title"]);
+						$t->setShortTitle($a_rec["ShortTitle"]);
 						$t->save();
 					}
 				}

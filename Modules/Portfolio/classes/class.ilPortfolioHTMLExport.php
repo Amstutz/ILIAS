@@ -18,7 +18,6 @@ class ilPortfolioHTMLExport
 	 * Constructor
 	 *
 	 * @param
-	 * @return
 	 */
 	function __construct($a_portfolio_gui, $a_object)
 	{
@@ -35,8 +34,6 @@ class ilPortfolioHTMLExport
 	 */
 	function buildExportFile()
 	{
-		global $ilias;
-
 		// create export file
 		include_once("./Services/Export/classes/class.ilExport.php");
 		ilExport::_createExportDirectory($this->object->getId(), "html", "prtf");
@@ -141,8 +138,6 @@ class ilPortfolioHTMLExport
 	 */
 	function exportHTMLPages()
 	{
-		global $tpl, $ilBench, $ilLocator;
-
 		require_once "Modules/Portfolio/classes/class.ilPortfolioPage.php";
 		$pages = ilPortfolioPage::getAllPortfolioPages($this->object->getId());
 			
@@ -202,7 +197,9 @@ class ilPortfolioHTMLExport
 	
 	function buildExportTemplate(array $a_js_files = null)
 	{
-		global $ilTabs;
+		global $DIC;
+
+		$ilTabs = $DIC->tabs();
 		
 		$this->tpl = $this->co_page_html_export->getPreparedMainTemplate();		
 		$this->tpl->getStandardTemplate();
@@ -289,8 +286,6 @@ class ilPortfolioHTMLExport
 	 */
 	function exportPageHTML($a_post_id)
 	{
-		global $lng;
-		
 		// page
 		include_once "Modules/Portfolio/classes/class.ilPortfolioPageGUI.php";
 		$pgui = new ilPortfolioPageGUI($this->object->getId(), $a_post_id);

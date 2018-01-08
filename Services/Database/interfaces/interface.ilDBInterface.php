@@ -386,6 +386,15 @@ interface ilDBInterface {
 	 */
 	public function substr($a_exp);
 
+	/**
+	 * Prepare a query (SELECT) statement to be used with execute.
+	 *
+	 * @param	string $a_query
+	 *
+	 * @return	\ilDBStatement
+	 */
+	public function prepare($a_query, $a_types = null, $a_result_types = null);
+
 
 	/**
 	 * @param $a_query
@@ -404,7 +413,8 @@ interface ilDBInterface {
 	/**
 	 * @param $stmt
 	 * @param array $data
-	 * @return bool
+	 * @throws ilDatabaseException
+	 * @return ilDBStatement
 	 */
 	public function execute($stmt, $data = array());
 
@@ -782,13 +792,13 @@ interface ilDBPdoInterface {
 	 * Generate an insert, update or delete query and call prepare() and execute() on it
 	 *
 	 * @param string $tablename of the table
-	 * @param array $fields     ($key=>$value) where $key is a field name and $value its value
-	 * @param int $mode         of query to build
+	 * @param array $fields ($key=>$value) where $key is a field name and $value its value
+	 * @param int $mode of query to build
 	 *                          ilDBConstants::MDB2_AUTOQUERY_INSERT
 	 *                          ilDBConstants::MDB2_AUTOQUERY_UPDATE
 	 *                          ilDBConstants::MDB2_AUTOQUERY_DELETE
 	 *                          ilDBConstants::MDB2_AUTOQUERY_SELECT
-	 * @param string $where     (in case of update and delete queries, this string will be put after the sql WHERE statement)
+	 * @param string $where (in case of update and delete queries, this string will be put after the sql WHERE statement)
 	 *
 	 * @deprecated Will be removed in ILIAS 5.3
 	 * @return bool

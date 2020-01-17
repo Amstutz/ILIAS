@@ -1,3 +1,7 @@
+.il-std-item-container:not(:last-child) {
+	border-bottom: 1px solid @body-bg;
+}
+
 .il-item {
 	background-color: @il-primary-container-bg;
 	position: relative;
@@ -5,7 +9,7 @@
 	.clearfix();
 
 	h5 {
-		margin: @il-item-h5-margin;
+		margin: 0;
 		font-size: @font-size-h5;
 		float: left;
 
@@ -60,14 +64,20 @@
 
 .il-item-group {
 	clear: both;
-}
+	background-color: @il-secondary-container-bg;
 
-.il-item-group h4 {
-	float:left;
-}
+	> h4 {
+		float:left;
+		color: @panel-heading-color;
+		font-size: @font-size-h4;
+		font-weight: normal;
+		padding: @panel-heading-padding;
+		margin: 0;
+	}
 
-.il-item-group .dropdown {
-	float:right;
+	.dropdown {
+		float:right;
+	}
 }
 
 .il-item-group-items {

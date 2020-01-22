@@ -156,6 +156,12 @@ div.il_ContainerListItem {
 		margin: 0;
 		color: @panel-heading-color;
 	}
+	&:hover{
+		background-color: @il-highlight-bg;
+		h3{
+			background-color: @il-highlight-bg;
+		}
+	}
 }
 
 .ilContainerBlockHeaderExpanded, .ilContainerBlockHeaderCollapsed {
@@ -168,12 +174,13 @@ div.il_ContainerListItem {
 	cursor: pointer;
 }
 
+
 .ilContainerBlockHeaderExpanded {
-	background-image: url("images/tree_exp.svg");
+	background-image: url("@{background-images-path}tree_exp.svg");
 }
 
 .ilContainerBlockHeaderCollapsed {
-	background-image: url("images/tree_col.svg");
+	background-image: url("@{background-images-path}tree_col.svg");
 	/* background-color: @il-secondary-container-bg; */
 }
 

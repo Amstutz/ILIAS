@@ -1,5 +1,5 @@
 .il-std-item-container:not(:last-child) {
-	border-bottom: 1px solid @body-bg;
+	border-bottom: @il-item-border-bottom;
 }
 
 .il-item {
@@ -187,11 +187,6 @@
 			display: none;
 		}
 	}
-
-	.panel-secondary .il-item:hover {
-		background-color: @il-highlight-bg;
-	}
-
 }
 
 /* otherwise dropdowns in items with icon do not work */

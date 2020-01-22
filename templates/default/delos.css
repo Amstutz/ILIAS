@@ -6851,7 +6851,13 @@ button.close {
   overflow: hidden;
 }
 .panel-secondary .panel-body .il-item-group {
-  margin: -6px -12px;
+  margin: 0 -12px;
+}
+.panel-secondary .panel-body .il-item-group h4 {
+  padding: 6px 12px;
+}
+.panel-secondary .panel-body .il-item-group:first-child {
+  margin: -6px -12px 0 -12px;
 }
 .panel-secondary .panel-body .il-item-group .il-item {
   padding-left: 12px;
@@ -6859,16 +6865,22 @@ button.close {
 .panel-secondary .il-panel-listing-std-container > h3,
 .panel-secondary .panel-body h4 {
   display: block;
-  padding: 6px 12px;
-  font-size: 12px;
-  color: #909090;
+  padding: 6px 0;
+  font-size: 14px;
+  color: #707070;
   margin: 0;
+}
+.panel-secondary .il-std-item-container:not(:last-child) {
+  border-bottom: 1px solid #f0f0f0;
 }
 .panel-sub {
   margin: -6px -12px;
 }
 .panel-sub .panel-body {
   margin: 0;
+}
+.panel-sub:first-child .panel-heading {
+  padding-top: 3px;
 }
 .il-panel-report .thumbnail {
   margin-bottom: 0;
@@ -6889,13 +6901,18 @@ button.close {
   font-weight: 600;
   float: left;
   padding: 9px 12px;
+  padding-bottom: 3px;
   margin: 0;
+  line-height: 1.33;
 }
 .il-panel-listing-std-container .dropdown {
   float: right;
 }
 .il-panel-listing-std-container > .dropdown {
   padding: 9px 12px;
+}
+.il-panel-listing-std-container > .dropdown:not(:last-child) {
+  padding-bottom: 3px;
 }
 .il-card {
   padding: 0;
@@ -7436,7 +7453,7 @@ hr.il-divider-with-label {
   background-color: #ecf0f4;
 }
 .il-std-item-container:not(:last-child) {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 2px solid #f0f0f0;
 }
 .il-item {
   background-color: white;
@@ -7603,9 +7620,6 @@ hr.il-divider-with-label {
   }
   .panel-secondary .il-item button.dropdown-toggle > span {
     display: none;
-  }
-  .panel-secondary .il-item:hover {
-    background-color: #ffffd0;
   }
 }
 /* otherwise dropdowns in items with icon do not work */
@@ -8784,7 +8798,20 @@ footer {
        mobile Layout
 **************************************************************
 */
+@media (min-width: 768px) {
+  #il_right_col {
+    padding-left: 0;
+  }
+}
 @media only screen and (max-width: 1199px) {
+  .il-layout-page.with-mainbar-slates-engaged #il_right_col {
+    padding-left: 15px;
+  }
+}
+@media only screen and (max-width: 1199px) {
+  .il-layout-page.with-mainbar-slates-engaged #il_center_col.col-sm-9 {
+    padding-right: 15px;
+  }
   .il-layout-page.with-mainbar-slates-engaged #il_center_col.col-sm-9,
   .il-layout-page.with-mainbar-slates-engaged #il_right_col.col-sm-3 {
     float: none !important;
@@ -12106,8 +12133,7 @@ div.ilCommandRow.one_side_col {
   padding-left: 22%;
 }
 div.ilAdminRow {
-  margin: 10px 1% 20px;
-  width: 98%;
+  margin: 10px 15px 20px 15px;
 }
 table.std {
   color: #222;
@@ -14284,12 +14310,10 @@ div#block_cal_sel_0 div.ilBlockContent {
   padding: 0;
 }
 div.ilCalSelAct {
-  background-color: #f0f0f0;
   font-size: 90%;
   padding: 2px 2px 3px 0;
 }
 div.ilCalSelSelAll {
-  background-color: #f8f8f8;
   font-size: 80%;
   padding: 3px 2px 2px 0;
 }
@@ -15187,9 +15211,8 @@ ul.il-mm-selfloading {
 }
 /* Services/UIComponent/GroupedLists */
 div.ilGroupedListH {
-  padding: 2px 10px;
-  background-color: #f0f0f0;
-  font-size: 85%;
+  padding: 6px 0 3px 0;
+  color: #707070;
 }
 div.ilGroupedListSep {
   padding-bottom: 3px;
@@ -15503,9 +15526,6 @@ div.ilBlogListItemCommtensPerma {
   font-size: 90%;
   margin-top: 15px;
   min-height: 15px;
-}
-div.ilBlogSideBlocks {
-  margin-left: 5px;
 }
 td.ilBlogSideBlockContent {
   padding: 10px;
@@ -16322,7 +16342,7 @@ div.ilPreconditionItem {
 }
 /* Repository */
 div.ilContainerListItemOuter {
-  padding: 15px 10px;
+  padding: 15px 12px;
   zoom: 1;
   /* background-color: lighten(@mid-gray, 75%); */
 }
@@ -16435,16 +16455,17 @@ div.il_ContainerListItem {
 }
 .ilContainerBlockHeader h3 {
   margin: 0;
+  color: #707070;
 }
 .ilContainerBlockHeaderExpanded,
 .ilContainerBlockHeaderCollapsed {
   background-repeat: no-repeat;
-  background-position: 20px 8px;
-  padding-left: 50px;
+  background-position: 15px 8px;
+  background-size: 25px 25px;
+  padding-left: 55px;
   /* padding-top: 6px; */
   background-color: #f9f9f9;
   cursor: pointer;
-  margin-bottom: 1px;
 }
 .ilContainerBlockHeaderExpanded {
   background-image: url("images/tree_exp.svg");
@@ -16452,10 +16473,6 @@ div.il_ContainerListItem {
 .ilContainerBlockHeaderCollapsed {
   background-image: url("images/tree_col.svg");
   /* background-color: @il-secondary-container-bg; */
-}
-.ilContainerBlockHeaderExpanded:hover,
-.ilContainerBlockHeaderCollapsed:hover {
-  background-color: #ffffd0;
 }
 [dir="rtl"] .ilContainerBlockHeader {
   text-align: right;
@@ -16496,6 +16513,9 @@ div#ilContRepIntro img {
 }
 .ilContainerTileRows {
   margin: 10px -20px 0 -20px;
+}
+.ilContainerTileRows > .il-deck {
+  margin: 0 5px;
 }
 .ilContainerTileRows .card-no-highlight {
   height: 0px;
@@ -16691,11 +16711,8 @@ div.ilCreationFormSection .form-horizontal {
   padding-top: 1px;
 }
 .ilObjListRow {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 2px solid #f0f0f0;
   background-color: white;
-}
-.ilObjListRow:hover {
-  background-color: #ffffea;
 }
 .table-striped {
   border-collapse: separate;
@@ -16802,8 +16819,7 @@ div.ilBlockContent {
   border-bottom: 1px solid #f0f0f0;
 }
 div.ilBlockPropertyCaption {
-  color: #696969;
-  font-style: italic;
+  color: #909090;
 }
 /* Services/UIComponent/Lightbox */
 .ilLightbox {
@@ -18586,7 +18602,7 @@ img[src$="icon_checked.svg"] {
 div.ilNewObjectSelector {
   display: inline-block;
   margin-bottom: 8px;
-  padding: 0 10px;
+  padding: 0;
   width: 100%;
 }
 div.ilNewObjectSelector > .btn-group {

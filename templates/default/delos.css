@@ -7478,7 +7478,7 @@ hr.il-divider-with-label {
 }
 .il-item h5 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   float: left;
 }
 .il-item h5 .btn-link {
@@ -7554,7 +7554,7 @@ hr.il-divider-with-label {
   }
   .panel-secondary .il-item h5 {
     margin-top: 0;
-    font-size: 100%;
+    font-size: 14px;
     float: none;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -8588,7 +8588,7 @@ div.alert ul > li:before {
   width: 100%;
 }
 .il-tree li.il-tree-node.highlighted > .node-line {
-  background-color: #ffffd0;
+  background-color: #dfe3e6;
 }
 .il-tree li.il-tree-node.expandable > .node-line:before {
   color: #777777;
@@ -13031,12 +13031,12 @@ span.ilIcalIcon {
 }
 .il_HAccordionHead:hover,
 .il_VAccordionHead:hover {
-  background-color: #ffffd0;
+  background-color: #dfe3e6;
 }
 .il_HAccordionHeadActive,
 .il_VAccordionHeadActive {
   background-image: url("images/tree_exp.svg");
-  background-color: #ffffd0;
+  background-color: #dfe3e6;
 }
 .ilAccHideContent {
   width: 0px;
@@ -13371,13 +13371,13 @@ li.il_Explorer {
 }
 a.il_HighlightedNode,
 .ilHighlighted {
-  background-color: #ffff9d;
+  background-color: #dfe3e6;
   padding: 0 5px;
 }
 li.ilExplSecHighlight {
   background-color: white !important;
-  border-top: solid 2px #e9ea00;
-  border-bottom: solid 2px #e9ea00;
+  border-top: solid 2px #62727d;
+  border-bottom: solid 2px #62727d;
 }
 div.il_ExplorerItemDescription {
   margin-left: 40px;
@@ -14242,7 +14242,7 @@ a.nostyle:hover {
   cursor: pointer;
 }
 .ilCOPgEditStyleSelectionItem:hover {
-  background-color: #ffffd0;
+  background-color: #dfe3e6;
 }
 ul#ilAdvSelListTable_style_selection {
   overflow: auto;
@@ -16461,12 +16461,6 @@ div.il_ContainerListItem {
   margin: 0;
   color: #707070;
 }
-.ilContainerBlockHeader:hover {
-  background-color: #ffffd0;
-}
-.ilContainerBlockHeader:hover h3 {
-  background-color: #ffffd0;
-}
 .ilContainerBlockHeaderExpanded,
 .ilContainerBlockHeaderCollapsed {
   background-repeat: no-repeat;
@@ -16476,6 +16470,14 @@ div.il_ContainerListItem {
   /* padding-top: 6px; */
   background-color: #f9f9f9;
   cursor: pointer;
+}
+.ilContainerBlockHeaderExpanded:hover,
+.ilContainerBlockHeaderCollapsed:hover {
+  background-color: #dfe3e6;
+}
+.ilContainerBlockHeaderExpanded:hover h3,
+.ilContainerBlockHeaderCollapsed:hover h3 {
+  background-color: transparent;
 }
 .ilContainerBlockHeaderExpanded {
   background-image: url("images/tree_exp.svg");
@@ -16731,10 +16733,10 @@ div.ilCreationFormSection .form-horizontal {
   background-color: white;
 }
 .table-striped > tbody > tr.ilObjListRow:hover > td {
-  background-color: #ffffea;
+  background-color: #edf0f1;
 }
 .table-striped > tbody > tr.ilObjListRow:hover:nth-child(2n+1) > td {
-  background-color: #ffffea;
+  background-color: #edf0f1;
 }
 /* Services/Navigation */
 form.ilNavHistoryForm {
@@ -17465,7 +17467,7 @@ div.ilChecklist ul a:hover {
   color: #557196;
 }
 div.ilChecklist ul li a:hover {
-  background-color: #ffffd0;
+  background-color: #dfe3e6;
 }
 div.ilChecklist ul li p,
 div.ilChecklist ul li p:hover {
@@ -17686,7 +17688,7 @@ body.ilPrtfPdfBody .ilPCMyCoursesToggle img {
   height: 10px;
 }
 #awareness-content .ilHighlighted {
-  background-color: #ffff9d;
+  background-color: #dfe3e6;
   color: #606060;
 }
 .ilAwrnBadgeHidden {

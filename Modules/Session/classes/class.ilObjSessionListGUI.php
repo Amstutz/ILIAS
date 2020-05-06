@@ -155,10 +155,11 @@ class ilObjSessionListGUI extends ilObjectListGUI
         */
         include_once './Modules/Session/classes/class.ilObjSession.php';
         $session_data = new ilObjSession($this->obj_id, false);
-        include_once './Modules/Session/classes/class.ilSessionParticipants.php';
-        $part = ilSessionParticipants::getInstance($this->ref_id);
-
+        //UNIBE-Patch
         if ($session_data->isRegistrationUserLimitEnabled()) {
+            include_once './Modules/Session/classes/class.ilSessionParticipants.php';
+            $part = ilSessionParticipants::getInstance($this->ref_id);
+            //END UNIBE-Patch
             if ($part->getCountMembers() <= $session_data->getRegistrationMaxUsers()) {
                 $props[] = array(
                     'alert' => false,

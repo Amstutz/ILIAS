@@ -51,6 +51,8 @@ class ilAssQuestionTypeOrderer
 
         'assFlashQuestion',
         'assJavaApplet',
+        //UNIBE-PATCH OK: extra Zeile macht dass Stack-Fragen aus dem Plugin: https://github.com/iLUB/assStackQuestion an unterster Stelle in der Auflistung der Fragen erscheint
+        'assStackQuestion'
     );
     
     /**

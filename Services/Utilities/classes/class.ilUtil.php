@@ -1745,7 +1745,13 @@ class ilUtil
             }
         }
 
-        $zipcmd = "-r " . ilUtil::escapeShellArg($a_file) . " " . $source;
+        //TA Patch for faster zipping
+        $zipcmd = " -r ";
+        if (!$compress_content) {
+            $zipcmd .= " -0 ";
+        }
+        $zipcmd .= ilUtil::escapeShellArg($a_file) . " " . $source;
+        //End Patch
         ilUtil::execQuoted($zip, $zipcmd);
         chdir($cdir);
         return true;

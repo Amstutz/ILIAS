@@ -243,27 +243,27 @@ class ilForumMailNotification extends ilMailNotification
         ));
 
         if ($this->isCronjob()) {
+            //UNIBE-Patch
             $posting_link = sprintf(
                 $language_text,
                 ilUtil::_getHttpPath() . "/goto.php?target=frm_" . $forum_parameters . '&client_id=' . CLIENT_ID
-            ) . "\n\n";
+            ) . "\n\n\n\n";
 
             $posting_link .= sprintf(
                 $this->getLanguageText("forums_notification_intro"),
-                $ilClientIniFile->readVariable("client", "name"),
-                ilUtil::_getHttpPath() . '/?client_id=' . CLIENT_ID
-            ) . "\n\n";
+                $ilClientIniFile->readVariable("client", "name")
+            );
         } else {
             $posting_link = sprintf(
                 $language_text,
                 ilUtil::_getHttpPath() . "/goto.php?target=frm_" . $forum_parameters . '&client_id=' . CLIENT_ID
-            ) . "\n\n";
+            ) . "\n\n\n\n";
 
             $posting_link .= sprintf(
                 $this->getLanguageText("forums_notification_intro"),
-                $ilClientIniFile->readVariable("client", "name"),
-                ilUtil::_getHttpPath() . '/?client_id=' . CLIENT_ID
-            ) . "\n\n";
+                $ilClientIniFile->readVariable("client", "name")
+            );
+            //END UNIBE-Patch
         }
 
         $this->logger->debug(sprintf(
@@ -361,8 +361,6 @@ class ilForumMailNotification extends ilMailNotification
         $this->appendBody("\n\n");
         $this->appendBody($customText);
         $this->appendBody("\n\n");
-        $this->appendBody($this->getLanguageText('forum') . ": " . $this->provider->getForumTitle());
-        $this->appendBody("\n\n");
         $this->appendBody($this->getLanguageText('thread') . ": " . $this->provider->getThreadTitle());
         $this->appendBody("\n\n");
         $this->appendBody($this->getLanguageText($action) . ": \n------------------------------------------------------------\n");
@@ -370,8 +368,6 @@ class ilForumMailNotification extends ilMailNotification
         $this->appendBody($this->getLanguageText('author') . ": " . $this->provider->getPostUserName($this->getLanguage()));
         $this->appendBody("\n");
         $this->appendBody($this->getLanguageText('date') . ": " . $date);
-        $this->appendBody("\n");
-        $this->appendBody($this->getLanguageText('subject') . ": " . $this->provider->getPostTitle());
         $this->appendBody("\n");
         $this->appendBody($this->getLanguageText('frm_noti_message'));
         $this->appendBody("\n");

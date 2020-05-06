@@ -192,7 +192,13 @@ il.UI = il.UI || {};
                 // Highlighting handler
                 $(document).dragster({
                     enter: function (dragsterEvent, event) {
-                        _enableHighlighting(_darkenedBackground);
+                        //Patch UNIBE
+						var no_modal_overlay = $(".il-modal-roundtrip.in").length == 0;
+
+						if (no_modal_overlay) {
+							_enableHighlighting(_darkenedBackground);
+						}
+						//End Patch UNIBE
                     },
                     leave: function (dragsterEvent, event) {
                         _disableHighlighting();
@@ -215,9 +221,9 @@ il.UI = il.UI || {};
                 */
             $dropzone.dragster({
                 enter: function (dragsterEvent, event) {
-                    dragsterEvent.stopImmediatePropagation();
-                    $(this).find(".il-dropzone").addClass(CSS.dropzoneDragHover);
-                },
+					dragsterEvent.stopImmediatePropagation();
+					$(this).find(".il-dropzone").addClass(CSS.dropzoneDragHover);
+				},
                 leave: function (dragsterEvent, event) {
                     dragsterEvent.stopImmediatePropagation();
                     $(this).find(".il-dropzone").removeClass(CSS.dropzoneDragHover);
@@ -225,7 +231,11 @@ il.UI = il.UI || {};
                 drop: function (dragsterEvent, event) {
                     $(this).find(".il-dropzone").removeClass(CSS.dropzoneDragHover);
                     _disableHighlighting();
-                    if (!topmost) {
+					//Patch Unibe
+					var modal_overlay = $(".il-modal-roundtrip.in").length != 0;
+
+					if (!topmost || modal_overlay) {
+					//End Patch Unibe
                         event.stopImmediatePropagation();
                         return false;
                     }

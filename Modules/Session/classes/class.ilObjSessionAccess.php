@@ -86,7 +86,8 @@ class ilObjSessionAccess extends ilObjectAccess
         if (!$a_user_id) {
             $a_user_id = $ilUser->getId();
         }
-        
+
+
         switch ($a_cmd) {
             case 'register':
                 
@@ -99,9 +100,16 @@ class ilObjSessionAccess extends ilObjectAccess
                 if (self::_lookupRegistered($a_user_id, $a_obj_id)) {
                     return false;
                 }
-                if (\ilSessionParticipants::_isSubscriber($a_obj_id, $a_user_id)) {
+                //UNIBE-Patch
+
+                include_once './Modules/Session/classes/class.ilSessionParticipants.php';
+                if (ilSessionParticipants::_isParticipant($a_ref_id, $a_user_id)) {
                     return false;
                 }
+                if (ilSessionParticipants::_isSubscriber($a_obj_id, $a_user_id)) {
+                    return false;
+                }
+                //END UNIBE-Patch
                 include_once './Modules/Session/classes/class.ilSessionWaitingList.php';
                 if (ilSessionWaitingList::_isOnList($a_user_id, $a_obj_id)) {
                     return false;

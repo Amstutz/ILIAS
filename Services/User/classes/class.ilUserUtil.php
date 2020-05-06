@@ -182,7 +182,7 @@ class ilUserUtil
             "SELECT value FROM usr_pref " .
             " WHERE usr_id = " . $ilDB->quote($a_user_id, "integer") .
             " and keyword = " . $ilDB->quote("public_profile", "text")
-            );
+        );
         $rec = $ilDB->fetchAssoc($set);
 
         return in_array($rec["value"], array("y", "g"));
@@ -284,7 +284,7 @@ class ilUserUtil
         $valid = array_keys(self::getPossibleStartingPoints());
         if (in_array($a_value, $valid)) {
             $ilSetting->set("usr_starting_point", $a_value);
-            if($a_value == self::START_PD_CALENDAR) {
+            if ($a_value == self::START_PD_CALENDAR) {
                 foreach ($a_cal_view as $key => $value) {
                     $ilSetting->set($key, $value);
                 }
@@ -396,7 +396,7 @@ class ilUserUtil
         }
 
         $calendar_string = "";
-        if(!empty($cal_view) && !empty($cal_period)) {
+        if (!empty($cal_view) && !empty($cal_period)) {
             $calendar_string = "&cal_view=" . $cal_view . "&cal_agenda_per=" . $cal_period;
         }
 
@@ -416,13 +416,35 @@ class ilUserUtil
                 $current = self::START_PD_OVERVIEW;
                 // fallthrough
 
+
+            /**
+             * Patch for Studmed Integration in ILIAS see:
+             *  - http://ilublx3.unibe.ch:8080/mantis/view.php?id=1313
+             *  - http://ilublx3.unibe.ch:8080/mantis/view.php?id=1367
+             */
+            // no break
+            case self::START_PD_CALENDAR:
+                /**
+                 * @var $DIC \ILIAS\DI\Container
+                 */
+                global $DIC;
+                $dozent_role_id = $DIC->rbac()->review()->roleExists("Dozent Humanmedizin");
+                if ($dozent_role_id && $DIC->rbac()->review()->isAssigned($ilUser->getId(), $dozent_role_id)) {
+                    $DIC->ctrl()->setParameterByClass("ilcalendarpresentationgui", "cal_agenda_per", ilCalendarAgendaListGUI::PERIOD_HALF_YEAR);
+                    $list_link = $DIC->ctrl()->getLinkTargetByClass(["ilPersonalDesktopGUI", "ilCalendarPresentationGUI", "ilCalendarInboxGUI", "ilcalendaragendalistgui"], "", "", false, false);
+                    return $list_link;
+                } else {
+                    $week_link = $DIC->ctrl()->getLinkTargetByClass(["ilPersonalDesktopGUI", "ilCalendarPresentationGUI", "ilcalendarweekgui"], "", "", false, false);
+                    return $week_link;
+                }
+
                 // no break
             default:
                 $map = array(
                     self::START_PD_OVERVIEW => 'ilias.php?baseClass=ilDashboardGUI&cmd=jumpToSelectedItems',
                     self::START_PD_SUBSCRIPTION => 'ilias.php?baseClass=ilMembershipOverviewGUI',
                     self::START_PD_WORKSPACE => 'ilias.php?baseClass=ilDashboardGUI&cmd=jumpToWorkspace',
-                    self::START_PD_CALENDAR => 'ilias.php?baseClass=ilDashboardGUI&cmd=jumpToCalendar'. $calendar_string,
+                    self::START_PD_CALENDAR => 'ilias.php?baseClass=ilDashboardGUI&cmd=jumpToCalendar' . $calendar_string,
                     self::START_PD_MYSTAFF => 'ilias.php?baseClass=' . ilDashboardGUI::class . '&cmd=' . ilDashboardGUI::CMD_JUMP_TO_MY_STAFF
                 );
                 return $map[$current];

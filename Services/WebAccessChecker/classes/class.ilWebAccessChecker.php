@@ -96,6 +96,11 @@ class ilWebAccessChecker
         if (!$this->getPathObject()) {
             throw new ilWACException(ilWACException::CODE_NO_PATH);
         }
+        // UNIBE-Patch
+        if ($_SERVER["REMOTE_ADDR"] == $_SERVER["SERVER_ADDR"]) {
+            return true;
+        }
+        //End Patch
 
         // Check if Path has been signed with a token
         $ilWACSignedPath = new ilWACSignedPath($this->getPathObject(), $this->http, $this->cookieFactory);

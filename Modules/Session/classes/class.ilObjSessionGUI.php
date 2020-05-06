@@ -1063,6 +1063,17 @@ class ilObjSessionGUI extends ilObjectGUI implements ilDesktopItemHandling
             $ilErr->setMessage($this->lng->txt('err_check_input'));
         }
 
+        //UNIBE-Patch, Bugfix, see: #1513 unstrip slashes for a tags.
+        foreach ($this->form->getItems() as $item) {
+            if (($item instanceof ilTextAreaInputGUI || $item instanceof ilTextInputGUI) && $_POST[$item->getPostVar()]) {
+                $value = $_POST[$item->getPostVar()];
+                $value = str_replace("< a", "<a", $value);
+                $value = str_replace("< /a>", "</a>", $value);
+                $_POST[$item->getPostVar()] = $value;
+            }
+        }
+        //End Patch
+
         if (
             $this->record_gui instanceof \ilAdvancedMDRecordGUI &&
             !$this->record_gui->importEditFormPostValues()
@@ -1754,7 +1765,7 @@ class ilObjSessionGUI extends ilObjectGUI implements ilDesktopItemHandling
             array(
                     ilObjectServiceSettingsGUI::CUSTOM_METADATA
                 )
-            );
+        );
 
         $gallery = new ilCheckboxInputGUI($this->lng->txt('sess_show_members'), 'show_members');
         $gallery->setChecked($this->object->getShowMembers());

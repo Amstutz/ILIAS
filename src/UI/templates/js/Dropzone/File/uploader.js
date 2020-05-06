@@ -206,6 +206,30 @@ il.UI = il.UI || {};
          * @param options
          */
         var init = function (uploadId, options) {
+			//UNIBE Patch
+			//Only execute if Doc is loaded
+			$(function () {
+				console.log(uploadId);
+				var $uploadFileLists = $('#' + uploadId + ' .il-upload-file-list');
+				$uploadFileLists.find('span.toggle .glyph:first').hide();
+				$uploadFileLists.on('click', 'span.toggle .glyph', function () {
+					$(this).parent().find(".glyph").each(function () {
+						$(this).toggle();
+					});
+					$(this).parents('.il-upload-file-item').find('.metadata').toggle();
+					return false;
+				});
+				$uploadFileLists.on('click', 'span.remove button.close', function () {
+					var dz = $(this).closest('.il-dropzone-base').find(".il-dropzone");
+					var uploadId = dz.data('upload-id');
+					var fileId = parseInt($(this).parents('.il-upload-file-item').data('file-id'));
+					il.UI.uploader.removeFile(uploadId, fileId);
+					return false;
+				});
+			});
+
+			//Register the rest
+			//END UNIBE Patch
             options = $.extend({}, defaultOptions, options);
             var uploader = new qq.FineUploaderBasic({
                 autoUpload: options.autoUpload,
@@ -485,22 +509,3 @@ il.UI = il.UI || {};
     })($);
 
 })($, il.UI);
-
-$(function () {
-    var $uploadFileLists = $('.il-upload-file-list');
-    $uploadFileLists.find('span.toggle .glyph:first').hide();
-    $uploadFileLists.on('click', 'span.toggle .glyph', function () {
-        $(this).parent().find(".glyph").each(function () {
-            $(this).toggle();
-        });
-        $(this).parents('.il-upload-file-item').find('.metadata').toggle();
-        return false;
-    });
-    $uploadFileLists.on('click', 'span.remove button.close', function () {
-        var dz = $(this).closest('.il-dropzone-base').find(".il-dropzone");
-        var uploadId = dz.data('upload-id');
-        var fileId = parseInt($(this).parents('.il-upload-file-item').data('file-id'));
-        il.UI.uploader.removeFile(uploadId, fileId);
-        return false;
-    });
-});

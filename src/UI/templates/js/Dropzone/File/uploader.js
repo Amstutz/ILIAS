@@ -191,8 +191,10 @@ il.UI = il.UI || {};
             $.each($uploadButtons, function (index, $uploadButton) {
                 if (state) {
                     $uploadButton.removeClass('disabled');
+                    $uploadButton.prop('disabled', false);
                 } else {
                     $uploadButton.addClass('disabled');
+                    $uploadButton.prop('disabled', true);
                 }
             });
         };
@@ -209,7 +211,6 @@ il.UI = il.UI || {};
 			//UNIBE Patch
 			//Only execute if Doc is loaded
 			$(function () {
-				console.log(uploadId);
 				var $uploadFileLists = $('#' + uploadId + ' .il-upload-file-list');
 				$uploadFileLists.find('span.toggle .glyph:first').hide();
 				$uploadFileLists.on('click', 'span.toggle .glyph', function () {
@@ -263,7 +264,8 @@ il.UI = il.UI || {};
                         }
                     },
                     onAllComplete: function (succeeded, failed) {
-                        if (typeof instances[uploadId].lastRedirect !== 'undefined') {
+
+                        if (instances[uploadId].lastRedirect !== undefined) {
                             window.location.replace(instances[uploadId].lastRedirect);
                         }
                         var succeededFiles = succeeded.map(function (fileId) {

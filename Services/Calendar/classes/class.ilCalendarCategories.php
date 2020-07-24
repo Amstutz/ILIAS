@@ -1063,7 +1063,7 @@ class ilCalendarCategories
         //UNIBE-PATCH
         $usr_id = $DIC->user()->getId();
 
-        if (strtolower($_GET["baseClass"]) == "ilpersonaldesktopgui" || $this->getMode() == self::MODE_REMOTE_ACCESS) {
+        if (strtolower($_GET["baseClass"]) == "ildashboardgui" || $this->getMode() == self::MODE_REMOTE_ACCESS) {
             $query = "SELECT od2.type obj_type, od2.obj_id sess_id, od1.obj_id crs_id,cat_id, or2.ref_id sess_ref_id FROM object_data od1 " .
                 "JOIN object_reference or1 ON od1.obj_id = or1.obj_id " .
                 "JOIN tree t ON or1.ref_id = t.parent " .

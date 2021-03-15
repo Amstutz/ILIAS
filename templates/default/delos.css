@@ -9307,6 +9307,9 @@ footer {
     display: block;
   }
 }
+.il-content-outer {
+  background: red !important;
+}
 .il-maincontrols-slate.disengaged {
   display: none;
 }

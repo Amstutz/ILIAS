@@ -18,4 +18,15 @@ interface Factory
      * @return  \ILIAS\UI\Component\Layout\Page\Factory
      */
     public function page() : Page\Factory;
+
+    /**
+     * ---
+     * description:
+     *   purpose: >
+     *
+     * ----
+     *
+     * @return  \ILIAS\UI\Component\Layout\Content\Factory
+     */
+    public function content() : Content\Factory;
 }

@@ -14,4 +14,12 @@ class Factory implements Layout\Factory
     {
         return new Page\Factory();
     }
+
+    /**
+     * @inheritdoc
+     */
+    public function content() : Layout\Content\Factory
+    {
+        return new Content\Factory();
+    }
 }

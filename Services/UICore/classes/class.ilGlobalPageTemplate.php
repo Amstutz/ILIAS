@@ -43,6 +43,10 @@ class ilGlobalPageTemplate implements ilGlobalTemplateInterface
      */
     private $lng;
 
+    /**
+     * @var \ILIAS\UI\Component\Layout\Content\Outer\Standard
+     */
+    protected $outer_content;
 
     /**
      * @inheritDoc
@@ -55,6 +59,7 @@ class ilGlobalPageTemplate implements ilGlobalTemplateInterface
         $this->gs = $gs;
         $this->http = $http;
         $this->legacy_content_template = new PageContentGUI("tpl.page_content.html", true, true);
+        $this->outer_content = $this->ui->factory()->layout()->content()->outer()->standard();
         $this->il_settings = $DIC->settings();
     }
 
@@ -108,11 +113,10 @@ class ilGlobalPageTemplate implements ilGlobalTemplateInterface
         $this->prepareBasicJS();
         $this->prepareBasicCSS();
 
-        PageContentProvider::setContent($this->legacy_content_template->renderPage("DEFAULT", true, false));
+        //$legay_component = $this->ui->factory()->legacy($this->legacy_content_template->renderPage("DEFAULT", true, false));
+        //$out_content_component = $this->ui->factory()->layout()->content()->outer()->standard([$legay_component]);
+        PageContentProvider::setContent($this->ui->renderer()->render([$this->outer_content]));
         print $this->ui->renderer()->render($this->gs->collector()->layout()->getFinalPage());
-
-        // save language usages as late as possible
-        \ilObjLanguageAccess::_saveUsages();
 
         // see #26968
         $this->handleReferer();
@@ -128,7 +132,7 @@ class ilGlobalPageTemplate implements ilGlobalTemplateInterface
         $this->prepareBasicJS();
         $this->prepareBasicCSS();
 
-        PageContentProvider::setContent($this->legacy_content_template->renderPage("DEFAULT", true, false));
+        PageContentProvider::setContent($this->ui->renderer()->render([$this->outer_content]));
 
         return $this->ui->renderer()->render($this->gs->collector()->layout()->getFinalPage());
     }
@@ -183,7 +187,8 @@ class ilGlobalPageTemplate implements ilGlobalTemplateInterface
      */
     public function setContent($a_html)
     {
-        $this->legacy_content_template->setMainContent($a_html);
+        //$this->legacy_content_template->setMainContent($a_html);
+        $this->outer_content = $this->outer_content->withContent([$this->ui->factory()->legacy($a_html)]);
     }
 
 
@@ -224,7 +229,8 @@ class ilGlobalPageTemplate implements ilGlobalTemplateInterface
      */
     public function setTitle($a_title, $hidden = false)
     {
-        $this->legacy_content_template->setTitle((string) $a_title, $hidden);
+        //$this->legacy_content_template->setTitle((string) $a_title, $hidden);
+        $this->outer_content = $this->outer_content->withTitle($a_title);
 
         $short_title = (string) $this->il_settings->get('short_inst_name');
         if (trim($short_title) === "") {

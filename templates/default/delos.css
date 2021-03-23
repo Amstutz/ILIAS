@@ -17380,7 +17380,7 @@ div.ilSurveyPageEditActionMenu {
 }
 a.ilTag:hover,
 a.ilTag:active {
-  il-tag-bgtext-decoration: none;
+  text-decoration: none;
   color: white;
   background-color: #0b97ad;
 }

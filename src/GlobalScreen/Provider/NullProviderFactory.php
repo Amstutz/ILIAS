@@ -4,7 +4,6 @@ use ILIAS\GlobalScreen\Scope\MainMenu\Collector\Information\ItemInformation;
 
 /**
  * Class NullProviderFactory
- *
  * @author Fabian Schmid <fs@studer-raimann.ch>
  */
 class NullProviderFactory implements ProviderFactory
@@ -18,7 +17,6 @@ class NullProviderFactory implements ProviderFactory
         return [];
     }
 
-
     /**
      * @inheritDoc
      */
@@ -26,7 +24,6 @@ class NullProviderFactory implements ProviderFactory
     {
         return [];
     }
-
 
     /**
      * @inheritDoc
@@ -36,7 +33,6 @@ class NullProviderFactory implements ProviderFactory
         return null;
     }
 
-
     /**
      * @inheritDoc
      */
@@ -44,7 +40,6 @@ class NullProviderFactory implements ProviderFactory
     {
         return [];
     }
-
 
     /**
      * @inheritDoc
@@ -54,7 +49,6 @@ class NullProviderFactory implements ProviderFactory
         return [];
     }
 
-
     /**
      * @inheritDoc
      */
@@ -63,6 +57,13 @@ class NullProviderFactory implements ProviderFactory
         return [];
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function getTabsProvider() : array
+    {
+        return [];
+    }
 
     /**
      * @inheritDoc
@@ -72,7 +73,6 @@ class NullProviderFactory implements ProviderFactory
         // return new NullP;
     }
 
-
     /**
      * @inheritDoc
      */
@@ -80,7 +80,6 @@ class NullProviderFactory implements ProviderFactory
     {
         return false;
     }
-
 
     /**
      * @inheritDoc

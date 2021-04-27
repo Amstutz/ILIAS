@@ -6,10 +6,10 @@ use ILIAS\GlobalScreen\Scope\MainMenu\Provider\StaticMainMenuProvider;
 use ILIAS\GlobalScreen\Scope\MetaBar\Provider\StaticMetaBarProvider;
 use ILIAS\GlobalScreen\Scope\Notification\Provider\NotificationProvider;
 use ILIAS\GlobalScreen\Scope\Tool\Provider\DynamicToolProvider;
+use ILIAS\GlobalScreen\Scope\Content\Tabs\Provider\TabProvider;
 
 /**
  * Interface ProviderFactory
- *
  * @author Fabian Schmid <fs@studer-raimann.ch>
  */
 interface ProviderFactory
@@ -20,56 +20,50 @@ interface ProviderFactory
      */
     public function getModificationProvider() : array;
 
-
     /**
      * @return StaticMainMenuProvider[]
      */
     public function getMainBarProvider() : array;
-
 
     /**
      * @return ItemInformation
      */
     public function getMainBarItemInformation() : ItemInformation;
 
-
     /**
      * @return DynamicToolProvider[]
      */
     public function getToolProvider() : array;
-
 
     /**
      * @return StaticMetaBarProvider[]
      */
     public function getMetaBarProvider() : array;
 
-
     /**
      * @return NotificationProvider[]
      */
     public function getNotificationsProvider() : array;
 
+    /**
+     * @return TabProvider[]
+     */
+    public function getTabsProvider() : array;
 
     /**
      * @param string $class_name
-     *
      * @return Provider
      */
     public function getProviderByClassName(string $class_name) : Provider;
 
-
     /**
      * @param string $class_name
-     *
      * @return bool
      */
     public function isInstanceCreationPossible(string $class_name) : bool;
 
-
     /**
      * @param string $class_name
-     *
      * @return bool
      */
     public function isRegistered(string $class_name) : bool;

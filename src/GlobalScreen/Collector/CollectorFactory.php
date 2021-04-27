@@ -17,10 +17,6 @@ class CollectorFactory
 {
     use SingletonTrait;
     /**
-     * @var array
-     */
-    protected static $instances = [];
-    /**
      * @var ProviderFactory
      */
     private $provider_factory;

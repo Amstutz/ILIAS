@@ -2,9 +2,10 @@
 
 /* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
+use ILIAS\DI\Container;
+
 /**
  * Tabs GUI
- *
  * @author Alex Killing <alex.killing@gmx.de>
  */
 class ilTabsGUI
@@ -27,9 +28,9 @@ class ilTabsGUI
     protected $force_one_tab = false;
 
     /**
-    * Constructor
-    * @access	public
-    */
+     * Constructor
+     * @access    public
+     */
     public function __construct()
     {
         global $DIC;
@@ -49,30 +50,28 @@ class ilTabsGUI
         $this->back_2_target = "";
         $this->back_2_title = "";
     }
-    
+
     /**
      * Set setup mode
-     *
      * @param boolean $a_val setup mode
      */
     public function setSetupMode($a_val)
     {
         $this->setup_mode = $a_val;
     }
-    
+
     /**
      * Get setup mode
-     *
      * @return boolean setup mode
      */
     public function getSetupMode()
     {
         return $this->setup_mode;
     }
-    
+
     /**
-    * back target for upper context
-    */
+     * back target for upper context
+     */
     public function setBackTarget($a_title, $a_target, $a_frame = "")
     {
         $this->back_title = $a_title;
@@ -81,8 +80,8 @@ class ilTabsGUI
     }
 
     /**
-    * back target for tow level upper context
-    */
+     * back target for tow level upper context
+     */
     public function setBack2Target($a_title, $a_target, $a_frame = "")
     {
         $this->back_2_title = $a_title;
@@ -92,7 +91,6 @@ class ilTabsGUI
 
     /**
      * Set force presentation of single tab
-     *
      * @param bool $a_val force presentation of single tab
      */
     public function setForcePresentationOfSingleTab($a_val)
@@ -102,7 +100,6 @@ class ilTabsGUI
 
     /**
      * Get force presentation of single tab
-     *
      * @return bool force presentation of single tab
      */
     public function getForcePresentationOfSingleTab()
@@ -111,22 +108,19 @@ class ilTabsGUI
     }
 
     /**
-    * @deprecated since version 5.0
-    *
-    * Use addTab/addSubTab and activateTab/activateSubTab.
-    *
-    * Add a target to the tabbed menu. If no target has set $a_activate to
-    * true, ILIAS tries to determine the current activated menu item
-    * automatically using $a_cmd and $a_cmdClass. If one item is set
-    * activated (and only one should be activated) the automatism is disabled.
-    *
-    * @param	string		$a_text			menu item text
-    * @param	string		$a_link			menu item link
-    * @param	string		$a_cmd			command, used for auto activation
-    * @param	string		$a_cmdClass		used for auto activation. String or array of cmd classes
-    * @param	string		$a_frame		frame target
-    * @param	boolean		$a_activate		activate this menu item
-    */
+     * @param string  $a_text     menu item text
+     * @param string  $a_link     menu item link
+     * @param string  $a_cmd      command, used for auto activation
+     * @param string  $a_cmdClass used for auto activation. String or array of cmd classes
+     * @param string  $a_frame    frame target
+     * @param boolean $a_activate activate this menu item
+     * @deprecated since version 5.0
+     *                            Use addTab/addSubTab and activateTab/activateSubTab.
+     *                            Add a target to the tabbed menu. If no target has set $a_activate to
+     *                            true, ILIAS tries to determine the current activated menu item
+     *                            automatically using $a_cmd and $a_cmdClass. If one item is set
+     *                            activated (and only one should be activated) the automatism is disabled.
+     */
     public function addTarget(
         $a_text,
         $a_link,
@@ -145,31 +139,41 @@ class ilTabsGUI
         if ($a_activate) {
             $this->manual_activation = true;
         }
-        $this->target[] = array("text" => $a_text, "link" => $a_link,
-            "cmd" => $a_cmd, "cmdClass" => $a_cmdClass, "frame" => $a_frame,
-            "activate" => $a_activate, "dir_text" => $a_dir_text, "id" => $a_text);
+        $this->target[] = array("text" => $a_text,
+                                "link" => $a_link,
+                                "cmd" => $a_cmd,
+                                "cmdClass" => $a_cmdClass,
+                                "frame" => $a_frame,
+                                "activate" => $a_activate,
+                                "dir_text" => $a_dir_text,
+                                "id" => $a_text
+        );
     }
-    
+
     /**
-    * Add a Tab
-    *
-    * @param	string		id
-    * @param	string		text (no lang var!)
-    * @param	string		link
-    * @param	string		frame target
-    */
+     * Add a Tab
+     * @param string        id
+     * @param string        text (no lang var!)
+     * @param string        link
+     * @param string        frame target
+     */
     public function addTab($a_id, $a_text, $a_link, $a_frame = "")
     {
-        $this->target[] = array("text" => $a_text, "link" => $a_link,
-            "frame" => $a_frame, "dir_text" => true, "id" => $a_id, "cmdClass" => array());
+        $this->target[] = array("text" => $a_text,
+                                "link" => $a_link,
+                                "frame" => $a_frame,
+                                "dir_text" => true,
+                                "id" => $a_id,
+                                "cmdClass" => array()
+        );
     }
-    
+
     /**
      * Remove a tab identified by its id.
-     *
-     * @param 	string	$a_id	Id of tab to remove
-     * @return bool	false if tab wasn't found
+     * @param string $a_id Id of tab to remove
+     * @return bool    false if tab wasn't found
      * @access public
+     * @deprecated
      */
     public function removeTab($a_id)
     {
@@ -184,10 +188,10 @@ class ilTabsGUI
 
     /**
      * Remove a tab identified by its id.
-     *
-     * @param 	string	$a_id	Id of tab to remove
-     * @return bool	false if tab wasn't found
+     * @param string $a_id Id of tab to remove
+     * @return bool    false if tab wasn't found
      * @access public
+     * @deprecated
      */
     public function removeSubTab($a_id)
     {
@@ -203,12 +207,11 @@ class ilTabsGUI
     /**
      * Replace a tab.
      * In contrast to a combination of removeTab and addTab, the position is kept.
-     *
-     * @param string $a_old_id				old id of tab
-     * @param string $a_new_id				new id if tab
-     * @param string $a_text				tab text
-     * @param string $a_link				tab link
-     * @param string $a_frame[optional]		frame
+     * @param string $a_old_id old id of tab
+     * @param string $a_new_id new id if tab
+     * @param string $a_text   tab text
+     * @param string $a_link   tab link
+     * @param string $a_frame  [optional]        frame
      * @return bool
      */
     public function replaceTab($a_old_id, $a_new_id, $a_text, $a_link, $a_frame = '')
@@ -222,7 +225,8 @@ class ilTabsGUI
                     "frame" => $a_frame,
                     "dir_text" => true,
                     "id" => $a_new_id,
-                    "cmdClass" => array());
+                    "cmdClass" => array()
+                );
                 return true;
             }
         }
@@ -230,8 +234,8 @@ class ilTabsGUI
     }
 
     /**
-    * clear all targets
-    */
+     * clear all targets
+     */
     public function clearTargets()
     {
         global $DIC;
@@ -240,7 +244,7 @@ class ilTabsGUI
         if (isset($DIC["ilHelp"])) {
             $ilHelp = $DIC["ilHelp"];
         }
-        
+
         if (!$this->getSetupMode()) {
             $ilHelp->setScreenIdComponent("");
         }
@@ -257,23 +261,20 @@ class ilTabsGUI
     }
 
     /**
-    * DEPRECATED.
-    *
-    * Use addTab/addSubTab and activateTab/activateSubTab.
-    *
-    * Add a Subtarget to the tabbed menu. If no target has set $a_activate to
-    * true, ILIAS tries to determine the current activated menu item
-    * automatically using $a_cmd and $a_cmdClass. If one item is set
-    * activated (and only one should be activated) the automatism is disabled.
-    *
-    * @param	string		$a_text			menu item text
-    * @param	string		$a_link			menu item link
-    * @param	string		$a_cmd			command, used for auto activation
-    * @param	string		$a_cmdClass		used for auto activation. String or array of cmd classes
-    * @param	string		$a_frame		frame target
-    * @param	boolean		$a_activate		activate this menu item
-    * @param	boolean		$a_dir_text		text is direct text, no language variable
-    */
+     * DEPRECATED.
+     * Use addTab/addSubTab and activateTab/activateSubTab.
+     * Add a Subtarget to the tabbed menu. If no target has set $a_activate to
+     * true, ILIAS tries to determine the current activated menu item
+     * automatically using $a_cmd and $a_cmdClass. If one item is set
+     * activated (and only one should be activated) the automatism is disabled.
+     * @param string  $a_text     menu item text
+     * @param string  $a_link     menu item link
+     * @param string  $a_cmd      command, used for auto activation
+     * @param string  $a_cmdClass used for auto activation. String or array of cmd classes
+     * @param string  $a_frame    frame target
+     * @param boolean $a_activate activate this menu item
+     * @param boolean $a_dir_text text is direct text, no language variable
+     */
     public function addSubTabTarget(
         $a_text,
         $a_link,
@@ -292,35 +293,42 @@ class ilTabsGUI
         if ($a_activate) {
             $this->subtab_manual_activation = true;
         }
-        $this->sub_target[] = array("text" => $a_text, "link" => $a_link,
-            "cmd" => $a_cmd, "cmdClass" => $a_cmdClass, "frame" => $a_frame,
-            "activate" => $a_activate, "dir_text" => $a_dir_text, "id" => $a_text);
+        $this->sub_target[] = array("text" => $a_text,
+                                    "link" => $a_link,
+                                    "cmd" => $a_cmd,
+                                    "cmdClass" => $a_cmdClass,
+                                    "frame" => $a_frame,
+                                    "activate" => $a_activate,
+                                    "dir_text" => $a_dir_text,
+                                    "id" => $a_text
+        );
     }
 
     /**
-    * Add a Subtab
-    *
-    * @param	string		id
-    * @param	string		text (no lang var!)
-    * @param	string		link
-    * @param	string		frame target
-    */
+     * Add a Subtab
+     * @param string        id
+     * @param string        text (no lang var!)
+     * @param string        link
+     * @param string        frame target
+     */
     public function addSubTab($a_id, $a_text, $a_link, $a_frame = "")
     {
-        $this->sub_target[] = array("text" => $a_text, "link" => $a_link,
-            "frame" => $a_frame, "dir_text" => true, "id" => $a_id, "cmdClass" => array());
+        $this->sub_target[] = array("text" => $a_text,
+                                    "link" => $a_link,
+                                    "frame" => $a_frame,
+                                    "dir_text" => true,
+                                    "id" => $a_id,
+                                    "cmdClass" => array()
+        );
     }
 
     /**
      * DEPRECATED.
+     * @param string $a_text menu item text
      * @deprecated since version 5.2
-     *
-     * Use addTab/addSubTab and activateTab/activateSubTab.
-     *
-     * Activate a specific tab identified by name
-     * This method overrides the definition in YOUR_OBJECT::getTabs() and deactivates all other tabs.
-     *
-     * @param	string		$a_text			menu item text
+     *                       Use addTab/addSubTab and activateTab/activateSubTab.
+     *                       Activate a specific tab identified by name
+     *                       This method overrides the definition in YOUR_OBJECT::getTabs() and deactivates all other tabs.
      */
     public function setTabActive($a_id)
     {
@@ -336,29 +344,25 @@ class ilTabsGUI
     }
 
     /**
-    * Activate a specific tab identified its id
-    *
-    * @param	string		$a_text			menu item text
-    */
+     * Activate a specific tab identified its id
+     * @param string $a_text menu item text
+     */
     public function activateTab($a_id)
     {
         $this->setTabActive($a_id);
     }
 
     /**
-    * @deprecated since version 5.2
-    *
-    * Use addTab/addSubTab and activateTab/activateSubTab.
-    *
-    * Activate a specific tab identified by name
-    * This method overrides the definition in YOUR_OBJECT::getTabs() and deactivates all other tabs.
-    *
-    * @param	string		$a_text			menu item text
-    * @param	boolean
-    */
+     * @param string $a_text menu item text
+     * @param boolean
+     * @deprecated since version 5.2
+     *                       Use addTab/addSubTab and activateTab/activateSubTab.
+     *                       Activate a specific tab identified by name
+     *                       This method overrides the definition in YOUR_OBJECT::getTabs() and deactivates all other tabs.
+     */
     public function setSubTabActive($a_text)
     {
-        for ($i = 0; $i < count($this->sub_target);$i++) {
+        for ($i = 0; $i < count($this->sub_target); $i++) {
             $this->sub_target[$i]['activate'] = $this->sub_target[$i]['id'] == $a_text;
         }
         $this->subtab_manual_activation = true;
@@ -366,20 +370,18 @@ class ilTabsGUI
     }
 
     /**
-    * Activate a specific subtab identified its id
-    *
-    * @param	string		$a_text			menu item text
-    */
+     * Activate a specific subtab identified its id
+     * @param string $a_text menu item text
+     */
     public function activateSubTab($a_id)
     {
         $this->setSubTabActive($a_id);
     }
 
     /**
-    * Clear all already added sub tabs
-    *
-    * @param	boolean
-    */
+     * Clear all already added sub tabs
+     * @param boolean
+     */
     public function clearSubTabs()
     {
         $this->sub_target = array();
@@ -388,36 +390,58 @@ class ilTabsGUI
 
     /**
      * get tabs code as html
-     *
      * @param bool $a_after_tabs_anchor
      * @return string
-    */
+     */
     public function getHTML($a_after_tabs_anchor = false)
     {
-        return $this->__getHTML(false, $a_after_tabs_anchor);
+        global $DIC;
+        /**
+         * @var $DIC Container
+         */
+
+        $provider = $DIC->globalScreen()->resolver()->tabs();
+
+        $content = "new TABS here: <ul>";
+
+        foreach ($provider->getMainTabs() as $item) {
+            $content .= "<li>{$item->getTitle()}</li>";
+        }
+
+        $content .= "</ul>";
+
+        return "<div style='border: 1px red solid; padding: 12px; margin: 12px;'>{$content}</div>";
+
+//        return $this->__getHTML(false, $a_after_tabs_anchor);
     }
-    
+
     /**
      * get sub tabs code as html
      * @return string
-    */
+     */
     public function getSubTabHTML()
     {
+        return "";
+
         return $this->__getHTML(true);
     }
 
     /**
-    * Add a non-tabbed link (outside of tabs at same level)
-    *
-    * @param	string		id
-    * @param	string		text (no lang var!)
-    * @param	string		link
-    * @param	string		frame target
-    */
+     * Add a non-tabbed link (outside of tabs at same level)
+     * @param string        id
+     * @param string        text (no lang var!)
+     * @param string        link
+     * @param string        frame target
+     */
     public function addNonTabbedLink($a_id, $a_text, $a_link, $a_frame = "")
     {
-        $this->non_tabbed_link[] = array("text" => $a_text, "link" => $a_link,
-            "frame" => $a_frame, "dir_text" => true, "id" => $a_id, "cmdClass" => array());
+        $this->non_tabbed_link[] = array("text" => $a_text,
+                                         "link" => $a_link,
+                                         "frame" => $a_frame,
+                                         "dir_text" => true,
+                                         "id" => $a_id,
+                                         "cmdClass" => array()
+        );
     }
 
     public function removeNonTabbedLinks()
@@ -466,7 +490,6 @@ class ilTabsGUI
             }
         }
 
-        
         // user interface hook [uihk]
         if (!$this->getSetupMode()) {
             $cmd = $ilCtrl->getCmd();
@@ -497,7 +520,7 @@ class ilTabsGUI
 
                 $tpl->parseCurrentBlock();
             }
-            
+
             // back tab
             if ($this->back_title != "") {
                 $tpl->setCurrentBlock("back_tab");
@@ -514,13 +537,13 @@ class ilTabsGUI
         $targets = $a_get_sub_tabs ? $this->sub_target : $this->target;
 
         $i = 0;
-        
+
         // do not display one tab only
         if ((count($targets) > 1 || $this->force_one_tab) || ($this->back_title != "" && !$a_get_sub_tabs)
             || (count($this->non_tabbed_link) > 0 && !$a_get_sub_tabs)) {
             foreach ($targets as $target) {
                 $i++;
-                
+
                 if (isset($target["cmd"]) && !is_array($target["cmd"])) {
                     $target["cmd"] = array($target["cmd"]);
                 }
@@ -532,7 +555,7 @@ class ilTabsGUI
                 } else {
                     $tabtype = $pre . "tabinactive";
                 }
-                
+
                 if (($a_get_sub_tabs ? $this->subtab_manual_activation : $this->manual_activation) && $target["activate"]) {
                     $tabtype = $pre . "tabactive";
                 }
@@ -541,7 +564,7 @@ class ilTabsGUI
                     $tpl->setCurrentBlock("sel_text");
                     $tpl->setVariable("TXT_SELECTED", $lng->txt("stat_selected"));
                     $tpl->parseCurrentBlock();
-                    
+
                     if (!$this->getSetupMode()) {
                         if ($a_get_sub_tabs) {
                             $part = ilHelpGUI::ID_PART_SUB_SCREEN;
@@ -551,10 +574,10 @@ class ilTabsGUI
                         $ilHelp->setDefaultScreenId($part, $target["id"]);
                     }
                 }
-    
+
                 $tpl->setCurrentBlock($pre . "tab");
                 $tpl->setVariable("ID", $pre . "tab_" . $target["id"]);
-                
+
                 // tooltip
                 if (!$this->getSetupMode()) {
                     $ttext = $ilHelp->getTabTooltipText($target["id"]);
@@ -582,7 +605,7 @@ class ilTabsGUI
                         ? "#after_" . $sr_pre . "tabs"
                         : "";
                 }
-                
+
                 $tpl->setVariable($pre2 . "TAB_LINK", $target["link"] . $hash);
                 if ($target["dir_text"]) {
                     $tpl->setVariable($pre2 . "TAB_TEXT", $target["text"]);
@@ -594,7 +617,7 @@ class ilTabsGUI
                 }
                 $tpl->parseCurrentBlock();
             }
-            
+
             if ($a_get_sub_tabs) {
                 $tpl->setVariable("TXT_SUBTABS", $lng->txt("subtabs"));
             } else {
@@ -610,7 +633,7 @@ class ilTabsGUI
                     $tpl->setVariable("TAB_TARGET", $link["frame"]);
                     $tpl->setVariable("ID", "nontab_" . $link["id"]);
                     $tpl->parseCurrentBlock();
-                    
+
                     // tooltip
                     if (!$this->getSetupMode()) {
                         $ttext = $ilHelp->getTabTooltipText($link["id"]);
@@ -633,7 +656,7 @@ class ilTabsGUI
             return "";
         }
     }
-    
+
     public function getActiveTab()
     {
         foreach ($this->target as $i => $target) {
@@ -642,7 +665,7 @@ class ilTabsGUI
             }
         }
     }
-    
+
     public function hasTabs()
     {
         return (bool) sizeof($this->target);

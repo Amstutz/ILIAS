@@ -8,15 +8,17 @@ use ILIAS\GlobalScreen\Scope\MainMenu\Factory\MainMenuItemFactory;
 use ILIAS\GlobalScreen\Scope\MetaBar\Factory\MetaBarItemFactory;
 use ILIAS\GlobalScreen\Scope\Notification\NotificationServices;
 use ILIAS\GlobalScreen\Scope\Tool\ToolServices;
+use ILIAS\GlobalScreen\Scope\Content\ContentServices;
+use ILIAS\GlobalScreen\Collector\ResolverFactory;
 
 /**
  * Class Services
- *
  * @author Fabian Schmid <fs@studer-raimann.ch>
  */
 class Services
 {
     use SingletonTrait;
+
     /**
      * @var Services
      */
@@ -26,10 +28,8 @@ class Services
      */
     private $provider_factory;
 
-
     /**
      * Services constructor.
-     *
      * @param ProviderFactory $provider_factory
      */
     public function __construct(ProviderFactory $provider_factory)
@@ -37,10 +37,8 @@ class Services
         $this->provider_factory = $provider_factory;
     }
 
-
     /**
      * @param ProviderFactory $provider_factory
-     *
      * @return Services
      */
     public static function getInstance(ProviderFactory $provider_factory)
@@ -52,17 +50,14 @@ class Services
         return self::$instance;
     }
 
-
     /**
      * @return MainMenuItemFactory
      * @see MainMenuItemFactory
-     *
      */
     public function mainBar() : MainMenuItemFactory
     {
         return $this->get(MainMenuItemFactory::class);
     }
-
 
     /**
      * @return MetaBarItemFactory
@@ -71,7 +66,6 @@ class Services
     {
         return $this->get(MetaBarItemFactory::class);
     }
-
 
     /**
      * @return ToolServices
@@ -82,7 +76,6 @@ class Services
         return $this->get(ToolServices::class);
     }
 
-
     /**
      * @return LayoutServices
      */
@@ -90,7 +83,6 @@ class Services
     {
         return $this->get(LayoutServices::class);
     }
-
 
     /**
      * @return NotificationServices
@@ -100,6 +92,15 @@ class Services
         return $this->get(NotificationServices::class);
     }
 
+    public function content() : ContentServices
+    {
+        return $this->get(ContentServices::class);
+    }
+
+    public function resolver() : ResolverFactory
+    {
+        return $this->getWithArgument(ResolverFactory::class, $this->provider_factory);
+    }
 
     /**
      * @return CollectorFactory
@@ -109,11 +110,9 @@ class Services
         return $this->getWithArgument(CollectorFactory::class, $this->provider_factory);
     }
 
-
     /**
      * @return IdentificationFactory
      * @see IdentificationFactory
-     *
      */
     public function identification() : IdentificationFactory
     {

@@ -10,6 +10,7 @@ use ILIAS\GlobalScreen\Scope\MainMenu\Provider\StaticMainMenuProvider;
 use ILIAS\GlobalScreen\Scope\MetaBar\Provider\StaticMetaBarProvider;
 use ILIAS\GlobalScreen\Scope\Notification\Provider\NotificationProvider;
 use ILIAS\GlobalScreen\Scope\Tool\Provider\DynamicToolProvider;
+use ILIAS\GlobalScreen\Scope\Content\Tabs\Provider\TabProvider;
 
 /**
  * Class ilGSProviderFactory
@@ -44,9 +45,9 @@ class ilGSProviderFactory implements ProviderFactory
      */
     public function __construct(Container $dic)
     {
-        $this->dic                        = $dic;
+        $this->dic = $dic;
         $this->main_menu_item_information = new ilMMItemInformation();
-        $this->class_loader               = include "Services/GlobalScreen/artifacts/global_screen_providers.php";
+        $this->class_loader = include "Services/GlobalScreen/artifacts/global_screen_providers.php";
     }
 
     private function initPlugins() : void
@@ -179,6 +180,20 @@ class ilGSProviderFactory implements ProviderFactory
                 $providers[] = $provider;
             }
         }
+
+        $this->registerInternal($providers);
+
+        return $providers;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getTabsProvider() : array
+    {
+        $providers = [];
+        // Core
+        $this->appendCore($providers, TabProvider::class);
 
         $this->registerInternal($providers);
 

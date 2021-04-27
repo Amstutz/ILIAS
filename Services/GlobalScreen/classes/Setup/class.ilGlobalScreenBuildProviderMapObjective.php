@@ -6,6 +6,7 @@ use ILIAS\GlobalScreen\Scope\MetaBar\Provider\StaticMetaBarProvider;
 use ILIAS\GlobalScreen\Scope\Notification\Provider\NotificationProvider;
 use ILIAS\GlobalScreen\Scope\Tool\Provider\DynamicToolProvider;
 use ILIAS\Setup;
+use ILIAS\GlobalScreen\Scope\Content\Tabs\Provider\TabProvider;
 
 /**
  * Class ilGSBootLoaderBuilder
@@ -29,6 +30,7 @@ class ilGlobalScreenBuildProviderMapObjective extends Setup\Artifact\BuildArtifa
             DynamicToolProvider::class,
             ModificationProvider::class,
             NotificationProvider::class,
+            TabProvider::class,
         ];
 
         $finder = new Setup\ImplementationOfInterfaceFinder();

@@ -3,6 +3,7 @@
 /* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 use ILIAS\DI\Container;
+use ILIAS\Tabs\GlobalScreen\LegacyStaticTabsHolder;
 
 /**
  * Tabs GUI
@@ -130,6 +131,9 @@ class ilTabsGUI
         $a_activate = false,
         $a_dir_text = false
     ) {
+        LegacyStaticTabsHolder::addTab($a_text, $this->lng->txt($a_text), $a_link);
+
+
         if (!$a_cmdClass) {
             $a_cmdClass = array();
         }
@@ -159,6 +163,8 @@ class ilTabsGUI
      */
     public function addTab($a_id, $a_text, $a_link, $a_frame = "")
     {
+        LegacyStaticTabsHolder::addTab($a_id, $a_text, $a_link);
+
         $this->target[] = array("text" => $a_text,
                                 "link" => $a_link,
                                 "frame" => $a_frame,
@@ -402,10 +408,10 @@ class ilTabsGUI
 
         $provider = $DIC->globalScreen()->resolver()->tabs();
 
-        $content = "new TABS here: <ul>";
+        $content = "<ul>";
 
         foreach ($provider->getMainTabs() as $item) {
-            $content .= "<li>{$item->getTitle()}</li>";
+            $content .= "<li><a href='{$item->getURI()}'>{$item->getTitle()}</a></li>";
         }
 
         $content .= "</ul>";

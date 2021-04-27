@@ -28,7 +28,7 @@ class Standard implements Outer\Standard
     {
     }
 
-    public function getTitle() : string
+    public function getTitle() : ?string
     {
         return $this->title;
     }

@@ -10,7 +10,7 @@ use ILIAS\UI\Component\JavaScriptBindable;
  */
 interface Standard extends JavaScriptBindable, Component
 {
-    public function getTitle() : string;
+    public function getTitle() : ?string;
 
     public function withTitle(string $title);
 

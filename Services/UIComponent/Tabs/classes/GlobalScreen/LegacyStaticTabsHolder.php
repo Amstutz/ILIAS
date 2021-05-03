@@ -8,15 +8,15 @@ namespace ILIAS\Tabs\GlobalScreen;
  */
 class LegacyStaticTabsHolder
 {
-    protected static $tabs = [];
+    protected $tabs = [];
 
-    public static function addTab(string $id, string $title, string $url) : void
+    public function addTab(string $id, string $title, string $url) : void
     {
-        self::$tabs[$id] = ['title' => $title, 'url' => $url];
+        $this->tabs[$id] = ['title' => $title, 'url' => $url];
     }
 
-    public static function getTabs() : array
+    public function getTabs() : array
     {
-        return self::$tabs;
+        return $this->tabs;
     }
 }

@@ -27,6 +27,10 @@ class ilTabsGUI
     public $setup_mode = false;
 
     protected $force_one_tab = false;
+    /**
+     * @var LegacyStaticTabsHolder
+     */
+    protected $tabs_holder;
 
     /**
      * Constructor
@@ -50,6 +54,7 @@ class ilTabsGUI
         $this->back_target = "";
         $this->back_2_target = "";
         $this->back_2_title = "";
+        $this->tabs_holder = new LegacyStaticTabsHolder();
     }
 
     /**
@@ -131,7 +136,7 @@ class ilTabsGUI
         $a_activate = false,
         $a_dir_text = false
     ) {
-        LegacyStaticTabsHolder::addTab($a_text, $this->lng->txt($a_text), $a_link);
+        $this->tabs_holder->addTab($a_text, $this->lng->txt($a_text), $a_link);
 
 
         if (!$a_cmdClass) {
@@ -163,7 +168,7 @@ class ilTabsGUI
      */
     public function addTab($a_id, $a_text, $a_link, $a_frame = "")
     {
-        LegacyStaticTabsHolder::addTab($a_id, $a_text, $a_link);
+        $this->tabs_holder->addTab($a_id, $a_text, $a_link);
 
         $this->target[] = array("text" => $a_text,
                                 "link" => $a_link,
@@ -172,6 +177,11 @@ class ilTabsGUI
                                 "id" => $a_id,
                                 "cmdClass" => array()
         );
+    }
+
+    public function getTabsHolder() : LegacyStaticTabsHolder
+    {
+        return $this->tabs_holder;
     }
 
     /**
@@ -401,6 +411,7 @@ class ilTabsGUI
      */
     public function getHTML($a_after_tabs_anchor = false)
     {
+        return $this->__getHTML(false, $a_after_tabs_anchor);
         global $DIC;
         /**
          * @var $DIC Container
@@ -418,7 +429,7 @@ class ilTabsGUI
 
         return "<div style='border: 1px red solid; padding: 12px; margin: 12px;'>{$content}</div>";
 
-//        return $this->__getHTML(false, $a_after_tabs_anchor);
+//
     }
 
     /**

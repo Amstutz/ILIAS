@@ -29,7 +29,7 @@ class ilContentPageDataSet extends ilDataSet implements ilContentPageObjectConst
     /**
      * @inheritdoc
      */
-    public function getXmlNamespace($a_entity, $a_schema_version)
+    protected function getXmlNamespace($a_entity, $a_schema_version)
     {
         return 'http://www.ilias.de/xml/Modules/ContentPage/' . $a_entity;
     }
@@ -73,7 +73,7 @@ class ilContentPageDataSet extends ilDataSet implements ilContentPageObjectConst
      * @param string $entity
      * @param array $ids
      */
-    protected function readEntityData($entity, $ids)
+    protected function readEntityData(string $entity, array $ids) : void
     {
         switch ($entity) {
             case self::OBJ_TYPE:
@@ -109,7 +109,7 @@ class ilContentPageDataSet extends ilDataSet implements ilContentPageObjectConst
      * @param ilImportMapping $a_mapping
      * @param $a_schema_version
      */
-    public function importRecord($a_entity, $a_types, $a_rec, $a_mapping, $a_schema_version)
+    public function importRecord($a_entity, $a_types, $a_rec, $a_mapping, $a_schema_version) : void
     {
         switch ($a_entity) {
             case self::OBJ_TYPE:
@@ -148,8 +148,8 @@ class ilContentPageDataSet extends ilDataSet implements ilContentPageObjectConst
     /**
      * @inheritdoc
      */
-    protected function getDependencies($a_entity, $a_version, $a_rec, $a_ids)
+    protected function getDependencies($a_entity, $a_version, $a_rec, $a_ids) : array
     {
-        return false;
+        return [];
     }
 }

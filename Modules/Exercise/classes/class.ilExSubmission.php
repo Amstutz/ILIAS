@@ -784,7 +784,8 @@ class ilExSubmission
                 }
 
                 if ($a_peer_review_mask_filename) {
-                    $suffix = array_pop(explode(".", $file["filetitle"]));
+                    $title_a = explode(".", $file["filetitle"]);
+                    $suffix = array_pop($title_a);
                     $file["filetitle"] = $this->assignment->getTitle() . "_peer" . $peer_id . "." . $suffix;
                 } elseif ($file["late"]) {
                     $file["filetitle"] = $lng->txt("exc_late_submission") . " - " .
@@ -803,7 +804,8 @@ class ilExSubmission
 
                     $src = basename($file["filename"]);
                     if ($a_peer_review_mask_filename) {
-                        $suffix = array_pop(explode(".", $src));
+                        $src_a = explode(".", $src);
+                        $suffix = array_pop($src_a);
                         $tgt = $this->assignment->getTitle() . "_peer" . $peer_id .
                             "_" . (++$seq) . "." . $suffix;
                         
@@ -951,7 +953,7 @@ class ilExSubmission
         }
         
         chdir($tmpdir);
-        $zipcmd = $zip . " " . ilUtil::escapeShellArg($tmpzipfile) . " " . join($parsed_files, " ");
+        $zipcmd = $zip . " " . ilUtil::escapeShellArg($tmpzipfile) . " " . join(" ", $parsed_files);
 
         exec($zipcmd);
         ilUtil::delDir($tmpdir);
@@ -1042,7 +1044,7 @@ class ilExSubmission
             if ($a_ass->getAssignmentType()->isSubmissionAssignedToTeam()) {
                 $targetdir = $team_dir . ilUtil::getASCIIFilename(
                     $item["name"]
-                    );
+                );
                 if ($targetdir == "") {
                     continue;
                 }

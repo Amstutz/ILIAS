@@ -6,12 +6,12 @@ namespace ILIAS\UI\Component\Button;
 /**
  * This describes a bulky button.
  */
-interface Bulky extends Button, Engageable
+interface Bulky extends Button
 {
     /**
      * Get the icon or glyph the button was created with.
      *
-     * @return ILIAS\UI\Component\Symbol\Symbol
+     * @return \ILIAS\UI\Component\Symbol\Symbol
      */
     public function getIconOrGlyph();
 }

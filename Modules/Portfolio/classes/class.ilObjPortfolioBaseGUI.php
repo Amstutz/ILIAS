@@ -24,7 +24,27 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
     protected $perma_link; // [string]
     protected $page_id; // [int]
     protected $page_mode; // [string] preview|edit
+
+    /**
+     * @var int
+     */
+    protected $requested_ppage;
+
+    /**
+     * @var int
+     */
+    protected $requested_user_page;
+
+    /**
+     * @var string
+     */
+    protected $requested_back_url = "";
     
+    /**
+     * @var \ILIAS\DI\UIServices
+     */
+    protected $ui;
+
     public function __construct($a_id = 0, $a_id_type = self::REPOSITORY_NODE_ID, $a_parent_node_id = 0)
     {
         global $DIC;
@@ -40,6 +60,8 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         $ilUser = $DIC->user();
         $this->ui = $DIC->ui();
         
+        $this->ui = $DIC->ui();
+        
         parent::__construct($a_id, $a_id_type, $a_parent_node_id);
 
         $this->user_id = $ilUser->getId();
@@ -47,6 +69,20 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         $this->lng->loadLanguageModule("prtf");
         $this->lng->loadLanguageModule("user");
         $this->lng->loadLanguageModule("obj");
+
+        $this->requested_ppage = (int) $_REQUEST["ppage"];
+        $this->requested_user_page = (int) $_REQUEST["user_page"];
+
+        // temp sanitization, should be done smarter in the future
+        $back = str_replace("&amp;", ":::", $_REQUEST["back_url"]);
+        $back = preg_replace(
+            "/[^a-zA-Z0-9_\.\?=:\s]/",
+            "",
+            $back
+        );
+        $this->requested_back_url = str_replace(":::", "&amp;", $back);
+
+        $this->ctrl->setParameterbyClass("ilobjportfoliogui", "back_url", rawurlencode($this->requested_back_url));
     }
     
     protected function addLocatorItems()
@@ -77,19 +113,19 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
     protected function determinePageCall()
     {
         // edit
-        if (isset($_REQUEST["ppage"])) {
+        if ($this->requested_ppage > 0) {
             if (!$this->checkPermissionBool("write")) {
                 $this->ctrl->redirect($this, "view");
             }
             
-            $this->page_id = $_REQUEST["ppage"];
+            $this->page_id = $this->requested_ppage;
             $this->page_mode = "edit";
             $this->ctrl->setParameter($this, "ppage", $this->page_id);
             return true;
         }
         // preview
         else {
-            $this->page_id = $_REQUEST["user_page"];
+            $this->page_id = $this->requested_user_page;
             $this->page_mode = "preview";
             $this->ctrl->setParameter($this, "user_page", $this->page_id);
             return false;
@@ -207,8 +243,6 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
 
         $prfa_set = new ilSetting("prfa");
         if ($prfa_set->get("banner")) {
-            ilFileInputGUI::setPersonalWorkspaceQuotaCheck(true);
-
             $dimensions = " (" . $prfa_set->get("banner_width") . "x" .
                 $prfa_set->get("banner_height") . ")";
 
@@ -283,6 +317,7 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
      */
     public function view()
     {
+        $ctrl = $this->ctrl;
         $ilToolbar = $this->toolbar;
         $ilSetting = $this->settings;
         $tree = $this->tree;
@@ -308,13 +343,32 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
 
 
         // #16571
+        $modal_html = "";
         if ($this->getType() == "prtf") {
             $ilToolbar->addSeparator();
 
-            $button = ilLinkButton::getInstance();
-            $button->setCaption("export_html");
-            $button->setUrl($this->ctrl->getLinkTarget($this, "export"));
-            $ilToolbar->addButtonInstance($button);
+            $ui = $this->ui;
+
+            if ($this->object->isCommentsExportPossible()) {
+                $this->lng->loadLanguageModule("note");
+                $comment_export_helper = new \ILIAS\Notes\Export\ExportHelperGUI();
+                $comment_modal = $comment_export_helper->getCommentIncludeModalDialog(
+                    $this->lng->txt("export_html"),
+                    $this->lng->txt("note_html_export_include_comments"),
+                    $this->ctrl->getLinkTarget($this, "export"),
+                    $this->ctrl->getLinkTarget($this, "exportWithComments")
+                );
+                $button = $ui->factory()->button()->standard($this->lng->txt("export_html"), '')
+                             ->withOnClick($comment_modal->getShowSignal());
+                $ilToolbar->addComponent($button);
+                $modal_html = $ui->renderer()->render($comment_modal);
+            } else {
+                $button = ilLinkButton::getInstance();
+                $button->setCaption("export_html");
+                $button->setUrl($this->ctrl->getLinkTarget($this, "export"));
+                $ilToolbar->addButtonInstance($button);
+            }
+
 
             $button = ilLinkButton::getInstance();
             $button->setCaption("prtf_pdf");
@@ -325,7 +379,7 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         $table = new ilPortfolioPageTableGUI($this, "view");
         
 
-        $this->tpl->setContent($message . $table->getHTML());
+        $this->tpl->setContent($message . $table->getHTML() . $modal_html);
     }
     
     /**
@@ -560,7 +614,7 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         $this->tabs_gui->clearTargets();
             
         $pages = ilPortfolioPage::getAllPortfolioPages($portfolio_id);
-        $current_page = (int) $_GET["user_page"];
+        $current_page = $this->requested_user_page;
         
         // validate current page
         if ($pages && $current_page) {
@@ -592,8 +646,8 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         $back_caption = "";
                         
         // public profile
-        if ($_REQUEST["back_url"]) {
-            $back = $_REQUEST["back_url"];
+        if ($this->requested_back_url != "") {
+            $back = $this->requested_back_url;
         } elseif ($_GET["baseClass"] != "ilPublicUserProfileGUI" &&
             $this->user_id && $this->user_id != ANONYMOUS_USER_ID) {
             if (!$this->checkPermissionBool("write")) {
@@ -677,6 +731,7 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         $notes = "";
         if ($a_show_notes && $this->object->hasPublicComments() && !$current_blog && $current_page) {
             $note_gui = new ilNoteGUI($portfolio_id, $current_page, "pfpg");
+
             $note_gui->setRepositoryMode(false);
             $note_gui->enablePublicNotes(true);
             $note_gui->enablePrivateNotes(false);
@@ -737,12 +792,10 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
      */
     protected function showEditButton($page_id)
     {
-        if ($page_id == 0) {
-            return;
-        }
         $page_class = ($this->getType() == "prtt")
             ? "ilPortfolioTemplatePageGUI"
             : "ilportfoliopagegui";
+        $button = null;
         if (ilPortfolioPage::lookupType($page_id) == ilPortfolioPage::TYPE_PAGE) {
             $this->ctrl->setParameterByClass($page_class, "ppage", $page_id);
             $button = $this->ui->factory()->button()->standard(
@@ -750,14 +803,23 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
                 $this->ctrl->getLinkTargetByClass($page_class, "edit")
             );
         } else {
-            $this->ctrl->setParameterByClass("ilobjbloggui", "ppage", $page_id);
-            $this->ctrl->setParameterByClass("ilobjbloggui", "prt_id", (int) $_GET["prt_id"]);
-            $button = $this->ui->factory()->button()->standard(
-                $this->lng->txt("edit"),
-                $this->ctrl->getLinkTargetByClass([$page_class, "ilobjbloggui"], "render")
-            );
+            if ($this->getType() != "prtt") {
+                if ($page_id > 0) {
+                    $this->ctrl->setParameterByClass("ilobjbloggui", "ppage", $page_id);
+                    $this->ctrl->setParameterByClass("ilobjbloggui", "prt_id", (int) $_GET["prt_id"]);
+                    $button = $this->ui->factory()->button()->standard(
+                        $this->lng->txt("edit"),
+                        $this->ctrl->getLinkTargetByClass([$page_class, "ilobjbloggui"], "render")
+                    );
+                }
+            } else {    // portfolio template, blog page cannot be edited -> link to overview
+                $button = $this->ui->factory()->button()->standard(
+                    $this->lng->txt("edit"),
+                    $this->ctrl->getLinkTargetByClass(["ilobjportfoliotemplategui"], "view")
+                );
+            }
         }
-        if ($this->checkPermissionBool("write")) {
+        if ($button && $this->checkPermissionBool("write")) {
             $this->tpl->setHeaderActionMenu($this->ui->renderer()->render($button));
         }
     }
@@ -826,14 +888,19 @@ abstract class ilObjPortfolioBaseGUI extends ilObject2GUI
         // $a_tpl->setBodyClass("std ilExternal ilPortfolio");
     }
             
-    public function export()
+    public function export($a_with_comments = false)
     {
         $port_export = new \ILIAS\Portfolio\Export\PortfolioHtmlExport($this);
+        $port_export->includeComments($a_with_comments);
         $zip = $port_export->exportHtml();
 
         ilUtil::deliverFile($zip, $this->object->getTitle() . ".zip", '', false, true);
     }
     
+    public function exportWithComments()
+    {
+        $this->export(true);
+    }
     
     /**
      * Select target portfolio for page(s) copy

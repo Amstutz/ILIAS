@@ -29,6 +29,8 @@ class ilFileSystemComponentDataDirectoryCreatedObjective extends Setup\Objective
         string $component_dir,
         int $base_location = self::DATADIR
     ) {
+        parent::__construct($component_dir);
+
         $this->component_dir = $component_dir;
         $this->base_location = $base_location;
     }
@@ -43,25 +45,34 @@ class ilFileSystemComponentDataDirectoryCreatedObjective extends Setup\Objective
 
     protected function buildPath(Setup\Environment $environment) : string
     {
-        $common_config = $environment->getConfigFor("common");
-        $fs_config = $environment->getConfigFor("filesystem");
+        $ini = $environment->getResource(Setup\Environment::RESOURCE_ILIAS_INI);
+        $client_id = $environment->getResource(Setup\Environment::RESOURCE_CLIENT_ID);
+
         if ($this->base_location === self::DATADIR) {
-            $data_dir = $fs_config->getDataDir();
+            $data_dir = $ini->readVariable('clients', 'datadir');
         }
         if ($this->base_location === self::WEBDIR) {
-            $data_dir = $fs_config->getWebDir();
+            $data_dir = dirname(__DIR__, 4) . "/data";
         }
 
-        $client_data_dir = $data_dir . '/' . $common_config->getClientId();
+        $client_data_dir = $data_dir . '/' . $client_id;
         $new_dir = $client_data_dir . '/' . $this->component_dir;
         return $new_dir;
     }
 
     public function getPreconditions(Setup\Environment $environment) : array
     {
-        $config = $environment->getConfigFor("filesystem");
+        // case if it is a fresh ILIAS installation
+        if ($environment->hasConfigFor("filesystem")) {
+            $config = $environment->getConfigFor("filesystem");
+            return [
+                new ilFileSystemDirectoriesCreatedObjective($config)
+            ];
+        }
+
+        // case if ILIAS is already installed
         return [
-            new ilFileSystemDirectoriesCreatedObjective($config)
+            new ilIniFilesLoadedObjective()
         ];
     }
 
@@ -69,5 +80,14 @@ class ilFileSystemComponentDataDirectoryCreatedObjective extends Setup\Objective
     {
         $this->path = $this->buildPath($environment);
         return parent::achieve($environment);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isApplicable(Setup\Environment $environment) : bool
+    {
+        $this->path = $this->buildPath($environment);
+        return parent::isApplicable($environment);
     }
 }

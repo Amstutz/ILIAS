@@ -10024,7 +10024,6 @@ prtf#:#prtf_template_import_blog_reuse#:#Use Existing Blog###16 09 2013 new vari
 prtf#:#prtf_template_import_blog_ignore#:#Remove Blog Page###16 09 2013 new variable
 prtf#:#prtf_create_template_from_portfolio#:#Portfolio###16 09 2013 new variable
 prtf#:#prtf_create_template_from_portfolio_info#:#Select a portfolio to use its content and settings for the template.###16 09 2013 new variable
-prtf#:#prtf_template_import_quota_failure#:#This portfolio template cannot be copied because it would exceed your disk quota.###16 09 2013 new variable
 cntr#:#prtf_create_portfolio_from_template#:#Create Portfolio From Template###16 09 2013 new variable
 content#:#content_plugin_not_activated#:#The page content element plugin is currently not activated.###16 09 2013 new variable
 administration#:#vc_information#:#Version Control Information###16 09 2013 new variable
@@ -12400,7 +12399,7 @@ crs#:#crs_loc_settings_passed_mode_mark#:#Testfragen zu bestandenen Lernzielen w
 assessment#:#correct_answers#:#Correct Answers: ###23 12 2015 new variable
 assessment#:#answer_options#:#Answer Options: ###23 12 2015 new variable
 assessment#:#add_answers#:#Add Antworten ###23 12 2015 new variable
-assessment#:#log_wrong_test_password_entered#:#Participant entered wrong test password. Input: '%s'###23 12 2015 new variable
+assessment#:#log_wrong_test_password_entered#:#Participant entered wrong test password.###23 12 2015 new variable
 assessment#:#tst_nav_while_edit_modal_header#:#Decision about Answers###23 12 2015 new variable
 assessment#:#tst_nav_while_edit_modal_text#:#What to do with the answers you possibly entered for this question?###23 12 2015 new variable
 assessment#:#tst_nav_while_edit_modal_save_btn#:#Save###23 12 2015 new variable
@@ -12411,7 +12410,7 @@ assessment#:#feedback_correct_sc_mc#:#Show answer specific feedback for all corr
 assessment#:#feedback_correct_kprim#:#Show answer specific feedback for all correct answers (Correct answers are those, for that the positive option is to be chosen/selected).###23 12 2015 new variable
 common#:#user_not_found_to_delete#:#A user could not be found to delete.###23 12 2015 new variable
 maps#:#maps_custom_tile_server_info#:#Server URL to provide tile-data. Multiple inputs should be separated by spaces. Defaults is "%s".###23 12 2015 new variable
-maps#:#maps_custom_geolocation_server_info#:#Server URL to provide geolocation-data using Nominatim. Your entry should contain the placeholder [QUERY] to define a position for request information. Example: nominatim.example.com/search/[QUERY]?format=json.###23 12 2015 new variable
+maps#:#maps_custom_geolocation_server_info#:#Server URL to provide geolocation-data using Nominatim. Your entry should contain the placeholder [QUERY] to define a position for request information. Example: https://nominatim.example.com/search/[QUERY]?format=json.###23 12 2015 new variable
 maps#:#configure_geolocation#:#Please finish the geolocation configuration in the "Third Party Software" administration menu to enable address search.###23 12 2015 new variable
 rbac#:#role_confirm_block_role#:#Save Role Status###23 12 2015 new variable
 rbac#:#role_blocked#:#: <i>Role will be blocked</i>###23 12 2015 new variable
@@ -15448,8 +15447,6 @@ pwsp#:#pwsp_enable_personal_resources#:#Enable personal resources###07 02 2020 n
 file#:#personal_resources_disk_quota#:#Hard Disk Quota for Personal Resources###07 02 2020 new variable
 file#:#personal_resources_disk_quota_info#:#Allows definition of a hard disk quota for each user account and each global role. This quota only affects files in the personal resources and in portfolios. As soon as a user exceeds the defined quota, ILIAS will prohibit the user to upload more files until the used disk space is again under quota.###07 02 2020 new variable
 common#:#personal_resources#:#Personal Resources###07 02 2020 new variable
-file#:#personal_resources_quota_exceeded_warning#:#You have exceeded the disk quota for your personal resources.###07 02 2020 new variable
-file#:#personal_resources_quota_status_legend#:#You are using %1$s of your available disk quota of %2$s (%3$d%%).###07 02 2020 new variable
 wsp#:#wsp_personal_resources_description#:#Here you can manage your private files, blogs and artifacts.###07 02 2020 new variable
 administration#:#adm_personal_workspace#:#Personal Workspace###07 02 2020 new variable
 dash#:#dash_favourites#:#Favourites###07 02 2020 new variable
@@ -15937,7 +15934,7 @@ prg#:#last_edited_by#:#Last Editor###07 02 2020 new variable
 prg#:#last_edited#:#Last edited###07 02 2020 new variable
 prg#:#add_category#:#Add Category###07 02 2020 new variable
 prg#:#modal_categories_title#:#Category to be monitored###07 02 2020 new variable
-prg#:#category#:#Category RefId###07 02 2020 new variable
+prg#:#category#:#Category###07 02 2020 new variable
 common#:#obj_prgr#:#Link to Study Programme###07 02 2020 new variable
 common#:#obj_prgrs#:#Links to Study Programmes###07 02 2020 new variable
 prg#:#prgr_new#:#Create Study Programme Link###07 02 2020 new variable

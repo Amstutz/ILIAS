@@ -24,12 +24,25 @@ class ilCoursePlaceholderDescriptionTest extends ilCertificateBaseTestCase
             ->getMock();
 
         $userDefinePlaceholderMock->method('createPlaceholderHtmlDescription')
-            ->willReturn([]);
+            ->willReturn('');
 
         $userDefinePlaceholderMock->method('getPlaceholderDescriptions')
             ->willReturn([]);
 
-        $placeholderDescriptionObject = new ilCoursePlaceholderDescription(null, $languageMock, $userDefinePlaceholderMock);
+        $customUserPlaceholderObject = $this->getMockBuilder("ilObjectCustomUserFieldsPlaceholderDescription")
+                                            ->disableOriginalConstructor()
+                                            ->getMock();
+
+        $customUserPlaceholderObject->method("getPlaceholderDescriptions")
+                                    ->willReturn(array(
+                                        '+SOMETHING' => 'SOMEWHAT',
+                                        '+SOMETHING_ELSE' => 'ANYTHING'
+                                    ));
+
+        $customUserPlaceholderObject->method('createPlaceholderHtmlDescription')
+                                  ->willReturn('');
+
+        $placeholderDescriptionObject = new ilCoursePlaceholderDescription(200,null, $languageMock, $userDefinePlaceholderMock, $customUserPlaceholderObject);
 
         $html = $placeholderDescriptionObject->createPlaceholderHtmlDescription($templateMock);
 
@@ -59,7 +72,19 @@ class ilCoursePlaceholderDescriptionTest extends ilCertificateBaseTestCase
                 )
             );
 
-        $placeholderDescriptionObject = new ilCoursePlaceholderDescription($defaultPlaceholder, $languageMock);
+        $customUserPlaceholderObject = $this->getMockBuilder('ilObjectCustomUserFieldsPlaceholderDescription')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $customUserPlaceholderObject->method('getPlaceholderDescriptions')
+            ->willReturn(
+                array(
+                    '+SOMETHING' => 'SOMEWHAT',
+                    '+SOMETHING_ELSE' => 'ANYTHING'
+                )
+            );
+
+        $placeholderDescriptionObject = new ilCoursePlaceholderDescription(200, $defaultPlaceholder, $languageMock, null, $customUserPlaceholderObject);
 
         $placeHolders = $placeholderDescriptionObject->getPlaceholderDescriptions();
 
@@ -68,6 +93,8 @@ class ilCoursePlaceholderDescriptionTest extends ilCertificateBaseTestCase
                 'COURSE_TITLE' => 'Something translated',
                 'SOMETHING' => 'SOMEWHAT',
                 'SOMETHING_ELSE' => 'ANYTHING',
+                '+SOMETHING' => 'SOMEWHAT',
+                '+SOMETHING_ELSE' => 'ANYTHING',
                 'DATE_COMPLETED' => 'Something translated',
                 'DATETIME_COMPLETED' => 'Something translated'
             ),

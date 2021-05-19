@@ -7,23 +7,13 @@ define("IL_PASSWD_PLAIN", "plain");
 define("IL_PASSWD_CRYPTED", "crypted");
 
 
-require_once "./Services/Object/classes/class.ilObject.php";
-require_once './Services/User/exceptions/class.ilUserException.php';
-require_once './Modules/OrgUnit/classes/class.ilObjOrgUnit.php';
-require_once './Modules/OrgUnit/classes/class.ilObjOrgUnitTree.php';
-
 /**
-* @defgroup ServicesUser Services/User
-*
-* User application class
-*
-* @author	Sascha Hofmann <saschahofmann@gmx.de>
-* @author	Stefan Meyer <meyer@leifos.com>
-* @author	Peter Gabriel <pgabriel@databay.de>
-* @version	$Id$
-*
-* @ingroup ServicesUser
-*/
+ * User class
+ *
+ * @author	Sascha Hofmann <saschahofmann@gmx.de>
+ * @author	Stefan Meyer <meyer@leifos.com>
+ * @author	Peter Gabriel <pgabriel@databay.de>
+ */
 class ilObjUser extends ilObject
 {
     /**
@@ -109,6 +99,9 @@ class ilObjUser extends ilObject
     public $login_attempts;
 
     public $user_defined_data = array();
+
+    /** @var array<string, string> */
+    protected $oldPrefs = [];
     
     /**
     * Contains variable Userdata (Prefs, Settings)
@@ -131,13 +124,6 @@ class ilObjUser extends ilObject
     * @access	private
     */
     public $default_role;
-
-    /**
-    * ilias object
-    * @var object ilias
-    * @access private
-    */
-    public $ilias;
 
     public static $is_desktop_item_loaded;
     public static $is_desktop_item_cache;
@@ -180,6 +166,7 @@ class ilObjUser extends ilObject
      */
     protected $first_login;	// timestamp
 
+    protected bool $profile_incomplete = false;
 
     /**
     * Constructor
@@ -267,25 +254,28 @@ class ilObjUser extends ilObject
             //get userpreferences from usr_pref table
             $this->readPrefs();
 
-            //set language to default if not set
-            if ($this->prefs["language"] == "") {
-                $this->prefs["language"] = $this->oldPrefs["language"];
+            if (!isset($this->prefs['language']) || $this->prefs['language'] === '') {
+                $this->prefs['language'] = $this->oldPrefs['language'] ?? '';
             }
 
-            //check skin-setting
-            include_once("./Services/Style/System/classes/class.ilStyleDefinition.php");
-            if ($this->prefs["skin"] == "" ||
-                    !ilStyleDefinition::skinExists($this->prefs["skin"])) {
-                $this->prefs["skin"] = $this->oldPrefs["skin"];
+            if (
+                !isset($this->prefs['skin']) || $this->prefs['skin'] === '' ||
+                !ilStyleDefinition::skinExists($this->prefs['skin'])
+            ) {
+                $this->prefs['skin'] = $this->oldPrefs['skin'] ?? '';
             }
 
             $this->skin = $this->prefs["skin"];
 
-            //check style-setting (skins could have more than one stylesheet
-            if ($this->prefs["style"] == "" ||
-                    (!ilStyleDefinition::skinExists($this->skin) && ilStyleDefinition::styleExistsForSkinId($this->skin, $this->prefs["style"]))) {
-                //load default (css)
-                $this->prefs["style"] = $this->ilias->ini->readVariable("layout", "style");
+            if (
+                !isset($this->prefs['style']) ||
+                $this->prefs['style'] == '' ||
+                (
+                    !ilStyleDefinition::skinExists($this->skin) &&
+                    ilStyleDefinition::styleExistsForSkinId($this->skin, $this->prefs['style'])
+                )
+            ) {
+                $this->prefs['style'] = $this->ilias->ini->readVariable('layout', 'style');
             }
 
             if (empty($this->prefs["hits_per_page"])) {
@@ -840,7 +830,7 @@ class ilObjUser extends ilObject
                 array($a_user_str)
             );
             $user_rec = $ilDB->fetchAssoc($res);
-            return $user_rec["usr_id"];
+            return $user_rec["usr_id"] ?? null;
         } else {
             $set = $ilDB->query(
                 "SELECT usr_id FROM usr_data " .
@@ -848,7 +838,7 @@ class ilObjUser extends ilObject
             );
             $ids = array();
             while ($rec = $ilDB->fetchAssoc($set)) {
-                $ids[] = $rec["usr_id"];
+                $ids[] = ($rec["usr_id"] ?? null);
             }
             return $ids;
         }
@@ -1421,11 +1411,7 @@ class ilObjUser extends ilObject
         include_once "./Services/PersonalWorkspace/classes/class.ilWorkspaceTree.php";
         $tree = new ilWorkspaceTree($this->getId());
         $tree->cascadingDelete();
-        
-        // remove disk quota entries
-        include_once "./Services/DiskQuota/classes/class.ilDiskQuotaHandler.php";
-        ilDiskQuotaHandler::deleteByOwner($this->getId());
-        
+
         // remove reminder entries
         require_once 'Services/User/classes/class.ilCronDeleteInactiveUserReminderMail.php';
         ilCronDeleteInactiveUserReminderMail::removeSingleUserFromTable($this->getId());
@@ -2009,38 +1995,6 @@ class ilObjUser extends ilObject
         return $this->prefs["language"];
     }
 
-    /**
-    * Sets the minimal disk quota imposed by this user account.
-    *
-    * The minimal disk quota is specified in bytes.
-     *
-    * @access	public
-    * @param	integer
-    */
-    public function setDiskQuota($a_disk_quota)
-    {
-        $this->setPref("disk_quota", $a_disk_quota);
-    }
-
-    /**
-    * Returns the minimal disk quota imposed by this user account.
-    *
-    * The minimal disk quota is specified in bytes.
-    * The default value is 0.
-    *
-    * @access	public
-    * @return	integer
-    */
-    public function getDiskQuota()
-    {
-        return $this->prefs["disk_quota"] ? $this->prefs["disk_quota"] : 0;
-    }
-    
-    public function getPersonalWorkspaceDiskQuota()
-    {
-        return $this->prefs["wsp_disk_quota"] ? $this->prefs["wsp_disk_quota"] : 0;
-    }
-
     public function setLastPasswordChangeTS($a_last_password_change_ts)
     {
         $this->last_password_change_ts = $a_last_password_change_ts;
@@ -2120,9 +2074,9 @@ class ilObjUser extends ilObject
      * returns the current language (may differ from user's pref setting!)
      *
      */
-    public function getCurrentLanguage()
+    public function getCurrentLanguage() : string
     {
-        return $_SESSION['lang'];
+        return (string) ilSession::get('lang');
     }
 
     /**
@@ -2132,7 +2086,7 @@ class ilObjUser extends ilObject
      */
     public function setCurrentLanguage($a_val)
     {
-        $_SESSION['lang'] = $a_val;
+        ilSession::set('lang', $a_val);
     }
 
     /**
@@ -2245,7 +2199,6 @@ class ilObjUser extends ilObject
         return $this->approve_date;
     }
 
-    // BEGIN DiskQuota: show when user accepted user agreement
     /**
     * get the date when the user accepted the user agreement
     * @access   public
@@ -2265,7 +2218,6 @@ class ilObjUser extends ilObject
     {
         $this->agree_date = $a_str;
     }
-    // END DiskQuota: show when user accepted user agreement
 
     /**
     * set user active state and updates system fields appropriately
@@ -3207,6 +3159,7 @@ class ilObjUser extends ilObject
         if ($a_time == 0) {
             $a_time = date("Y-m-d H:i:s", time());
         }
+        ilSession::set("user_pc_clip", true);
         $ilDB->insert("personal_pc_clipboard", array(
             "user_id" => array("integer", $this->getId()),
             "content" => array("clob", $a_content),
@@ -3223,6 +3176,10 @@ class ilObjUser extends ilObject
         global $DIC;
 
         $ilDB = $DIC['ilDB'];
+
+        if (!ilSession::get("user_pc_clip")) {
+            return [];
+        }
 
         $set = $ilDB->queryF("SELECT MAX(insert_time) mtime FROM personal_pc_clipboard " .
             " WHERE user_id = %s", array("integer"), array($this->getId()));
@@ -3763,7 +3720,7 @@ class ilObjUser extends ilObject
 
     public static function _getAvatar($a_usr_id) : Avatar
     {
-        $define = new ilUserAvatarResolver((int) $a_usr_id);
+        $define = new ilUserAvatarResolver((int) ($a_usr_id ? $a_usr_id : ANONYMOUS_USER_ID));
 
         return $define->getAvatar();
     }
@@ -3783,7 +3740,8 @@ class ilObjUser extends ilObject
         $a_usr_id,
         $a_size = "small",
         $a_force_pic = false,
-        $a_prevent_no_photo_image = false
+        $a_prevent_no_photo_image = false,
+        $html_export = false
     ) {
         $define = new ilUserAvatarResolver((int) $a_usr_id);
         $define->setForcePicture($a_force_pic);
@@ -5549,7 +5507,7 @@ class ilObjUser extends ilObject
             "SELECT * FROM usr_pref " .
                 " WHERE keyword = " . $ilDB->quote("public_profile", "text") .
                 " AND " . $ilDB->in("usr_id", $a_user_ids, false, "integer")
-            );
+        );
         $r = array(
             "global" => array(),
             "local" => array(),

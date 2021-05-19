@@ -1,5 +1,4 @@
-<?php
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace ILIAS\UI\Component\Symbol;
 
@@ -10,12 +9,11 @@ namespace ILIAS\UI\Component\Symbol;
  */
 interface Factory
 {
-
     /**
      * ---
      * description:
      *   purpose: >
-     *     Icons are quickly comprehensible and recognizable graphics that are presented with a text label.
+     *     Icons are quickly comprehensible and recognizable graphics.
      *     They indicate the functionality or nature of the element they illustrate:
      *     Icons will mainly be used in front of object-titles, e.g. in the
      *     header, the tree and in repository listing.
@@ -23,8 +21,6 @@ interface Factory
      *     functionality is not available for the intended audience.
      *   composition: >
      *     Icons come in three fixed sizes: small, medium and large.
-     *     They can be presented with an additional "abbreviation",
-     *     a text of a few characters that will be rendered on top of the image.
      *     The Disabled Icons are visually muted: A color shade covers the Icon.
      *   effect: >
      *     Icons themselves are not interactive; however they are allowed
@@ -46,11 +42,10 @@ interface Factory
      *     1: Icons MUST have a class indicating their usage.
      *     2: Icons MUST be tagged with a CSS-class indicating their size.
      *   accessibility:
-     *     1: Icons MUST bear an aria-label.
+     *     1: Icons MUST bear an alt-text.
      *     2: Disabled Icons MUST bear an aria-label indicating the disabled status.
      *   wording:
-     *     1: The aria-label MUST state the represented object-type.
-     *     2: The abbreviation SHOULD consist of one or two letters.
+     *     1: The alt-text MUST state the represented object-type.
      * ---
      *
      * @return \ILIAS\UI\Component\Symbol\Icon\Factory
@@ -143,7 +138,18 @@ interface Factory
      *     1: Avatars MUST be used to represent a specific user.
      *     2: Avatars MUST be used in combination with the represented username.
      *   accessibility:
-     *     1: Avatars MUST bear an aria-label with the username.
+     *     1:  >
+     *       Avatars MUST bear an aria-label or contain an image with an alt tag with some alternative text. Note,
+     *       that it MUST NOT contain both, a aria-label and an image with a non-empty alt tag.
+     *     2:  >
+     *       If the Avatar is accompanied by the name of the user shown in the image
+     *       (e.g. in the Members Gallery), the alternative text attribute MUST be "User Avatar".
+     *     3:  >
+     *       If the Avatar is not or might not (due to some setting) be accompaniedby the
+     *       name of the user shown in the image, the alternative text MUST be "User Avatar of NameOfUser".
+     *     4:  >
+     *       Avatars that show the currently logged in user outside some list with other users,
+     *       the alternative text MUST be "Your user avatar".
      *   responsiveness:
      *     1: the avatar MUST adjust it's size to the parent container.
      * ---

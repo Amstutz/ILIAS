@@ -54,6 +54,10 @@ abstract class ilPlugin
      * @var ProviderCollection
      */
     protected $provider_collection;
+    /**
+     * @var string
+     */
+    protected $message;
 
 
     public function __construct()
@@ -1427,5 +1431,14 @@ abstract class ilPlugin
     {
         //This returns the callable of $c[$key] without executing it.
         return $dic->raw($dic_key);
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getMessage() : string
+    {
+        return strval($this->message);
     }
 }

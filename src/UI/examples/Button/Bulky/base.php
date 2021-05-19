@@ -1,4 +1,7 @@
 <?php
+declare(strict_types=1);
+namespace ILIAS\UI\examples\Button\Bulky;
+
 //Note the exact look of the Bulky Buttons is mostly defined by the
 //surrounding container.
 function base()
@@ -18,9 +21,7 @@ function base()
 
     return $renderer->render([
         $button,
-        $button->withEngagedState(true),
         $f->divider()->horizontal(),
-        $button2,
-        $button2->withEngagedState(true),
+        $button2
     ]);
 }

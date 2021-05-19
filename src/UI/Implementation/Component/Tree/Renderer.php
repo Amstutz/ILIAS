@@ -20,8 +20,14 @@ class Renderer extends AbstractComponentRenderer
     {
         $this->checkComponent($component);
 
+        /**
+         * @var $component Tree\Expandable
+         */
+
         $tpl_name = "tpl.tree.html";
         $tpl = $this->getTemplate($tpl_name, true, true);
+
+        $tpl->setVariable("ARIA_LABEL", $component->getLabel());
 
         $recursion =
         $environment = $component->getEnvironment();
@@ -36,6 +42,11 @@ class Renderer extends AbstractComponentRenderer
         }
 
         $nodes_html = $default_renderer->render($nodes);
+
+        if ($component->isSubTree()) {
+            return $nodes_html;
+        }
+
         $tpl->setVariable('NODES', $nodes_html);
 
         $highlight_node_on_click = $component->getHighlightOnNodeClick();
@@ -55,10 +66,6 @@ class Renderer extends AbstractComponentRenderer
     /**
      * Trigger TreeRecursion::build and recurse into hierarchy by checking for
      * further children of the record.
-     * @param Tree\TreeRecursion $recursion
-     * @param mixed $record
-     * @param mixed $environment
-     * @return Node
      */
     protected function buildNode(
         Tree\TreeRecursion $recursion,

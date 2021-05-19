@@ -13,11 +13,13 @@ use ILIAS\GlobalScreen\Scope\MainMenu\Collector\Map\Map;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\hasSymbol;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\hasTitle;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\isChild;
+use ILIAS\GlobalScreen\Scope\MainMenu\Factory\isInterchangeableItem;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\isItem;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\isParent;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\isTopItem;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\supportsAsynchronousLoading;
 use ILIAS\GlobalScreen\Scope\MainMenu\Provider\StaticMainMenuProvider;
+use ILIAS\GlobalScreen\Scope\MainMenu\Factory\Item\Lost;
 
 /**
  * Class MainMenuMainCollector
@@ -146,13 +148,16 @@ class MainMenuMainCollector extends AbstractBaseCollector implements ItemCollect
 
         // Override parent from configuration
         $this->map->walk(function (isItem &$item) {
-            if ($item instanceof isChild && $item->hasParent()) {
+            if ($item instanceof isChild) {
                 $parent = $this->map->getSingleItemFromFilter($this->information->getParent($item));
                 if ($parent instanceof isParent) {
                     $parent->appendChild($item);
-                    $item->overrideParent($parent->getProviderIdentification());
+                    if ($parent instanceof Lost && $parent->getProviderIdentification()->serialize() === '') {
+                        $item->overrideParent($parent->getProviderIdentification());
+                    }
                 }
             }
+
             return $item;
         });
     }
@@ -187,17 +192,15 @@ class MainMenuMainCollector extends AbstractBaseCollector implements ItemCollect
     }
 
     /**
-     * This will return all available topitems, stacked based on the configuration
-     * in "Administration" and for the visibility of the currently user.
-     * Additionally this will filter sequent Separators to avoid double Separators
-     * in the UI.
-     * @return \Generator|isTopItem[]
-     * @throws \Throwable
+     * This will return all available isTopItem (and moved isInterchangeableItem),
+     * stacked based on the configuration in "Administration" and for the
+     * visibility of the currently user.
+     * @return \Generator|isTopItem[]|isInterchangeableItem[]
      */
     public function getItemsForUIRepresentation() : \Generator
     {
         foreach ($this->map->getAllFromFilter() as $item) {
-            if ($item instanceof isTopItem) {
+            if ($item->isTop()) {
                 yield $item;
             }
         }

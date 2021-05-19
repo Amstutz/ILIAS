@@ -44,7 +44,6 @@ class ilContext
      */
     public static function init($a_type)
     {
-        include_once "Services/Context/classes/class." . $a_type . ".php";
         self::$class_name = $a_type;
         self::$type = $a_type;
         
@@ -61,7 +60,6 @@ class ilContext
     {
         $class_name = $a_type;
         if ($class_name) {
-            include_once "Services/Context/classes/class." . $class_name . ".php";
             if (method_exists($class_name, $a_method)) {
                 return call_user_func(array($class_name, $a_method));
             }
@@ -70,16 +68,17 @@ class ilContext
 
     /**
      * Call current content
-     *
      * @param string $a_method
-     * @return bool
+     * @param array $args
+     * @return mixed
      */
-    protected static function callContext($a_method)
+    protected static function callContext($a_method, array $args = [])
     {
         if (!self::$class_name) {
             self::init(self::CONTEXT_WEB);
         }
-        return call_user_func(array(self::$class_name, $a_method));
+
+        return call_user_func_array([self::$class_name, $a_method], $args);
     }
     
     /**
@@ -204,5 +203,14 @@ class ilContext
     public static function isSessionMainContext()
     {
         return (bool) self::callContext('isSessionMainContext');
+    }
+
+    /**
+     * @param string $httpPath
+     * @return string
+     */
+    public static function modifyHttpPath(string $httpPath) : string
+    {
+        return self::callContext('modifyHttpPath', [$httpPath]);
     }
 }

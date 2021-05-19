@@ -29,7 +29,7 @@ include_once './Services/Calendar/classes/ConsultationHours/class.ilConsultation
  * Consultation hours editor
  * @author Stefan Meyer <smeyer.ilias@gmx.de>
  *
- * @ilCtrl_Calls: ilConsultationHoursGUI: ilPublicUserProfileGUI, ilRepositorySearchGUI
+ * @ilCtrl_Calls: ilConsultationHoursGUI ilPublicUserProfileGUI, ilRepositorySearchGUI
  */
 class ilConsultationHoursGUI
 {
@@ -322,6 +322,9 @@ class ilConsultationHoursGUI
         $ilToolbar = $DIC['ilToolbar'];
         $ilTabs = $DIC['ilTabs'];
         $tpl = $DIC['tpl'];
+        $ilHelp = $DIC['ilHelp'];
+
+        $ilHelp->setScreenId("consultation_hours");
 
         $ilToolbar->setFormAction($this->ctrl->getFormAction($this));
         $ilToolbar->addButton($this->lng->txt('cal_ch_add_grp'), $this->ctrl->getLinkTarget($this, 'addGroup'));
@@ -456,7 +459,6 @@ class ilConsultationHoursGUI
         $ilTabs->activateSubTab('cal_ch_app_grp');
         
 
-        include_once './Services/Utilities/classes/class.ilConfirmationGUI.php';
         $confirm = new ilConfirmationGUI();
         $confirm->setFormAction($ilCtrl->getFormAction($this));
         $confirm->setHeaderText($GLOBALS['DIC']['lng']->txt('cal_ch_grp_delete_sure'));
@@ -541,6 +543,9 @@ class ilConsultationHoursGUI
         $ilToolbar = $DIC['ilToolbar'];
         $ilTabs = $DIC['ilTabs'];
         $tpl = $DIC['tpl'];
+        $ilHelp = $DIC['ilHelp'];
+
+        $ilHelp->setScreenId("consultation_hours");
         
         $this->setSubTabs();
         $ilTabs->activateSubTab('cal_ch_app_bookings');
@@ -572,7 +577,6 @@ class ilConsultationHoursGUI
         $this->setSubTabs();
         $ilTabs->activateSubTab('cal_ch_app_bookings');
         
-        include_once('./Services/Utilities/classes/class.ilConfirmationGUI.php');
 
         $confirm = new ilConfirmationGUI();
         $confirm->setFormAction($this->ctrl->getFormAction($this));
@@ -1172,8 +1176,7 @@ class ilConsultationHoursGUI
             return $this->appointmentList();
         }
 
-        include_once('./Services/Utilities/classes/class.ilConfirmationGUI.php');
-        
+
         
         $this->ctrl->saveParameter($this, array('seed','app_id','dt'));
 

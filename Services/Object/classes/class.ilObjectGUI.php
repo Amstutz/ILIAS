@@ -1,17 +1,25 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
+
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
-* Class ilObjectGUI
-* Basic methods of all Output classes
-*
-* @author Stefan Meyer <meyer@leifos.com>
-* @version $Id$
-*
-*/
+ * Class ilObjectGUI
+ * Basic methods of all Output classes
+ *
+ * @author Stefan Meyer <meyer@leifos.com>
+ */
 class ilObjectGUI
 {
+    public const ADMIN_MODE_NONE = "";
+    public const ADMIN_MODE_SETTINGS = "settings";
+    public const ADMIN_MODE_REPOSITORY = "respository";
+
+
+    protected const UPLOAD_TYPE_LOCAL = 1;
+    protected const UPLOAD_TYPE_UPLOAD_DIRECTORY = 2;
+
     /**
      * @var ilErrorHandling
      */
@@ -110,6 +118,11 @@ class ilObjectGUI
     public $omit_locator = false;
 
     /**
+     * @var string
+     */
+    protected $type = "";
+
+    /**
      * @var ilTabsGUI
      */
     protected $tabs_gui = null;
@@ -134,6 +147,20 @@ class ilObjectGUI
     protected $favourites;
 
     /**
+     * @var ServerRequestInterface
+     */
+    protected $request;
+
+    /**
+     * @var int
+     */
+    protected $admin_mode = self::ADMIN_MODE_NONE;
+
+    protected int $requested_ref_id = 0;
+    protected int $requested_crtptrefid = 0;
+    protected int $requested_crtcb = 0;
+
+    /**
     * Constructor
     * @access	public
     * @param	array	??
@@ -144,6 +171,7 @@ class ilObjectGUI
     {
         global $DIC;
 
+        $this->request = $DIC->http()->request();
         $this->locator = $DIC["ilLocator"];
         $this->user = $DIC->user();
         $this->access = $DIC->access();
@@ -203,8 +231,14 @@ class ilObjectGUI
         $this->prepare_output = $a_prepare_output;
         $this->creation_mode = false;
 
-        $this->ref_id = ($this->call_by_reference) ? $this->id : $_GET["ref_id"];
-        $this->obj_id = ($this->call_by_reference) ? $_GET["obj_id"] : $this->id;
+        $this->requested_ref_id = (int) ($_GET["ref_id"] ?? 0);
+        $this->ref_id = (int) ($this->call_by_reference ? $this->id : ($_GET["ref_id"] ?? 0));
+        $this->obj_id = (int) ($this->call_by_reference ? ($_GET["obj_id"] ?? 0) : $this->id);
+
+        // callback after creation
+        $this->requested_crtptrefid = (int) ($_REQUEST["crtptrefid"] ?? 0);
+        $this->requested_crtcb = (int) ($_REQUEST["crtcb"] ?? 0);
+
 
         if ($this->id != 0) {
             $this->link_params = "ref_id=" . $this->ref_id;
@@ -215,7 +249,7 @@ class ilObjectGUI
         
         // set context
         if (is_object($this->object)) {
-            if ($this->call_by_reference && $this->ref_id == $_GET["ref_id"]) {
+            if ($this->call_by_reference && $this->ref_id == $this->requested_ref_id) {
                 $this->ctrl->setContext(
                     $this->object->getId(),
                     $this->object->getType()
@@ -227,6 +261,24 @@ class ilObjectGUI
         if ($a_prepare_output) {
             $this->prepareOutput();
         }
+    }
+
+    /**
+     * Set by administration
+     *
+     * @param string $mode
+     * @throws ilObjectException
+     */
+    public function setAdminMode(string $mode) : void
+    {
+        if (!in_array($mode, [
+            self::ADMIN_MODE_NONE,
+            self::ADMIN_MODE_REPOSITORY,
+            self::ADMIN_MODE_SETTINGS
+        ])) {
+            throw new ilObjectException("Unknown Admin Mode $mode.");
+        }
+        $this->admin_mode = $mode;
     }
     
     /**
@@ -341,14 +393,14 @@ class ilObjectGUI
             // repository vs. workspace
             if ($this->call_by_reference) {
                 // get gui class of parent and call their title and description method
-                $obj_type = ilObject::_lookupType($_GET["ref_id"], true);
+                $obj_type = ilObject::_lookupType($this->requested_ref_id, true);
                 $class_name = $this->objDefinition->getClassName($obj_type);
                 $class = strtolower("ilObj" . $class_name . "GUI");
                 $class_path = $this->ctrl->lookupClassPath($class);
                 include_once($class_path);
                 $class_name = $this->ctrl->getClassForClasspath($class_path);
                 //echo "<br>instantiating parent for title and description";
-                $this->parent_gui_obj = new $class_name("", $_GET["ref_id"], true, false);
+                $this->parent_gui_obj = new $class_name("", $this->requested_ref_id, true, false);
                 // the next line prevents the header action menu being shown
                 $this->parent_gui_obj->setCreationMode(true);
                 $this->parent_gui_obj->setTitleAndDescription();
@@ -362,7 +414,6 @@ class ilObjectGUI
 
 
             // fileupload support
-            require_once './Services/FileUpload/classes/class.ilFileUploadUtil.php';
             if (ilFileUploadUtil::isUploadAllowed($this->ref_id, $this->object->getType())) {
                 $this->enableDragDropFileUpload();
             }
@@ -377,8 +428,8 @@ class ilObjectGUI
     protected function setTitleAndDescription()
     {
         if (!is_object($this->object)) {
-            if ((int) $_REQUEST["crtptrefid"] > 0) {
-                $cr_obj_id = ilObject::_lookupObjId((int) $_REQUEST["crtcb"]);
+            if ($this->requested_crtptrefid > 0) {
+                $cr_obj_id = ilObject::_lookupObjId($this->requested_crtcb);
                 $this->tpl->setTitle(ilObject::_lookupTitle($cr_obj_id));
                 $this->tpl->setTitleIcon(ilObject::_getIcon($cr_obj_id));
             }
@@ -397,7 +448,6 @@ class ilObjectGUI
             );
         }
 
-        include_once './Services/Object/classes/class.ilObjectListGUIFactory.php';
         $lgui = ilObjectListGUIFactory::_getListGUIByType($this->object->getType());
         $lgui->initItem($this->object->getRefId(), $this->object->getId(), $this->object->getType());
         $this->tpl->setAlertProperties($lgui->getAlertProperties());
@@ -415,7 +465,6 @@ class ilObjectGUI
         $ilAccess = $this->access;
         
         if (!$this->creation_mode && $this->object) {
-            include_once "Services/Object/classes/class.ilCommonActionDispatcherGUI.php";
             $dispatcher = new ilCommonActionDispatcherGUI(
                 ilCommonActionDispatcherGUI::TYPE_REPOSITORY,
                 $ilAccess,
@@ -426,12 +475,11 @@ class ilObjectGUI
             
             $dispatcher->setSubObject($a_sub_type, $a_sub_id);
             
-            include_once "Services/Object/classes/class.ilObjectListGUI.php";
-            ilObjectListGUI::prepareJSLinks(
+            ilObjectListGUI::prepareJsLinks(
                 $this->ctrl->getLinkTarget($this, "redrawHeaderAction", "", true),
                 $this->ctrl->getLinkTargetByClass(array("ilcommonactiondispatchergui", "ilnotegui"), "", "", true, false),
                 $this->ctrl->getLinkTargetByClass(array("ilcommonactiondispatchergui", "iltagginggui"), "", "", true, false)
-                );
+            );
             
             $lg = $dispatcher->initHeaderAction();
             
@@ -446,7 +494,6 @@ class ilObjectGUI
                 
                 // comments settings are always on (for the repository)
                 // should only be shown if active or permission to toggle
-                include_once "Services/Notes/classes/class.ilNote.php";
                 if ($ilAccess->checkAccess("write", "", $this->ref_id) ||
                     $ilAccess->checkAccess("edit_permissions", "", $this->ref_id) ||
                     ilNote::commentsActivated($this->object->getId(), 0, $this->object->getType())) {
@@ -560,7 +607,7 @@ class ilObjectGUI
     *
     * @param	array		$a_actions		array with $command => $lang_var pairs
     */
-    final private function setActions($a_actions = "")
+    private function setActions($a_actions = "")
     {
         if (is_array($a_actions)) {
             foreach ($a_actions as $name => $lng) {
@@ -577,7 +624,7 @@ class ilObjectGUI
     *
     * @param	array		$a_actions		array with $command => $lang_var pairs
     */
-    final private function setSubObjects($a_sub_objects = "")
+    private function setSubObjects($a_sub_objects = "")
     {
         if (is_array($a_sub_objects)) {
             foreach ($a_sub_objects as $name => $options) {
@@ -610,8 +657,8 @@ class ilObjectGUI
             // todo: admin workaround
             // in the future, objectgui classes should not be called in
             // admin section anymore (rbac/trash handling in own classes)
-            $ref_id = ($_GET["ref_id"] != "")
-                ? $_GET["ref_id"]
+            $ref_id = ($this->requested_ref_id > 0)
+                ? $this->requested_ref_id
                 : $this->object->getRefId();
             $ilLocator->addRepositoryItems($ref_id);
         }
@@ -646,7 +693,7 @@ class ilObjectGUI
     {
         $ilLocator = $this->locator;
         
-        if ($_GET["admin_mode"] == "settings") {	// system settings
+        if ($this->admin_mode == self::ADMIN_MODE_SETTINGS) {	// system settings
             $this->ctrl->setParameterByClass(
                 "ilobjsystemfoldergui",
                 "ref_id",
@@ -655,7 +702,7 @@ class ilObjectGUI
             $ilLocator->addItem(
                 $this->lng->txt("administration"),
                 $this->ctrl->getLinkTargetByClass(array("iladministrationgui", "ilobjsystemfoldergui"), "")
-                );
+            );
             if ($this->object && ($this->object->getRefId() != SYSTEM_FOLDER_ID && !$a_do_not_add_object)) {
                 $ilLocator->addItem(
                     $this->object->getTitle(),
@@ -691,9 +738,8 @@ class ilObjectGUI
             $_SESSION["saved_post"] = array_unique(array_merge($_SESSION["saved_post"], $_POST["mref_id"]));
         }
         
-        include_once("./Services/Repository/classes/class.ilRepUtilGUI.php");
         $ru = new ilRepUtilGUI($this);
-        $ru->deleteObjects($_GET["ref_id"], ilSession::get("saved_post"));
+        $ru->deleteObjects($this->requested_ref_id, ilSession::get("saved_post"));
         ilSession::clear("saved_post");
         $this->ctrl->returnToParent($this);
     }
@@ -748,7 +794,8 @@ class ilObjectGUI
             $forms = $this->initCreationForms($new_type);
             
             // copy form validation error: do not show other creation forms
-            if ($_GET["cpfl"] && isset($forms[self::CFORM_CLONE])) {
+            $cpfl = $_GET["cpfl"] ?? false;
+            if ($cpfl && isset($forms[self::CFORM_CLONE])) {
                 $forms = array(self::CFORM_CLONE => $forms[self::CFORM_CLONE]);
             }
             $tpl->setContent($this->getCreationFormsHTML($forms));
@@ -804,8 +851,6 @@ class ilObjectGUI
             }
             return $a_forms->getHTML();
         } else {
-            include_once("./Services/Accordion/classes/class.ilAccordionGUI.php");
-
             $acc = new ilAccordionGUI();
             $acc->setBehaviour(ilAccordionGUI::FIRST_OPEN);
             $cnt = 1;
@@ -845,7 +890,6 @@ class ilObjectGUI
      */
     protected function initCreateForm($a_new_type)
     {
-        include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
         $form->setTarget("_top");
         $form->setFormAction($this->ctrl->getFormAction($this, "save"));
@@ -890,11 +934,10 @@ class ilObjectGUI
                 $this->lng->txt('objs_' . $this->type)
             ));
         
-        include_once './Services/DidacticTemplate/classes/class.ilDidacticTemplateSettings.php';
         $templates = ilDidacticTemplateSettings::getInstanceByObjectType($this->type)->getTemplates();
         if ($templates) {
             foreach ($templates as $template) {
-                if ($template->isEffective($_GET["ref_id"])) {
+                if ($template->isEffective($this->requested_ref_id)) {
                     $options["dtpl_" . $template->getId()] = array(
                         $template->getPresentationTitle(),
                         $template->getPresentationDescription()
@@ -916,7 +959,6 @@ class ilObjectGUI
             );
             // workaround for containers in edit mode
             if (!$this->getCreationMode()) {
-                include_once './Services/DidacticTemplate/classes/class.ilDidacticTemplateObjSettings.php';
                 $value = 'dtpl_' . ilDidacticTemplateObjSettings::lookupTemplateId($this->object->getRefId());
 
                 $type->setValue($value);
@@ -1015,20 +1057,12 @@ class ilObjectGUI
             
             // auto rating
             $this->handleAutoRating($newObj);
-            
-            // additional paramters are added to afterSave()
-            $args = func_get_args();
-            if ($args) {
-                $this->afterSave($newObj, $args);
-            } else {
-                $this->afterSave($newObj);
-            }
-            return;
+            $this->afterSave($newObj);
         }
 
         // display only this form to correct input
         $form->setValuesByPost();
-        $tpl->setContent($form->getHtml());
+        $tpl->setContent($form->getHTML());
     }
     
     /**
@@ -1039,7 +1073,7 @@ class ilObjectGUI
      */
     public function getDidacticTemplateVar($a_type)
     {
-        $tpl = $_POST["didactic_type"];
+        $tpl = $_POST["didactic_type"] ?? null;
         if ($tpl && substr($tpl, 0, strlen($a_type) + 1) == $a_type . "_") {
             return (int) substr($tpl, strlen($a_type) + 1);
         }
@@ -1059,12 +1093,12 @@ class ilObjectGUI
         $objDefinition = $this->objDefinition;
 
         if (!$a_parent_node_id) {
-            $a_parent_node_id = $_GET["ref_id"];
+            $a_parent_node_id = $this->requested_ref_id;
         }
         
         // add new object to custom parent container
-        if ((int) $_REQUEST["crtptrefid"]) {
-            $a_parent_node_id = (int) $_REQUEST["crtptrefid"];
+        if ($this->requested_crtptrefid > 0) {
+            $a_parent_node_id = $this->requested_crtptrefid;
         }
 
         $a_obj->createReference();
@@ -1075,27 +1109,25 @@ class ilObjectGUI
         $this->ref_id = $a_obj->getRefId();
 
         // BEGIN ChangeEvent: Record save object.
-        require_once('Services/Tracking/classes/class.ilChangeEvent.php');
         ilChangeEvent::_recordWriteEvent($this->obj_id, $ilUser->getId(), 'create');
         // END ChangeEvent: Record save object.
 
         // rbac log
-        include_once "Services/AccessControl/classes/class.ilRbacLog.php";
         $rbac_log_roles = $rbacreview->getParentRoleIds($this->ref_id, false);
         $rbac_log = ilRbacLog::gatherFaPa($this->ref_id, array_keys($rbac_log_roles), true);
         ilRbacLog::add(ilRbacLog::CREATE_OBJECT, $this->ref_id, $rbac_log);
         
         // use forced callback after object creation
-        if ($_REQUEST["crtcb"]) {
-            $callback_type = ilObject::_lookupType((int) $_REQUEST["crtcb"], true);
+        if ($this->requested_crtcb > 0) {
+            $callback_type = ilObject::_lookupType($this->requested_crtcb, true);
             $class_name = "ilObj" . $objDefinition->getClassName($callback_type) . "GUI";
             $location = $objDefinition->getLocation($callback_type);
             include_once($location . "/class." . $class_name . ".php");
             if (in_array(strtolower($class_name), array("ilobjitemgroupgui"))) {
-                $callback_obj = new $class_name((int) $_REQUEST["crtcb"]);
+                $callback_obj = new $class_name($this->requested_crtcb);
             } else {
                 // #10368
-                $callback_obj = new $class_name(null, (int) $_REQUEST["crtcb"], true, false);
+                $callback_obj = new $class_name(null, $this->requested_crtcb, true, false);
             }
             $callback_obj->afterSaveCallback($a_obj);
         }
@@ -1153,11 +1185,9 @@ class ilObjectGUI
     protected function initEditForm()
     {
         $lng = $this->lng;
-        $ilCtrl = $this->ctrl;
 
         $lng->loadLanguageModule($this->object->getType());
 
-        include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
         $form->setFormAction($this->ctrl->getFormAction($this, "update"));
         $form->setTitle($this->lng->txt($this->object->getType() . "_edit"));
@@ -1242,7 +1272,7 @@ class ilObjectGUI
         // display form again to correct errors
         $ilTabs->activateTab("settings");
         $form->setValuesByPost();
-        $tpl->setContent($form->getHtml());
+        $tpl->setContent($form->getHTML());
     }
     
     /**
@@ -1282,17 +1312,58 @@ class ilObjectGUI
      */
     protected function initImportForm($a_new_type)
     {
-        include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
+        global $DIC;
+
+        $import_directory_factory = new ilImportDirectoryFactory();
+        $export_directory = $import_directory_factory->getInstanceForComponent(ilImportDirectoryFactory::TYPE_EXPORT);
+        $upload_files = $export_directory->getFilesFor((int) $DIC->user()->getId(), (string) $a_new_type);
+        $has_upload_files = false;
+        if (count($upload_files)) {
+            $has_upload_files = true;
+        }
+
         $form = new ilPropertyFormGUI();
         $form->setTarget("_top");
         $form->setFormAction($this->ctrl->getFormAction($this, "importFile"));
         $form->setTitle($this->lng->txt($a_new_type . "_import"));
 
-        include_once("./Services/Form/classes/class.ilFileInputGUI.php");
         $fi = new ilFileInputGUI($this->lng->txt("import_file"), "importfile");
         $fi->setSuffixes(array("zip"));
         $fi->setRequired(true);
-        $form->addItem($fi);
+        if ($has_upload_files) {
+            $this->lng->loadLanguageModule('content');
+            $option = new ilRadioGroupInputGUI(
+                $this->lng->txt('cont_choose_file_source'),
+                'upload_type'
+            );
+            $option->setValue(self::UPLOAD_TYPE_LOCAL);
+            $form->addItem($option);
+
+            $direct = new ilRadioOption(
+                $this->lng->txt('cont_choose_local'),
+                self::UPLOAD_TYPE_LOCAL
+            );
+            $option->addOption($direct);
+
+            $direct->addSubItem($fi);
+            $upload = new ilRadioOption(
+                $this->lng->txt('cont_choose_upload_dir'),
+                self::UPLOAD_TYPE_UPLOAD_DIRECTORY
+            );
+            $option->addOption($upload);
+            $files = new ilSelectInputGUI(
+                $this->lng->txt('cont_choose_upload_dir'),
+                'uploadFile'
+            );
+            $upload_files[''] = $this->lng->txt('cont_select_from_upload_dir');
+            $files->setOptions($upload_files);
+            $files->setRequired(true);
+            $upload->addSubItem($files);
+        }
+
+        if (!$has_upload_files) {
+            $form->addItem($fi);
+        }
 
         $form->addCommandButton("importFile", $this->lng->txt("import"));
         $form->addCommandButton("cancel", $this->lng->txt("cancel"));
@@ -1305,14 +1376,19 @@ class ilObjectGUI
      */
     protected function importFileObject($parent_id = null, $a_catch_errors = true)
     {
+        global $DIC;
+
+        $user = $DIC->user();
+
         $objDefinition = $this->objDefinition;
         $tpl = $this->tpl;
         $ilErr = $this->ilErr;
 
         if (!$parent_id) {
-            $parent_id = $_GET["ref_id"];
+            $parent_id = $this->requested_ref_id;
         }
         $new_type = $_REQUEST["new_type"];
+        $upload_type = $this->request->getParsedBody()['upload_type'] ?? self::UPLOAD_TYPE_LOCAL;
 
         // create permission is already checked in createObject. This check here is done to prevent hacking attempts
         if (!$this->checkPermissionBool("create", "", $new_type)) {
@@ -1327,20 +1403,34 @@ class ilObjectGUI
             // :todo: make some check on manifest file
 
             if ($objDefinition->isContainer($new_type)) {
-                include_once './Services/Export/classes/class.ilImportContainer.php';
                 $imp = new ilImportContainer((int) $parent_id);
             } else {
-                include_once("./Services/Export/classes/class.ilImport.php");
                 $imp = new ilImport((int) $parent_id);
             }
 
             try {
-                $new_id = $imp->importObject(
-                    null,
-                    $_FILES["importfile"]["tmp_name"],
-                    $_FILES["importfile"]["name"],
-                    $new_type
-                );
+                if ($upload_type == self::UPLOAD_TYPE_LOCAL) {
+                    $new_id = $imp->importObject(
+                        null,
+                        $_FILES["importfile"]["tmp_name"],
+                        $_FILES["importfile"]["name"],
+                        $new_type
+                    );
+                } else {
+                    $hash = $this->request->getParsedBody()['uploadFile'] ?? '';
+                    $upload_factory = new ilImportDirectoryFactory();
+                    $export_upload = $upload_factory->getInstanceForComponent(ilImportDirectoryFactory::TYPE_EXPORT);
+                    $file = $export_upload->getAbsolutePathForHash($user->getId(), $new_type, $hash);
+
+                    $new_id = $imp->importObject(
+                        null,
+                        $file,
+                        basename($file),
+                        $new_type,
+                        '',
+                        true
+                    );
+                }
             } catch (ilException $e) {
                 $this->tmp_import_dir = $imp->getTemporaryImportDir();
                 if (!$a_catch_errors) {
@@ -1349,7 +1439,7 @@ class ilObjectGUI
                 // display message and form again
                 ilUtil::sendFailure($this->lng->txt("obj_import_file_error") . " <br />" . $e->getMessage());
                 $form->setValuesByPost();
-                $tpl->setContent($form->getHtml());
+                $tpl->setContent($form->getHTML());
                 return;
             }
 
@@ -1378,7 +1468,7 @@ class ilObjectGUI
 
         // display form to correct errors
         $form->setValuesByPost();
-        $tpl->setContent($form->getHtml());
+        $tpl->setContent($form->getHTML());
     }
 
     /**
@@ -1460,7 +1550,7 @@ class ilObjectGUI
     */
     protected function getTargetFrame($a_cmd, $a_target_frame = "")
     {
-        if ($this->target_frame[$a_cmd] != "") {
+        if (isset($this->target_frame[$a_cmd]) && $this->target_frame[$a_cmd] != "") {
             return $this->target_frame[$a_cmd];
         } elseif (!empty($a_target_frame)) {
             return "target=\"" . $a_target_frame . "\"";
@@ -1491,7 +1581,7 @@ class ilObjectGUI
             if ($crs_id = $tree->checkForParentType($a_ref_id, 'crs')) {
                 if (!$this->checkPermissionBool("write", "", "", $crs_id)) {
                     // Show only activated courses
-                    $tmp_obj = &ilObjectFactory::getInstanceByRefId($crs_id, false);
+                    $tmp_obj = ilObjectFactory::getInstanceByRefId($crs_id, false);
     
                     if (!$tmp_obj->isActivated()) {
                         unset($tmp_obj);
@@ -1533,7 +1623,7 @@ class ilObjectGUI
         $itab = new ilAdminSubItemsTableGUI(
             $this,
             "view",
-            $_GET["ref_id"],
+            $this->requested_ref_id,
             $this->checkPermissionBool('write')
         );
         
@@ -1564,7 +1654,6 @@ class ilObjectGUI
         // SAVE POST VALUES (get rid of this
         ilSession::set("saved_post", $_POST["id"]);
 
-        include_once("./Services/Repository/classes/class.ilRepUtilGUI.php");
         $ru = new ilRepUtilGUI($this);
         if (!$ru->showDeleteConfirmation($_POST["id"], $a_error)) {
             $ilCtrl->returnToParent($this);
@@ -1660,8 +1749,6 @@ class ilObjectGUI
 
     protected function &__initTableGUI()
     {
-        include_once "./Services/Table/classes/class.ilTableGUI.php";
-
         return new ilTableGUI(0, false);
     }
     
@@ -1725,7 +1812,6 @@ class ilObjectGUI
      */
     protected function fillCloneTemplate($a_tpl_varname, $a_type)
     {
-        include_once './Services/Object/classes/class.ilObjectCopyGUI.php';
         $cp = new ilObjectCopyGUI($this);
         $cp->setType($a_type);
         $cp->setTarget($_GET['ref_id']);
@@ -1744,9 +1830,6 @@ class ilObjectGUI
      */
     public function cloneAllObject()
     {
-        include_once('./Services/Link/classes/class.ilLink.php');
-        include_once('Services/CopyWizard/classes/class.ilCopyWizardOptions.php');
-        
         $ilErr = $this->ilErr;
         $ilUser = $this->user;
         
@@ -1793,8 +1876,6 @@ class ilObjectGUI
     {
         $ilCtrl = $this->ctrl;
 
-        include_once("Services/Block/classes/class.ilColumnGUI.php");
-
         $obj_id = ilObject::_lookupObjId($this->object->getRefId());
         $obj_type = ilObject::_lookupType($obj_id);
 
@@ -1830,14 +1911,11 @@ class ilObjectGUI
     */
     protected function getRightColumnHTML()
     {
-        $ilUser = $this->user;
-        $lng = $this->lng;
         $ilCtrl = $this->ctrl;
         
         $obj_id = ilObject::_lookupObjId($this->object->getRefId());
         $obj_type = ilObject::_lookupType($obj_id);
 
-        include_once("Services/Block/classes/class.ilColumnGUI.php");
         $column_gui = new ilColumnGUI($obj_type, IL_COL_RIGHT);
         
         if ($column_gui->getScreenMode() == IL_SCREEN_FULL) {
@@ -1888,7 +1966,7 @@ class ilObjectGUI
                 // create: redirect to parent
                 if ($a_perm == "create") {
                     if (!$a_ref_id) {
-                        $a_ref_id = $_GET["ref_id"];
+                        $a_ref_id = $this->requested_ref_id;
                     }
                     $type = ilObject::_lookupType($a_ref_id, true);
                 } else {
@@ -1904,7 +1982,6 @@ class ilObjectGUI
 
                 ilSession::clear("il_rep_ref_id");
                 
-                include_once "Services/Object/exceptions/class.ilObjectException.php";
                 throw new ilObjectException($this->lng->txt("permission_denied"));
                 
             /*
@@ -1934,7 +2011,7 @@ class ilObjectGUI
 
         if ($a_perm == "create") {
             if (!$a_ref_id) {
-                $a_ref_id = $_GET["ref_id"];
+                $a_ref_id = $this->requested_ref_id;
             }
             return $ilAccess->checkAccess($a_perm . "_" . $a_type, $a_cmd, $a_ref_id);
         } else {
@@ -1962,14 +2039,12 @@ class ilObjectGUI
         $ilAccess = $DIC->access();
         $ilErr = $DIC["ilErr"];
         $lng = $DIC->language();
+        $ctrl = $DIC->ctrl();
         
         if ($ilAccess->checkAccess("read", "", ROOT_FOLDER_ID)) {
-            $_GET["cmd"] = "frameset";
-            $_GET["target"] = "";
-            $_GET["ref_id"] = ROOT_FOLDER_ID;
-            $_GET["baseClass"] = "ilRepositoryGUI";
-            include("ilias.php");
-            exit;
+            //$_GET["cmd"] = "frameset";
+            $ctrl->setParameterByClass("ilRepositoryGUI", "ref_id", ROOT_FOLDER_ID);
+            $ctrl->redirectByClass("ilRepositoryGUI");
         }
 
         if ($a_raise_error) {
@@ -1987,15 +2062,9 @@ class ilObjectGUI
     {
         global $DIC;
 
-        $ilAccess = $DIC->access();
-        $ilErr = $DIC["ilErr"];
-
-        $_GET["cmd"] = $a_cmd;
-        $_GET["target"] = "";
-        $_GET["ref_id"] = $a_ref_id;
-        $_GET["baseClass"] = "ilRepositoryGUI";
-        include("ilias.php");
-        exit;
+        $ctrl = $DIC->ctrl();
+        $ctrl->setParameterByClass("ilRepositoryGUI", "ref_id", $a_ref_id);
+        $ctrl->redirectByClass("ilRepositoryGUI", $a_cmd);
     }
     
     /**
@@ -2003,7 +2072,6 @@ class ilObjectGUI
      */
     protected function enableDragDropFileUpload()
     {
-        include_once("./Services/FileUpload/classes/class.ilFileUploadGUI.php");
         ilFileUploadGUI::initFileUpload();
         
         $this->tpl->enableDragDropFileUpload($this->ref_id);
@@ -2087,7 +2155,7 @@ class ilObjectGUI
         $this->favourites->add($user->getId(), (int) $_GET["item_ref_id"]);
         $lng->loadLanguageModule("rep");
         ilUtil::sendSuccess($lng->txt("rep_added_to_favourites"), true);
-        $ctrl->redirectToURL(ilLink::_getLink((int) $_GET["ref_id"]));
+        $ctrl->redirectToURL(ilLink::_getLink($this->requested_ref_id));
     }
 
     /**
@@ -2101,6 +2169,6 @@ class ilObjectGUI
         $lng->loadLanguageModule("rep");
         $this->favourites->remove($user->getId(), (int) $_GET["item_ref_id"]);
         ilUtil::sendSuccess($lng->txt("rep_removed_from_favourites"), true);
-        $ctrl->redirectToURL(ilLink::_getLink((int) $_GET["ref_id"]));
+        $ctrl->redirectToURL(ilLink::_getLink($this->requested_ref_id));
     }
 }

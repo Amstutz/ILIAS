@@ -126,7 +126,7 @@ class ilObjectActivationGUI
         switch ($this->ctrl->getNextClass($this)) {
             case 'ilconditionhandlergui':
                 // preconditions for single course items
-                $this->ctrl->saveParameter($this, 'item_id', $_GET['item_id']);
+                $this->ctrl->saveParameter($this, 'item_id');
                 $new_gui = new ilConditionHandlerGUI($this, (int) $_GET['item_id']);
                 $this->ctrl->forwardCommand($new_gui);
                 $this->tabs_gui->setTabActive('preconditions');
@@ -288,6 +288,7 @@ class ilObjectActivationGUI
 
         $form = $this->initFormEdit();
         if ($form->checkInput()) {
+            $valid = true;
             $activation = new ilObjectActivation();
             $activation->read($this->getItemId());
 
@@ -295,9 +296,15 @@ class ilObjectActivationGUI
                 $this->getActivation()->setTimingType(ilObjectActivation::TIMINGS_ACTIVATION);
 
                 $timing_start = $form->getItemByPostVar('timing_start')->getDate();
-                $this->getActivation()->setTimingStart($timing_start ? $timing_start->get(IL_CAL_UNIX) : null);
-
                 $timing_end = $form->getItemByPostVar('timing_end')->getDate();
+
+                if ($timing_start && $timing_end && ilDateTime::_after($timing_start, $timing_end)) {
+                    $form->getItemByPostVar('timing_start')->setAlert($this->lng->txt('crs_timing_err_start_end'));
+                    $form->getItemByPostVar('timing_end')->setAlert($this->lng->txt('crs_timing_err_start_end'));
+                    $valid = false;
+                }
+
+                $this->getActivation()->setTimingStart($timing_start ? $timing_start->get(IL_CAL_UNIX) : null);
                 $this->getActivation()->setTimingEnd($timing_end ? $timing_end->get(IL_CAL_UNIX) : null);
 
                 $this->getActivation()->toggleVisible((bool) $form->getInput('visible'));
@@ -305,13 +312,17 @@ class ilObjectActivationGUI
                 $this->getActivation()->setTimingType(ilObjectActivation::TIMINGS_DEACTIVATED);
             }
 
-            $this->getActivation()->update($this->getItemId(), $this->getParentId());
-            ilUtil::sendSuccess($this->lng->txt('settings_saved'), true);
-            $this->ctrl->redirect($this, "edit");
-        } else {
-            $form->setValuesByPost();
-            $this->edit($form);
+            if ($valid) {
+                $this->getActivation()->update($this->getItemId(), $this->getParentId());
+                ilUtil::sendSuccess($this->lng->txt('settings_saved'), true);
+                $this->ctrl->redirect($this, "edit");
+            } else {
+                ilUtil::sendFailure($this->lng->txt('form_input_not_valid'));
+            }
         }
+
+        $form->setValuesByPost();
+        $this->edit($form);
     }
 
     /**

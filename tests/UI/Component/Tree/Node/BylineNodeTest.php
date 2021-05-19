@@ -50,7 +50,7 @@ class BylineNodeTest extends ILIAS_UI_TestBase
         $html = $r->render($node);
 
         $expected = <<<EOT
-			<li id="" class="il-tree-node node-simple" role="none">
+			<li id="" class="il-tree-node node-simple" role="treeitem">
 				<span class="node-line">
 					<span class="node-label">My Label</span>
 					<span class="node-byline">This is my byline</span>
@@ -72,9 +72,12 @@ EOT;
         $html = $r->render($node);
 
         $expected = <<<EOT
-			<li id="" class="il-tree-node node-simple" role="none">
+			<li id="" class="il-tree-node node-simple" role="treeitem">
 				<span class="node-line">
-					<span class="node-label"><div class="icon small" aria-label=""></div>My Label</span>
+					<span class="node-label">
+						<img class="icon small" src="./templates/default/images/icon_default.svg" alt=""/>
+						My Label
+					</span>
 					<span class="node-byline">This is my byline</span>
 				</span>
 			</li>
@@ -103,6 +106,7 @@ EOT;
 					<span class="node-label">My Label</span>
 					<span class="node-byline">This is my byline</span>
 				</span>
+				<ul role="group"></ul>
 			</li>
 EOT;
 
@@ -112,59 +116,30 @@ EOT;
         );
     }
 
-    public function getDefaultRenderer(JavaScriptBinding $js_binding = null)
+    public function testRenderingExpanded()
     {
-        $ui_factory = $this->getUIFactory();
-        $tpl_factory = $this->getTemplateFactory();
-        $resource_registry = $this->getResourceRegistry();
-        $lng = $this->getLanguage();
-        if (!$js_binding) {
-            $js_binding = $this->getJavaScriptBinding();
-        }
+        $node = $this->node_factory->bylined('My Label', 'This is my byline');
+        $node = $node->withAsyncURL('something.de')->withExpanded(true);
 
-        $languageMock = $this->getMockBuilder('ilLanguage')
-            ->disableOriginalConstructor()
-            ->getMock();
+        $r = $this->getDefaultRenderer();
+        $html = $r->render($node);
 
-        $defaultRendererFactory = new DefaultRendererFactory(
-            $ui_factory,
-            $tpl_factory,
-            $lng,
-            $js_binding,
-            new ILIAS\Refinery\Factory(new ILIAS\Data\Factory(), $languageMock)
+        $expected = <<<EOT
+			<li id=""
+				 class="il-tree-node node-simple expandable"
+				 role="treeitem" aria-expanded="true"
+				 data-async_url="something.de" data-async_loaded="false">
+				<span class="node-line">
+					<span class="node-label">My Label</span>
+					<span class="node-byline">This is my byline</span>
+				</span>
+				<ul role="group"></ul>
+			</li>
+EOT;
+
+        $this->assertEquals(
+            $this->brutallyTrimHTML($expected),
+            $this->brutallyTrimHTML($html)
         );
-
-        $glyphRendererFactory = new GlyphRendererFactory(
-            $ui_factory,
-            $tpl_factory,
-            $lng,
-            $js_binding,
-            new ILIAS\Refinery\Factory(new ILIAS\Data\Factory(), $languageMock)
-        );
-
-        $fieldRendererFactory = new FieldRendererFactory(
-            $ui_factory,
-            $tpl_factory,
-            $lng,
-            $js_binding,
-            new ILIAS\Refinery\Factory(new ILIAS\Data\Factory(), $languageMock)
-        );
-
-        $fsLoader = new \ILIAS\UI\Implementation\Render\FSLoader(
-            $defaultRendererFactory,
-            $glyphRendererFactory,
-            $fieldRendererFactory
-        );
-
-        $loaderResourceRegistryWrapper = new \ILIAS\UI\Implementation\Render\LoaderResourceRegistryWrapper(
-            $resource_registry,
-            $fsLoader
-        );
-
-        $component_renderer_loader
-                                       = new \ILIAS\UI\Implementation\Render\LoaderCachingWrapper(
-                                           $loaderResourceRegistryWrapper
-        );
-        return new TestDefaultRenderer($component_renderer_loader);
     }
 }

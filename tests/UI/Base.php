@@ -140,6 +140,11 @@ class ilLanguageMock extends \ilLanguage
     public function loadLanguageModule($lang_module)
     {
     }
+
+    public function getLangKey()
+    {
+        return "en";
+    }
 }
 
 class LoggingJavaScriptBinding implements JavaScriptBinding
@@ -165,13 +170,46 @@ class LoggingJavaScriptBinding implements JavaScriptBinding
 
 class TestDefaultRenderer extends DefaultRenderer
 {
+    /**
+     * @var array
+     */
+    protected $with_stub_renderings = [];
+
+    public function __construct(Render\Loader $component_renderer_loader, $with_stub_renderings = [])
+    {
+        $this->with_stub_renderings = array_map(function ($component) {
+            return get_class($component);
+        }, $with_stub_renderings);
+        parent::__construct($component_renderer_loader);
+    }
+
     public function _getRendererFor(IComponent $component)
     {
         return $this->getRendererFor($component);
     }
+
+    public function getRendererFor(IComponent $component)
+    {
+        if (in_array(get_class($component), $this->with_stub_renderings)) {
+            return new TestDummyRenderer();
+        }
+        return parent::getRendererFor($component);
+    }
+
     public function _getContexts()
     {
         return $this->getContexts();
+    }
+}
+
+class TestDummyRenderer extends DefaultRenderer
+{
+    public function __construct()
+    {
+    }
+    public function render($component)
+    {
+        return $component->getCanonicalName();
     }
 }
 
@@ -244,7 +282,12 @@ abstract class ILIAS_UI_TestBase extends TestCase
             ->getMock();
     }
 
-    public function getDefaultRenderer(JavaScriptBinding $js_binding = null)
+    public function getImagePathResolver()
+    {
+        return new ilImagePathResolver();
+    }
+
+    public function getDefaultRenderer(JavaScriptBinding $js_binding = null, $with_stub_renderings = [])
     {
         $ui_factory = $this->getUIFactory();
         $tpl_factory = $this->getTemplateFactory();
@@ -255,37 +298,40 @@ abstract class ILIAS_UI_TestBase extends TestCase
         }
 
         $refinery = $this->getRefinery();
+        $image_path_resolver = $this->getImagePathResolver();
 
-        $component_renderer_loader
-            = new Render\LoaderCachingWrapper(
-                new Render\LoaderResourceRegistryWrapper(
-                    $resource_registry,
-                    new Render\FSLoader(
-                        new DefaultRendererFactory(
-                            $ui_factory,
-                            $tpl_factory,
-                            $lng,
-                            $js_binding,
-                            $refinery
-                            ),
-                        new GlyphRendererFactory(
-                            $ui_factory,
-                            $tpl_factory,
-                            $lng,
-                            $js_binding,
-                            $refinery
-                          ),
-                        new FieldRendererFactory(
-                            $ui_factory,
-                            $tpl_factory,
-                            $lng,
-                            $js_binding,
-                            $refinery
-                          )
-                        )
+        $component_renderer_loader = new Render\LoaderCachingWrapper(
+            new Render\LoaderResourceRegistryWrapper(
+                $resource_registry,
+                new Render\FSLoader(
+                    new DefaultRendererFactory(
+                        $ui_factory,
+                        $tpl_factory,
+                        $lng,
+                        $js_binding,
+                        $refinery,
+                        $image_path_resolver
+                    ),
+                    new GlyphRendererFactory(
+                        $ui_factory,
+                        $tpl_factory,
+                        $lng,
+                        $js_binding,
+                        $refinery,
+                        $image_path_resolver
+                    ),
+                    new FieldRendererFactory(
+                        $ui_factory,
+                        $tpl_factory,
+                        $lng,
+                        $js_binding,
+                        $refinery,
+                        $image_path_resolver
                     )
-                );
-        return new TestDefaultRenderer($component_renderer_loader);
+                )
+            )
+        );
+        return new TestDefaultRenderer($component_renderer_loader, $with_stub_renderings);
     }
 
     public function normalizeHTML($html)

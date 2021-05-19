@@ -112,7 +112,7 @@ class ilForumExplorerGUI extends ilTreeExplorerGUI
 
         $children = $this->thread->getNestedSetPostChildren($this->root_node->getId());
 
-        array_walk($children, function (&$node, $key) {
+        array_walk($children, function ($node, $key) {
             $this->node_id_to_parent_node_id_map[(int) $node['pos_pk']] = (int) $node['parent_pos'];
 
             if (!array_key_exists((int) $node['pos_pk'], $this->preloaded_children)) {
@@ -134,6 +134,14 @@ class ilForumExplorerGUI extends ilTreeExplorerGUI
     }
 
     /**
+     * @return string
+     */
+    public function getTreeLabel()
+    {
+        return $this->lng->txt("frm_posts");
+    }
+
+    /**
      * @inheritDoc
      */
     public function getTreeComponent() : Tree
@@ -152,7 +160,7 @@ class ilForumExplorerGUI extends ilTreeExplorerGUI
         ];
 
         $tree = $this->ui->factory()->tree()
-            ->expandable($this)
+            ->expandable($this->getTreeLabel(), $this)
             ->withData($rootNode)
             ->withHighlightOnNodeClick(false);
 

@@ -5,7 +5,6 @@ use ILIAS\Filesystem\Exception\FileNotFoundException;
 
 /**
  * Class ilFileVersionsGUI
- *
  * @author Fabian Schmid <fs@studer-raimann.ch>
  */
 class ilFileVersionsGUI
@@ -22,6 +21,7 @@ class ilFileVersionsGUI
     const CMD_CREATE_NEW_VERSION = 'saveVersion';
     const CMD_ADD_REPLACING_VERSION = 'addReplacingVersion';
     const CMD_CREATE_REPLACING_VERSION = 'createReplacingVersion';
+    const CMD_MIGRATE = 'migrate';
     /**
      * @var ilToolbarGUI
      */
@@ -62,11 +62,13 @@ class ilFileVersionsGUI
      * @var ilObjFile
      */
     private $file;
-
+    /**
+     * @var bool
+     */
+    protected $has_been_migrated = false;
 
     /**
      * ilFileVersionsGUI constructor.
-     *
      * @param ilObjFile $file
      */
     public function __construct(ilObjFile $file)
@@ -82,8 +84,8 @@ class ilFileVersionsGUI
         $this->toolbar = $DIC->toolbar();
         $this->access = $DIC->access();
         $this->wsp_access = new ilWorkspaceAccessHandler();
+        $this->has_been_migrated = !is_null($file->getResourceId());
     }
-
 
     public function executeCommand()
     {
@@ -115,7 +117,7 @@ class ilFileVersionsGUI
                 break;
             case self::CMD_CREATE_NEW_VERSION:
                 $this->saveVersion(ilFileVersionFormGUI::MODE_ADD);
-                // no break
+            // no break
             case self::CMD_CREATE_REPLACING_VERSION:
                 $this->saveVersion(ilFileVersionFormGUI::MODE_REPLACE);
                 break;
@@ -125,33 +127,45 @@ class ilFileVersionsGUI
             case self::CMD_CONFIRMED_DELETE_FILE:
                 $this->confirmDeleteFile();
                 break;
+            case self::CMD_MIGRATE:
+                $this->migrate();
+                break;
         }
     }
-
 
     private function index()
     {
         // Buttons
-        $add_version = ilLinkButton::getInstance();
-        $add_version->setCaption('file_new_version');
-        $add_version->setUrl($this->ctrl->getLinkTarget($this, self::CMD_ADD_NEW_VERSION));
-        $this->toolbar->addButtonInstance($add_version);
+        if ($this->has_been_migrated) {
+            $add_version = ilLinkButton::getInstance();
+            $add_version->setCaption('file_new_version');
+            $add_version->setUrl($this->ctrl->getLinkTarget($this, self::CMD_ADD_NEW_VERSION));
+            $this->toolbar->addButtonInstance($add_version);
 
-        $replace_version = ilLinkButton::getInstance();
-        $replace_version->setCaption('replace_file');
-        $replace_version->setUrl($this->ctrl->getLinkTarget($this, self::CMD_ADD_REPLACING_VERSION));
-        $this->toolbar->addButtonInstance($replace_version);
+            $replace_version = ilLinkButton::getInstance();
+            $replace_version->setCaption('replace_file');
+            $replace_version->setUrl($this->ctrl->getLinkTarget($this, self::CMD_ADD_REPLACING_VERSION));
+            $this->toolbar->addButtonInstance($replace_version);
+        } else {
+            $migrate = ilLinkButton::getInstance();
+            $migrate->setCaption('migrate');
+            $migrate->setUrl($this->ctrl->getLinkTarget($this, self::CMD_MIGRATE));
+//            $this->toolbar->addButtonInstance($migrate);
+            ilUtil::sendInfo($this->lng->txt('not_yet_migrated'));
+        }
 
         $table = new ilFileVersionsTableGUI($this, self::CMD_DEFAULT);
         $this->tpl->setContent($table->getHTML());
     }
-
 
     /**
      * @param int $mode
      */
     private function addVersion($mode = ilFileVersionFormGUI::MODE_ADD)
     {
+        if (!$this->has_been_migrated) {
+            return;
+        }
         $this->tabs->clearTargets();
         $this->tabs->setBackTarget($this->lng->txt('back'), $this->ctrl->getLinkTarget($this, self::CMD_DEFAULT));
 
@@ -160,15 +174,16 @@ class ilFileVersionsGUI
         $this->tpl->setContent($form->getHTML());
     }
 
-
     /**
      * @param int $mode
-     *
      * @throws \ILIAS\FileUpload\Collection\Exception\NoSuchElementException
      * @throws \ILIAS\FileUpload\Exception\IllegalStateException
      */
     private function saveVersion($mode = ilFileVersionFormGUI::MODE_ADD)
     {
+        if (!$this->has_been_migrated) {
+            return;
+        }
         $form = new ilFileVersionFormGUI($this, $mode);
         if ($form->saveObject()) {
             ilUtil::sendSuccess($this->lng->txt('msg_obj_modified'), true);
@@ -177,7 +192,6 @@ class ilFileVersionsGUI
         $form->setValuesByPost();
         $this->tpl->setContent($form->getHTML());
     }
-
 
     private function downloadVersion()
     {
@@ -188,26 +202,40 @@ class ilFileVersionsGUI
         }
     }
 
-
     private function deleteVersions()
     {
+        if (!$this->has_been_migrated) {
+            return;
+        }
+
         $version_ids = $this->getVersionIdsFromRequest();
+        $existing_versions = $this->file->getVersions();
+        $remaining_versions = array_udiff(
+            $existing_versions,
+            $version_ids,
+            static function ($a, $b) {
+                if ($a instanceof ilObjFileVersion) {
+                    $a = $a->getHistEntryId();
+                }
+                if ($b instanceof ilObjFileVersion) {
+                    $b = $b->getHistEntryId();
+                }
+                return $a - $b;
+            }
+        );
 
         if (count($version_ids) < 1) {
             ilUtil::sendFailure($this->lng->txt("no_checkbox"), true);
             $this->ctrl->redirect($this, self::CMD_DEFAULT);
         } else {
-            // check if all versions are selected
-            $versions_to_keep = $this->getVersionsToKeep($version_ids);
-
             $conf_gui = new ilConfirmationGUI();
             $conf_gui->setFormAction($this->ctrl->getFormAction($this, self::CMD_DEFAULT));
-            $conf_gui->setCancel($this->lng->txt("cancel"), self::CMD_CANCEL_DELETE);
+            $conf_gui->setCancel($this->lng->txt("cancel"), self::CMD_DEFAULT);
 
             $icon = ilObject::_getIcon($this->file->getId(), "small", $this->file->getType());
             $alt = $this->lng->txt("icon") . " " . $this->lng->txt("obj_" . $this->file->getType());
 
-            if (count($versions_to_keep) < 1) {
+            if (count($remaining_versions) < 1) {
                 // Ask
                 ilUtil::sendQuestion($this->lng->txt("file_confirm_delete_all_versions"));
 
@@ -225,24 +253,14 @@ class ilFileVersionsGUI
 
                 $conf_gui->setConfirm($this->lng->txt("confirm"), self::CMD_CONFIRMED_DELETE_VERSIONS);
 
-                /**
-                 * array (
-                 * 'date' => '2019-07-25 11:19:51',
-                 * 'user_id' => '6',
-                 * 'obj_id' => '287',
-                 * 'obj_type' => 'file',
-                 * 'action' => 'create',
-                 * 'info_params' => 'chicken_outlined.pdf,1,1',
-                 * 'user_comment' => '',
-                 * 'hist_entry_id' => '3',
-                 * 'filename' => 'lorem ipsum',
-                 * )
-                 */
                 foreach ($this->file->getVersions($version_ids) as $version) {
+                    $a_text = $version['filename'] ?? $version->getFilename() ?? $this->file->getTitle();
+                    $version_string = $version['hist_id'] ?? $version->getVersion();
+                    $a_text .= " (v" . $version_string . ")";
                     $conf_gui->addItem(
                         "hist_id[]",
                         $version['hist_entry_id'],
-                        $version['filename'] ?? $this->file->getTitle(),
+                        $a_text,
                         $icon,
                         $alt
                     );
@@ -253,9 +271,11 @@ class ilFileVersionsGUI
         }
     }
 
-
     private function rollbackVersion()
     {
+        if (!$this->has_been_migrated) {
+            return;
+        }
         $version_ids = $this->getVersionIdsFromRequest();
 
         // more than one entry selected?
@@ -271,12 +291,15 @@ class ilFileVersionsGUI
         $this->ctrl->redirect($this, self::CMD_DEFAULT);
     }
 
-
     private function confirmDeleteVersions()
     {
+        if (!$this->has_been_migrated) {
+            return;
+        }
         // delete versions after confirmation
-        if (is_array($_POST[self::HIST_ID]) && count($_POST[self::HIST_ID]) > 0) {
-            $this->file->deleteVersions($_POST[self::HIST_ID]);
+        $versions_to_delete = $this->getVersionIdsFromRequest();
+        if (is_array($versions_to_delete) && count($versions_to_delete) > 0) {
+            $this->file->deleteVersions($versions_to_delete);
             ilUtil::sendSuccess($this->lng->txt("file_versions_deleted"), true);
         }
 
@@ -284,9 +307,11 @@ class ilFileVersionsGUI
         $this->ctrl->redirect($this, self::CMD_DEFAULT);
     }
 
-
     private function confirmDeleteFile()
     {
+        if (!$this->has_been_migrated) {
+            return;
+        }
         global $DIC;
 
         $parent_id = $DIC->repositoryTree()->getParentId($this->ref_id);
@@ -299,6 +324,17 @@ class ilFileVersionsGUI
         $this->ctrl->redirectByClass(ilRepositoryGUI::class);
     }
 
+    private function migrate() : void
+    {
+        global $DIC;
+        $migration = new ilFileObjectToStorageMigrationRunner(
+            $DIC->fileSystem()->storage(),
+            $DIC->database(),
+            rtrim(CLIENT_DATA_DIR, "/") . '/ilFile/migration_log.csv'
+        );
+        $migration->migrate(new ilFileObjectToStorageDirectory($this->file->getId(), $this->file->getDirectory()));
+        $this->ctrl->redirect($this, self::CMD_DEFAULT);
+    }
 
     /**
      * @return ilObjFile
@@ -307,7 +343,6 @@ class ilFileVersionsGUI
     {
         return $this->file;
     }
-
 
     /**
      * @return array
@@ -325,48 +360,48 @@ class ilFileVersionsGUI
             $version_ids = (array) $request->getParsedBody()[self::HIST_ID];
         }
 
+        array_walk($version_ids, static function (&$i) {
+            $i = (int) $i;
+        });
+
         return $version_ids;
     }
 
-
     /**
      * @param array $version_ids
-     *
      * @return array
      */
     private function getVersionsToKeep(array $version_ids) : array
     {
-        $versions_to_keep = array_udiff($this->file->getVersions(), $version_ids, function ($v1, $v2) {
-            if (is_array($v1)) {
+        $versions_to_keep = $this->file->getVersions();
+        array_udiff($versions_to_keep, $version_ids, static function ($v1, $v2) {
+            if (is_array($v1) || $v1 instanceof ilObjFileVersion) {
                 $v1 = (int) $v1["hist_entry_id"];
             } else {
-                if (!is_int($v1)) {
+                if (!is_numeric($v1)) {
                     $v1 = (int) $v1;
                 }
             }
 
-            if (is_array($v2)) {
+            if (is_array($v2) || $v2 instanceof ilObjFileVersion) {
                 $v2 = (int) $v2["hist_entry_id"];
             } else {
-                if (!is_int($v2)) {
+                if (!is_numeric($v2)) {
                     $v2 = (int) $v2;
                 }
             }
 
-            return $v1 - $v2;
+            return $v1 === $v2;
         });
 
         return $versions_to_keep;
     }
 
-
     /**
      * bugfix mantis 26007:
      * this function was created to ensure that the access check not only works for repository objects
      * but for workspace objects too
-     *
      * @param string $a_permission
-     *
      * @return bool
      */
     private function hasPermission($a_permission)

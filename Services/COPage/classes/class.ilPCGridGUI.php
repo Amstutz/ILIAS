@@ -1,16 +1,11 @@
 <?php
-/* Copyright (c) 1998-2017 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-require_once("./Services/COPage/classes/class.ilPCGrid.php");
-require_once("./Services/COPage/classes/class.ilPCGridCell.php");
-require_once("./Services/COPage/classes/class.ilPageContentGUI.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
  * Responsive Grid UI class
  *
  * @author Alex Killing <killing@leifos.de>
- *
- * @ingroup ServicesCOPage
  */
 class ilPCGridGUI extends ilPageContentGUI
 {
@@ -99,7 +94,6 @@ class ilPCGridGUI extends ilPageContentGUI
         $lng = $this->lng;
 
         // edit form
-        include_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
         $form->setFormAction($this->ctrl->getFormAction($this));
         $form->setTitle($this->lng->txt("cont_ed_insert_grid"));
@@ -159,39 +153,14 @@ class ilPCGridGUI extends ilPageContentGUI
             $post_layout_template = (int) $_POST["layout_template"];
             $this->content_obj = new ilPCGrid($this->getPage());
             $this->content_obj->create($this->pg_obj, $this->hier_id, $this->pc_id);
-
-            switch ($post_layout_template) {
-                case self::TEMPLATE_TWO_COLUMN:
-                    $this->content_obj->addGridCell(12, 6, 6, 6);
-                    $this->content_obj->addGridCell(12, 6, 6, 6);
-                    break;
-
-                case self::TEMPLATE_THREE_COLUMN:
-                    $this->content_obj->addGridCell(12, 4, 4, 4);
-                    $this->content_obj->addGridCell(12, 4, 4, 4);
-                    $this->content_obj->addGridCell(12, 4, 4, 4);
-                    break;
-
-                case self::TEMPLATE_MAIN_SIDE:
-                    $this->content_obj->addGridCell(12, 6, 8, 9);
-                    $this->content_obj->addGridCell(12, 6, 4, 3);
-                    break;
-
-                case self::TEMPLATE_TWO_BY_TWO:
-                    $this->content_obj->addGridCell(12, 6, 6, 3);
-                    $this->content_obj->addGridCell(12, 6, 6, 3);
-                    $this->content_obj->addGridCell(12, 6, 6, 3);
-                    $this->content_obj->addGridCell(12, 6, 6, 3);
-                    break;
-
-
-                case self::TEMPLATE_MANUAL:
-                    for ($i = 0; $i < (int) $_POST["number_of_cells"]; $i++) {
-                        $this->content_obj->addGridCell($_POST["s"], $_POST["m"], $_POST["l"], $_POST["xl"]);
-                    }
-                    break;
-            }
-
+            $this->content_obj->applyTemplate(
+                $post_layout_template,
+                (int) $_POST["number_of_cells"],
+                $_POST["s"],
+                $_POST["m"],
+                $_POST["l"],
+                $_POST["xl"]
+            );
             $this->updated = $this->pg_obj->update();
 
             if ($this->updated === true) {
@@ -238,7 +207,6 @@ class ilPCGridGUI extends ilPageContentGUI
 
         $this->setTabs();
         $this->tabs->activateTab("settings");
-        include_once("./Services/COPage/classes/class.ilPCGridCellTableGUI.php");
         $table_gui = new ilPCGridCellTableGUI($this, "edit", $this->content_obj);
         $this->tpl->setContent($table_gui->getHTML());
     }
@@ -280,7 +248,6 @@ class ilPCGridGUI extends ilPageContentGUI
             ilUtil::sendInfo($this->lng->txt("no_checkbox"), true);
             $this->ctrl->redirect($this, "edit");
         } else {
-            include_once("./Services/Utilities/classes/class.ilConfirmationGUI.php");
             $cgui = new ilConfirmationGUI();
             $cgui->setFormAction($this->ctrl->getFormAction($this));
             $cgui->setHeaderText($this->lng->txt("cont_grid_cell_confirm_deletion"));

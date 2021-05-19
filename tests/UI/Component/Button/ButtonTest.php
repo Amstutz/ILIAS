@@ -20,11 +20,14 @@ class ButtonTest extends ILIAS_UI_TestBase
         return new \ILIAS\UI\Implementation\Component\Button\Factory();
     }
 
-    public static $canonical_css_classes = array( "standard" => "btn btn-default"
-        , "primary" => "btn btn-default btn-primary"
-        , "shy" => "btn btn-link"
-        , "tag" => "btn btn-tag btn-tag-relevance-veryhigh"
-        );
+    public static $canonical_css_classes = array("standard" => "btn btn-default"
+                                                 ,
+                                                 "primary" => "btn btn-default btn-primary"
+                                                 ,
+                                                 "shy" => "btn btn-link"
+                                                 ,
+                                                 "tag" => "btn btn-tag btn-tag-relevance-veryhigh"
+    );
 
     public function test_implements_factory_interface()
     {
@@ -34,19 +37,19 @@ class ButtonTest extends ILIAS_UI_TestBase
         $this->assertInstanceOf(
             "ILIAS\\UI\\Component\\Button\\Standard",
             $f->standard("label", "http://www.ilias.de")
-            );
+        );
         $this->assertInstanceOf(
             "ILIAS\\UI\\Component\\Button\\Primary",
             $f->primary("label", "http://www.ilias.de")
-            );
+        );
         $this->assertInstanceOf(
             "ILIAS\\UI\\Component\\Button\\Close",
             $f->close()
-            );
+        );
         $this->assertInstanceOf(
             "ILIAS\\UI\\Component\\Button\\Shy",
             $f->shy("label", "http://www.ilias.de")
-            );
+        );
     }
 
     /**
@@ -123,7 +126,7 @@ class ButtonTest extends ILIAS_UI_TestBase
     {
         $f = $this->getButtonFactory();
         $b = $f->$factory_method("label", "http://www.ilias.de")
-                ->withUnavailableAction();
+               ->withUnavailableAction();
 
         $this->assertFalse($b->isActive());
         $this->assertEquals("http://www.ilias.de", $b->getAction());
@@ -160,8 +163,8 @@ class ButtonTest extends ILIAS_UI_TestBase
 
         $css_classes = self::$canonical_css_classes[$factory_method];
         $expected = "<button class=\"$css_classes\" data-action=\"$ln\" id=\"id_1\">" .
-                    "label" .
-                    "</button>";
+            "label" .
+            "</button>";
         $this->assertHTMLEquals($expected, $html);
     }
 
@@ -173,15 +176,15 @@ class ButtonTest extends ILIAS_UI_TestBase
         $ln = "http://www.ilias.de";
         $f = $this->getButtonFactory();
         $b = $f->$factory_method("label", $ln)
-                ->withUnavailableAction();
+               ->withUnavailableAction();
         $r = $this->getDefaultRenderer();
 
         $html = $this->normalizeHTML($r->render($b));
 
         $css_classes = self::$canonical_css_classes[$factory_method];
         $expected = "<button class=\"$css_classes\" data-action=\"$ln\" disabled=\"disabled\">" .
-                    "label" .
-                    "</button>";
+            "label" .
+            "</button>";
         $this->assertHTMLEquals($expected, $html);
     }
 
@@ -193,10 +196,9 @@ class ButtonTest extends ILIAS_UI_TestBase
 
         $html = $this->normalizeHTML($r->render($b));
 
-        $expected = "<button type=\"button\" class=\"close\" data-dismiss=\"modal\">" .
-                    "	<span aria-hidden=\"true\">&times;</span>" .
-                    "	<span class=\"sr-only\">Close</span>" .
-                    "</button>";
+        $expected = "<button type=\"button\" class=\"close\" aria-label=\"close\">" .
+            "	<span aria-hidden=\"true\">&times;</span>" .
+            "</button>";
         $this->assertEquals($expected, $html);
     }
 
@@ -210,10 +212,10 @@ class ButtonTest extends ILIAS_UI_TestBase
         $r = $this->getDefaultRenderer();
         $ids = array();
         $b = $f->$factory_method("label", $ln)
-                ->withOnLoadCode(function ($id) use (&$ids) {
-                    $ids[] = $id;
-                    return "";
-                });
+               ->withOnLoadCode(function ($id) use (&$ids) {
+                   $ids[] = $id;
+                   return "";
+               });
 
         $html = $this->normalizeHTML($r->render($b));
 
@@ -222,8 +224,8 @@ class ButtonTest extends ILIAS_UI_TestBase
         $id = $ids[0];
         $css_classes = self::$canonical_css_classes[$factory_method];
         $expected = "<button class=\"$css_classes\" data-action=\"$ln\" id=\"$id\">" .
-                    "label" .
-                    "</button>";
+            "label" .
+            "</button>";
         $this->assertHTMLEquals($expected, $html);
     }
 
@@ -233,20 +235,19 @@ class ButtonTest extends ILIAS_UI_TestBase
         $r = $this->getDefaultRenderer();
         $ids = array();
         $b = $f->close()
-                ->withOnLoadCode(function ($id) use (&$ids) {
-                    $ids[] = $id;
-                    return "";
-                });
+               ->withOnLoadCode(function ($id) use (&$ids) {
+                   $ids[] = $id;
+                   return "";
+               });
 
         $html = $this->normalizeHTML($r->render($b));
 
         $this->assertCount(1, $ids);
 
         $id = $ids[0];
-        $expected = "<button type=\"button\" class=\"close\" data-dismiss=\"modal\" id=\"$id\">" .
-                    "	<span aria-hidden=\"true\">&times;</span>" .
-                    "	<span class=\"sr-only\">Close</span>" .
-                    "</button>";
+        $expected = "<button type=\"button\" class=\"close\" aria-label=\"close\" id=\"$id\">" .
+            "	<span aria-hidden=\"true\">&times;</span>" .
+            "</button>";
         $this->assertEquals($expected, $html);
     }
 
@@ -306,7 +307,7 @@ class ButtonTest extends ILIAS_UI_TestBase
         $bgcol = $df->color('#00ff00');
 
         $b = $f->tag('tag', '#')
-            ->withBackgroundColor($bgcol);
+               ->withBackgroundColor($bgcol);
         $html = $this->normalizeHTML($r->render($b));
         $expected = '<button class="btn btn-tag btn-tag-relevance-veryhigh" style="background-color: #00ff00; color: #000000;" data-action="#" id="id_1">tag</button>';
         $this->assertEquals($expected, $html);
@@ -326,13 +327,14 @@ class ButtonTest extends ILIAS_UI_TestBase
 
         $classes = array('cl1', 'cl2');
         $b = $f->tag('tag', '#')
-            ->withClasses($classes);
+               ->withClasses($classes);
         $this->assertEquals($classes, $b->getClasses());
 
         $html = $this->normalizeHTML($r->render($b));
         $expected = '<button class="btn btn-tag btn-tag-relevance-veryhigh cl1 cl2" data-action="#" id="id_1">tag</button>';
         $this->assertEquals($expected, $html);
     }
+
     /**
      * @dataProvider button_type_provider
      */
@@ -458,18 +460,18 @@ class ButtonTest extends ILIAS_UI_TestBase
         $f = $this->getButtonFactory();
         $signal = $this->createMock(Signal::class);
         $signal->method("__toString")
-            ->willReturn("MOCK_SIGNAL");
+               ->willReturn("MOCK_SIGNAL");
 
         $b = $f->$factory_method("label", $ln)
-                ->withOnClick($signal);
+               ->withOnClick($signal);
         $r = $this->getDefaultRenderer();
 
         $html = $this->normalizeHTML($r->render($b));
 
         $css_classes = self::$canonical_css_classes[$factory_method];
         $expected = "<button class=\"$css_classes\" id=\"id_1\">" .
-                    "label" .
-                    "</button>";
+            "label" .
+            "</button>";
         $this->assertHTMLEquals($expected, $html);
     }
 
@@ -483,7 +485,7 @@ class ButtonTest extends ILIAS_UI_TestBase
             $f = $this->getButtonFactory();
             $r = $this->getDefaultRenderer();
             $b = $f->$method("label", $ln)
-                ->withLoadingAnimationOnClick(true);
+                   ->withLoadingAnimationOnClick(true);
 
             $html = $this->normalizeHTML($r->render($b));
 
@@ -514,10 +516,13 @@ class ButtonTest extends ILIAS_UI_TestBase
 
     public function button_type_provider()
     {
-        return array( array("standard")
-            , array("primary")
-            , array("shy")
-            , array("tag")
-            );
+        return array(array("standard")
+                     ,
+                     array("primary")
+                     ,
+                     array("shy")
+                     ,
+                     array("tag")
+        );
     }
 }

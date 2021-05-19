@@ -206,7 +206,7 @@ EOT;
         $expected = <<<EOT
         <div class="il-maincontrols-footer">
             <div class="il-footer-content">
-                <div class="il-footer-permanent-url">perma_link<input id="current_perma_link" type="text" value="http://www.ilias.de/goto.php?target=xxx_123" readonly="readOnly">
+                <div class="il-footer-permanent-url"><label for="current_perma_link">perma_link</label><input id="current_perma_link" type="text" value="http://www.ilias.de/goto.php?target=xxx_123" readonly="readOnly">
                 </div>
 
                 <div class="il-footer-text">footer text</div>
@@ -257,7 +257,7 @@ EOT;
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
-                                <h4 class="modal-title">Modal1</h4>
+                                <span class="modal-title">Modal1</span>
                             </div>
                             <div class="modal-body">PhpUnit</div>
                             <div class="modal-footer">
@@ -273,7 +273,7 @@ EOT;
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
-                                <h4 class="modal-title">Modal2</h4>
+                                <span class="modal-title">Modal2</span>
                             </div>
                             <div class="modal-body">PhpUnit</div>
                             <div class="modal-footer">

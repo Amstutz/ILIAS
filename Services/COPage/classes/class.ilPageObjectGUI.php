@@ -1,13 +1,13 @@
 <?php
 
-/* Copyright (c) 1998-2019 ILIAS open source, Extended GPL, see docs/LICENSE */
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
  * Class ilPageObjectGUI
  *
  * User Interface for Page Objects Editing
  *
- * @author Alex Killing <alex.killing@gmx.de>
+ * @author Alexander Killing <killing@leifos.de>
  *
  * @ilCtrl_Calls ilPageObjectGUI: ilPageEditorGUI, ilEditClipboardGUI, ilObjectMetaDataGUI
  * @ilCtrl_Calls ilPageObjectGUI: ilPublicUserProfileGUI, ilNoteGUI, ilNewsItemGUI
@@ -22,7 +22,7 @@ class ilPageObjectGUI
     const PRINTING = "print";
 
     /**
-     * @var ilTemplate
+     * @var ilGlobalTemplateInterface
      */
     protected $tpl;
 
@@ -101,6 +101,15 @@ class ilPageObjectGUI
     private $abstract_only = false;
     protected $parent_type = "";
 
+    /** @var string */
+    protected $file_download_link = '';
+
+    /** @var string */
+    protected $fullscreen_link = '';
+
+    /** @var string */
+    protected $link_frame = '';
+
     /**
      * @var \ILIAS\GlobalScreen\ScreenContext\ContextServices
      */
@@ -119,6 +128,42 @@ class ilPageObjectGUI
     protected $page_linker;
 
     /**
+     * @var string pcid of single paragraph
+     */
+    protected $abstract_pcid = "";
+
+    /**
+     * @var ilToolbarGUI
+     */
+    protected $toolbar;
+
+    /**
+     * @var string
+     */
+    protected $open_place_holder;
+
+    // user id
+    protected int $requested_user_id = 0;
+
+    // question id
+    protected int $requested_q_id = 0;
+
+    protected int $requested_history_mode = 0;
+
+    protected bool $enabled_news = false;
+    protected int $news_obj_id = 0;
+    protected string $news_obj_type = "";
+    protected ?array $tab_hook = null;
+    protected string $view_page_link = "";
+    protected string $view_page_target = "";
+    protected string $offline_directory = "";
+    protected bool $notes_enabled = false;
+    protected string $prependinghtml = "";
+
+    protected string $header = "";
+    protected string $int_link_return = "";
+
+    /**
      * Constructor
      *
      * @param string $a_parent_type type of parent object
@@ -134,6 +179,7 @@ class ilPageObjectGUI
         $a_prevent_get_id = false,
         $a_lang = ""
     ) {
+        /** @var ILIAS\DI\Container $DIC $ */
         global $DIC;
 
         $this->log = ilLoggerFactory::getLogger('copg');
@@ -146,15 +192,16 @@ class ilPageObjectGUI
         $this->user = $DIC->user();
         $this->help = $DIC["ilHelp"];
         $this->ui = $DIC->ui();
+        $this->toolbar = $DIC->toolbar();
 
         $this->setParentType($a_parent_type);
         $this->setId($a_id);
-        if ($a_old_nr == 0 && !$a_prevent_get_id && $_GET["old_nr"] > 0) {
+        if ($a_old_nr == 0 && !$a_prevent_get_id && isset($_GET["old_nr"]) && $_GET["old_nr"] > 0) {
             $a_old_nr = $_GET["old_nr"];
         }
         $this->setOldNr($a_old_nr);
         
-        if ($a_lang == "" && $_GET["transl"] != "") {
+        if ($a_lang == "" && isset($_GET["transl"]) && is_string($_GET["transl"]) && $_GET["transl"] !== '') {
             $this->setLanguage($_GET["transl"]);
         } else {
             if ($a_lang == "") {
@@ -186,6 +233,10 @@ class ilPageObjectGUI
         $this->setTemplateOutput(false);
 
         $this->ctrl->saveParameter($this, "transl");
+
+        $this->requested_user_id = (int) ($_GET["user"] ?? 0);
+        $this->requested_q_id = (int) ($_GET['q_id'] ?? 0);
+        $this->requested_history_mode = (int) ($_GET["history_mode"] ?? 0);
         
         $this->afterConstructor();
     }
@@ -203,7 +254,6 @@ class ilPageObjectGUI
      */
     final protected function initPageObject()
     {
-        include_once("./Services/COPage/classes/class.ilPageObjectFactory.php");
         $page = ilPageObjectFactory::getInstance(
             $this->getParentType(),
             $this->getId(),
@@ -392,12 +442,12 @@ class ilPageObjectGUI
         return $this->presentation_title;
     }
 
-    public function setHeader($a_title = "")
+    public function setHeader(string $a_title = "")
     {
         $this->header = $a_title;
     }
 
-    public function getHeader()
+    public function getHeader() : string
     {
         return $this->header;
     }
@@ -547,7 +597,7 @@ class ilPageObjectGUI
         return $this->fullscreen_link;
     }
 
-    public function setIntLinkReturn($a_return)
+    public function setIntLinkReturn(string $a_return)
     {
         $this->int_link_return = $a_return;
     }
@@ -568,7 +618,7 @@ class ilPageObjectGUI
         $this->notes_parent_id = $a_parent_id;
     }
 
-    public function isEnabledNotes()
+    public function isEnabledNotes() : bool
     {
         return $this->notes_enabled;
     }
@@ -586,9 +636,9 @@ class ilPageObjectGUI
 
     /**
      * get offline directory
-     * @return directory where to store offline files
+     * @return string
      */
-    public function getOfflineDirectory()
+    public function getOfflineDirectory() : string
     {
         return $this->offline_directory;
     }
@@ -600,7 +650,7 @@ class ilPageObjectGUI
     * @param	string		link target
     * @param	string		target frame
     */
-    public function setViewPageLink($a_link, $a_target = "")
+    public function setViewPageLink(string $a_link, string $a_target = "")
     {
         $this->view_page_link = $a_link;
         $this->view_page_target = $a_target;
@@ -609,7 +659,7 @@ class ilPageObjectGUI
     /**
     * get view page link
     */
-    public function getViewPageLink()
+    public function getViewPageLink() : string
     {
         return $this->view_page_link;
     }
@@ -617,7 +667,7 @@ class ilPageObjectGUI
     /**
     * get view page target frame
     */
-    public function getViewPageTarget()
+    public function getViewPageTarget() : string
     {
         return $this->view_page_target;
     }
@@ -643,7 +693,7 @@ class ilPageObjectGUI
      *
      * @param	boolean	enabled news
      */
-    public function setEnabledNews($a_enabled, $a_news_obj_id = 0, $a_news_obj_type = 0)
+    public function setEnabledNews(bool $a_enabled, int $a_news_obj_id = 0, string $a_news_obj_type = "") : void
     {
         $this->enabled_news = $a_enabled;
         $this->news_obj_id = $a_news_obj_id;
@@ -717,6 +767,25 @@ class ilPageObjectGUI
     {
         $this->enabledpagefocus = $a_enabledpagefocus;
     }
+
+    /**
+     * Set open placeholder
+     * @param string $a_val open placeholder pc id
+     */
+    public function setOpenPlaceHolder($a_val)
+    {
+        $this->open_place_holder = $a_val;
+    }
+
+    /**
+     * Get open placeholder
+     * @return string open placeholder pc id
+     */
+    public function getOpenPlaceHolder()
+    {
+        return $this->open_place_holder;
+    }
+    
 
     /**
     * Get Enable page focus.
@@ -846,9 +915,10 @@ class ilPageObjectGUI
      *
      * @param boolean $a_val get only abstract (first text paragraph)
      */
-    public function setAbstractOnly($a_val)
+    public function setAbstractOnly($a_val, $pcid = "")
     {
         $this->abstract_only = $a_val;
+        $this->abstract_pcid = $pcid;
     }
     
     /**
@@ -996,16 +1066,21 @@ class ilPageObjectGUI
     */
     public function executeCommand()
     {
-        $this->getTabs();
-
         $this->ctrl->setReturn($this, "edit");
 
         $next_class = $this->ctrl->getNextClass($this);
         $this->log->debug("next_class: " . $next_class);
+
+        if ($next_class == "" && $this->ctrl->getCmd() == "edit") {
+            $this->tabs_gui->clearTargets();
+        } else {
+            $this->getTabs();
+        }
+
+
         switch ($next_class) {
             case 'ilobjectmetadatagui':
                 $this->tabs_gui->activateTab("meta_data");
-                include_once 'Services/Object/classes/class.ilObjectMetaDataGUI.php';
                 $md_gui = new ilObjectMetaDataGUI($this->meta_data_rep_obj, $this->meta_data_type, $this->meta_data_sub_obj_id);
                 if (is_object($this->meta_data_observer_obj)) {
                     $md_gui->addMDObserver(
@@ -1025,21 +1100,19 @@ class ilPageObjectGUI
                 
             // notes
             case "ilnotegui":
-                switch ($_GET["notes_mode"]) {
-                    default:
-                        $html = $this->edit();
-                        $this->tabs_gui->setTabActive("edit");
-                        return $html;
-                }
+                $html = $this->edit();
+                $this->tabs_gui->setTabActive("edit");
+                return $html;
                 break;
                 
             case 'ilpublicuserprofilegui':
-                require_once './Services/User/classes/class.ilPublicUserProfileGUI.php';
-                $profile_gui = new ilPublicUserProfileGUI($_GET["user"]);
+                $profile_gui = new ilPublicUserProfileGUI($this->requested_user_id);
                 $ret = $this->ctrl->forwardCommand($profile_gui);
                 break;
 
             case "ilpageeditorgui":
+                $this->setEditorToolContext();
+
                 if (!$this->getEnableEditing()) {
                     ilUtil::sendFailure($this->lng->txt("permission_denied"), true);
                     $this->ctrl->redirect($this, "preview");
@@ -1054,7 +1127,6 @@ class ilPageObjectGUI
                 break;
 
             case 'ilnewsitemgui':
-                include_once("./Services/News/classes/class.ilNewsItemGUI.php");
                 $news_item_gui = new ilNewsItemGUI();
                 $news_item_gui->setEnableEdit(true);
                 $news_item_gui->setContextObjId($this->news_obj_id);
@@ -1065,19 +1137,17 @@ class ilPageObjectGUI
                 $ret = $this->ctrl->forwardCommand($news_item_gui);
                 break;
 
-                $profile_gui = new ilPublicUserProfileGUI($_GET["user"]);
+                $profile_gui = new ilPublicUserProfileGUI($this->requested_user_id);
                 $ret = $this->ctrl->forwardCommand($profile_gui);
                 break;
 
             case "ilpropertyformgui":
-                include_once './Services/Form/classes/class.ilPropertyFormGUI.php';
                 $form = $this->initOpenedContentForm();
                 $this->ctrl->forwardCommand($form);
                 break;
                 
             case "ilinternallinkgui":
                 $this->lng->loadLanguageModule("content");
-                require_once("./Services/Link/classes/class.ilInternalLinkGUI.php");
                 $link_gui = new ilInternalLinkGUI("Media_Media", 0);
 
                 $link_gui->filterLinkType("PageObject_FAQ");
@@ -1091,10 +1161,8 @@ class ilPageObjectGUI
 
             case "ilquestioneditgui":
                 $this->setQEditTabs("question");
-                include_once("./Modules/TestQuestionPool/classes/class.ilQuestionEditGUI.php");
                 $edit_gui = new ilQuestionEditGUI();
                 $edit_gui->setPageConfig($this->getPageConfig());
-//			    $edit_gui->addNewIdListener($this, "setNewQuestionId");
                 $edit_gui->setSelfAssessmentEditingMode(true);
                 $ret = $this->ctrl->forwardCommand($edit_gui);
                 $this->tpl->setContent($ret);
@@ -1111,28 +1179,20 @@ class ilPageObjectGUI
                 $this->lng->loadLanguageModule("assessment");
 
                 // set context tabs
-                require_once 'Modules/TestQuestionPool/classes/class.assQuestionGUI.php';
-                require_once 'Modules/TestQuestionPool/classes/class.assQuestion.php';
-                $questionGUI = assQuestionGUI::_getQuestionGUI(assQuestion::_getQuestionType((int) $_GET['q_id']), (int) $_GET['q_id']);
+                $questionGUI = assQuestionGUI::_getQuestionGUI(
+                    assQuestion::_getQuestionType(
+                        $this->requested_q_id
+                    ),
+                    $this->requested_q_id
+                );
                 $questionGUI->object->setObjId(0);
                 $questionGUI->object->setSelfAssessmentEditingMode(true);
                 $questionGUI->object->setPreventRteUsage($this->getPageConfig()->getPreventRteUsage());
 
                 // forward to ilAssQuestionFeedbackGUI
-                require_once 'Modules/TestQuestionPool/classes/class.ilAssQuestionFeedbackEditingGUI.php';
                 $gui = new ilAssQuestionFeedbackEditingGUI($questionGUI, $this->ctrl, $this->access, $this->tpl, $this->tabs_gui, $this->lng);
                 $this->ctrl->forwardCommand($gui);
                 break;
-
-/*			case "ilpagemultilanggui":
-                $this->ctrl->setReturn($this, "edit");
-                include_once("./Services/COPage/classes/class.ilPageMultiLangGUI.php");
-                $ml_gui = new ilPageMultiLangGUI($this->getPageObject()->getParentType(), $this->getPageObject()->getParentId(),
-                    $this->getPageConfig()->getSinglePageMode());
-                //$this->setTabs("settings");
-                //$this->setSubTabs("cont_multilinguality");
-                $ret = $this->ctrl->forwardCommand($ml_gui);
-                break;*/
 
 
             case 'ilLearninghistorygui':
@@ -1147,6 +1207,15 @@ class ilPageObjectGUI
 
             default:
                 $cmd = $this->ctrl->getCmd("preview");
+                // presentation view
+                if ($this->getViewPageLink() != "" && $cmd != "edit") {
+                    $this->tabs_gui->addNonTabbedLink(
+                        "pres_view",
+                        $this->getViewPageText(),
+                        $this->getViewPageLink(),
+                        $this->getViewPageTarget()
+                    );
+                }
                 $ret = $this->$cmd();
                 break;
         }
@@ -1162,8 +1231,6 @@ class ilPageObjectGUI
      */
     public function setQEditTabs($a_active)
     {
-        include_once("./Modules/TestQuestionPool/classes/class.assQuestion.php");
-        
         $this->tabs_gui->clearTargets();
 
         $this->tabs_gui->setBackTarget(
@@ -1171,15 +1238,14 @@ class ilPageObjectGUI
             $this->ctrl->getLinkTarget($this, "edit")
         );
 
-        $this->ctrl->setParameterByClass("ilquestioneditgui", "q_id", $_GET["q_id"]);
+        $this->ctrl->setParameterByClass("ilquestioneditgui", "q_id", $this->requested_q_id);
         $this->tabs_gui->addTab(
             "question",
             $this->lng->txt("question"),
             $this->ctrl->getLinkTargetByClass("ilquestioneditgui", "editQuestion")
         );
 
-        require_once 'Modules/TestQuestionPool/classes/class.ilAssQuestionFeedbackEditingGUI.php';
-        $this->ctrl->setParameterByClass("ilAssQuestionFeedbackEditingGUI", "q_id", $_GET["q_id"]);
+        $this->ctrl->setParameterByClass("ilAssQuestionFeedbackEditingGUI", "q_id", $this->requested_q_id);
         $this->tabs_gui->addTab(
             "feedback",
             $this->lng->txt("feedback"),
@@ -1216,40 +1282,59 @@ class ilPageObjectGUI
     }
 
     /**
+     * Show edit toolbar
+     */
+    protected function showEditToolbar()
+    {
+        $ui = $this->ui;
+        $lng = $this->lng;
+        if ($this->getEnableEditing()) {
+            $b = $ui->factory()->button()->standard(
+                $lng->txt("edit"),
+                $this->ctrl->getLinkTarget($this, "edit")
+            );
+            $this->toolbar->addComponent($b);
+        }
+    }
+
+    /**
      * display content of page
      */
     public function showPage()
     {
         $main_tpl = $this->tpl;
 
+        if ($this->getOutputMode() == self::PREVIEW) {
+            $this->showEditToolbar();
+        }
+
+        $sel_js_mode = '';
+        $paragraph_plugin_string = '';
+        $disable_auto_margins = '';
+
         // jquery and jquery ui are always provided for components
-        include_once("./Services/jQuery/classes/class.iljQueryUtil.php");
         iljQueryUtil::initjQuery();
         iljQueryUtil::initjQueryUI();
 
         //		$this->initSelfAssessmentRendering();
-        
-        include_once("./Services/MediaObjects/classes/class.ilObjMediaObjectGUI.php");
         ilObjMediaObjectGUI::includePresentationJS($main_tpl);
 
         $main_tpl->addJavaScript("./Services/COPage/js/ilCOPagePres.js");
 
         // needed for overlays in iim
-        include_once("./Services/UIComponent/Overlay/classes/class.ilOverlayGUI.php");
         ilOverlayGUI::initJavascript();
         
-        include_once("./Services/MediaObjects/classes/class.ilPlayerUtil.php");
         ilPlayerUtil::initMediaElementJs($main_tpl);
         
         // init template
-        //if($this->outputToTemplate())
-        //{
         if ($this->getOutputMode() == "edit") {
+            $this->initEditing();
+
+            $this->getPageObject()->buildDom();
+
             $this->log->debug("ilPageObjectGUI, showPage() in edit mode.");
 
-            //echo ":".$this->getTemplateTargetVar().":";
             $tpl = new ilTemplate("tpl.page_edit_wysiwyg.html", true, true, "Services/COPage");
-            //$this->tpl->addBlockFile($this->getTemplateTargetVar(), "adm_content", "tpl.page_edit_wysiwyg.html", "Services/COPage");
 
             // to do: status dependent class
             $tpl->setVariable("CLASS_PAGE_TD", "ilc_Page");
@@ -1261,98 +1346,30 @@ class ilPageObjectGUI
                 $tpl->parseCurrentBlock();
             }
 
+            if ($this->getPageConfig()->getUsePageContainer()) {
+                $tpl->setVariable("PAGE_CONTAINER_CLASS", "ilc_page_cont_PageContainer");
+            }
+
             $tpl->setVariable(
                 "WYSIWYG_ACTION",
                 $this->ctrl->getFormActionByClass("ilpageeditorgui", "", "", true)
-                );
+            );
 
             // determine media, html and javascript mode
-            $sel_media_mode = ($this->user->getPref("ilPageEditor_MediaMode") == "disable")
-                    ? "disable"
-                    : "enable";
-            $sel_html_mode = ($this->user->getPref("ilPageEditor_HTMLMode") == "disable")
-                    ? "disable"
-                    : "enable";
-            $sel_js_mode = "disable";
-            //if($ilSetting->get("enable_js_edit", 1))
-            //{
             $sel_js_mode = (ilPageEditorGUI::_doJSEditing())
                         ? "enable"
                         : "disable";
-            //}
+            $sel_js_mode = "enable";
 
             // show prepending html
             $tpl->setVariable("PREPENDING_HTML", $this->getPrependingHtml());
             $tpl->setVariable("TXT_CONFIRM_DELETE", $this->lng->txt("cont_confirm_delete"));
 
-            // presentation view
-            if ($this->getViewPageLink() != "") {
-                $this->tabs_gui->addNonTabbedLink(
-                    "pres_view",
-                    $this->getViewPageText(),
-                    $this->getViewPageLink(),
-                    $this->getViewPageTarget()
-                    );
-            }
-
-            // show actions drop down
-            $this->addActionsMenu($tpl, $sel_media_mode, $sel_html_mode, $sel_js_mode);
 
             // get js files for JS enabled editing
             if ($sel_js_mode == "enable") {
-                include_once("./Services/YUI/classes/class.ilYuiUtil.php");
-                ilYuiUtil::initDragDrop();
-                ilYuiUtil::initConnection();
-                ilYuiUtil::initPanel(false);
-                $main_tpl->addJavaScript("./Services/COPage/js/ilcopagecallback.js");
-                $main_tpl->addJavascript("Services/COPage/js/page_editing.js");
-                $main_tpl->addOnloadCode("il.copg.editor.init('".
-                    ILIAS_HTTP_PATH."/".$this->ctrl->getLinkTargetByClass(["ilPageEditorGUI", "ilPageEditorServerAdapterGUI"], "invokeServer")."','".
-                    $this->ctrl->getFormActionByClass("ilPageEditorGUI")
-                    ."');");
 
-                include_once("./Services/UIComponent/Modal/classes/class.ilModalGUI.php");
-                ilModalGUI::initJS();
-                $this->lng->toJS("cont_error");
-                $this->lng->toJS("cont_sel_el_cut_use_paste");
-                $this->lng->toJS("cont_sel_el_copied_use_paste");
-
-                include_once './Services/Style/Content/classes/class.ilObjStyleSheet.php';
-                $main_tpl->addOnloadCode("var preloader = new Image();
-						preloader.src = './templates/default/images/loader.svg';
-						ilCOPage.setUser('" . $this->user->getLogin() . "');
-						ilCOPage.setContentCss('" .
-                        ilObjStyleSheet::getContentStylePath((int) $this->getStyleId()) .
-                        ", " . ilUtil::getStyleSheetLocation() .
-                        ", ./Services/COPage/css/tiny_extra.css" .
-                        "')");
-                include_once("./Services/COPage/classes/class.ilPCParagraphGUI.php");
-                foreach (ilPCParagraphGUI::_getTextCharacteristics($this->getStyleId()) as $c) {
-                    $main_tpl->addOnloadCode("ilCOPage.addTextFormat('" . $c . "');");
-                }
-
-                $main_tpl->addJavascript("./node_modules/tinymce/tinymce.min.js");
-                $tpl->touchBlock("init_dragging");
-
-                $cfg = $this->getPageConfig();
-                $tpl->setVariable(
-                    "IL_TINY_MENU",
-                    self::getTinyMenu(
-                        $this->getPageObject()->getParentType(),
-                        $cfg->getEnableInternalLinks(),
-                        $cfg->getEnableWikiLinks(),
-                        $cfg->getEnableKeywords(),
-                        $this->getStyleId(),
-                        true,
-                        true,
-                        $cfg->getEnableAnchors(),
-                        true,
-                        $cfg->getEnableUserLinks()
-                        )
-                    );
-                    
                 // add int link parts
-                include_once("./Services/Link/classes/class.ilInternalLinkGUI.php");
                 $tpl->setCurrentBlock("int_link_prep");
                 $tpl->setVariable("INT_LINK_PREP", ilInternalLinkGUI::getInitHTML(
                     $this->ctrl->getLinkTargetByClass(
@@ -1361,24 +1378,20 @@ class ilPageObjectGUI
                         false,
                         true,
                         false
-                        )
-                    ));
+                    )
+                ));
                 $tpl->parseCurrentBlock();
 
-                include_once("./Services/YUI/classes/class.ilYuiUtil.php");
-                ilYuiUtil::initConnection();
-                $main_tpl->addJavaScript("./Services/UIComponent/Explorer/js/ilExplorer.js");
+                $editor_init = new \ILIAS\COPage\Editor\UI\Init();
+                $editor_init->initUI($main_tpl, (string) $this->getOpenPlaceHolder());
             }
-
         } else {
             // presentation or preview here
-                
+
             $tpl = new ilTemplate("tpl.page.html", true, true, "Services/COPage");
             if ($this->getEnabledPageFocus()) {
                 $tpl->touchBlock("page_focus");
             }
-                
-            include_once("./Services/User/classes/class.ilUserUtil.php");
                 
             // presentation
             if ($this->isPageContainerToBeRendered()) {
@@ -1389,7 +1402,8 @@ class ilPageObjectGUI
 
             // history
             $c_old_nr = $this->getPageObject()->old_nr;
-            if ($c_old_nr > 0 || $this->getCompareMode() || $_GET["history_mode"] == 1) {
+            $c_old_nr = $this->getPageObject()->old_nr;
+            if ($c_old_nr > 0 || $this->getCompareMode() || ($this->requested_history_mode == 1)) {
                 $hist_info =
                         $this->getPageObject()->getHistoryInfo($c_old_nr);
 
@@ -1404,7 +1418,7 @@ class ilPageObjectGUI
                         $tpl->setVariable(
                             "HREF_PREV",
                             $this->ctrl->getLinkTarget($this, "preview")
-                            );
+                        );
                         $tpl->parseCurrentBlock();
                     } else {
                         $tpl->setCurrentBlock("previous_rev_disabled");
@@ -1420,7 +1434,7 @@ class ilPageObjectGUI
                         $tpl->setVariable(
                             "HREF_NEXT",
                             $this->ctrl->getLinkTarget($this, "preview")
-                            );
+                        );
                         $tpl->parseCurrentBlock();
 
                         // latest revision
@@ -1430,7 +1444,7 @@ class ilPageObjectGUI
                         $tpl->setVariable(
                             "HREF_LATEST",
                             $this->ctrl->getLinkTarget($this, "preview")
-                            );
+                        );
                         $tpl->parseCurrentBlock();
                     }
 
@@ -1443,12 +1457,12 @@ class ilPageObjectGUI
                         $tpl->setVariable(
                             "HREF_ROLLBACK",
                             $this->ctrl->getLinkTarget($this, "rollbackConfirmation")
-                            );
+                        );
                         $this->ctrl->setParameter($this, "old_nr", "");
                         $tpl->setVariable(
                             "TXT_ROLLBACK",
                             $this->lng->txt("cont_rollback")
-                            );
+                        );
                         $tpl->parseCurrentBlock();
                     }
                 }
@@ -1458,11 +1472,11 @@ class ilPageObjectGUI
                 $tpl->setVariable(
                     "VAL_REVISION_DATE",
                     ilDatePresentation::formatDate(new ilDateTime($hist_info["current"]["hdate"], IL_CAL_DATETIME))
-                    );
+                );
                 $tpl->setVariable(
                     "VAL_REV_USER",
                     ilUserUtil::getNamePresentation($hist_info["current"]["user_id"])
-                    );
+                );
                 $tpl->parseCurrentBlock();
             }
         }
@@ -1479,7 +1493,7 @@ class ilPageObjectGUI
                 $this->obj->getParentType() . ":pg",
                 $this->obj->getId(),
                 $this->obj->getLanguage()
-                );
+            );
             $mob_links = array();
             foreach ($links as $link) {
                 if ($link["type"] == "mob") {
@@ -1496,7 +1510,7 @@ class ilPageObjectGUI
                 $tpl->setVariable(
                     "SEL_MED_LINKS",
                     ilUtil::formSelect(0, "mob_id", $mob_links, false, true)
-                    );
+                );
                 $tpl->setVariable("TXT_EDIT_MEDIA", $this->lng->txt("cont_edit_mob"));
                 $tpl->setVariable("TXT_COPY_TO_CLIPBOARD", $this->lng->txt("cont_copy_to_clipboard"));
                 //$this->tpl->setVariable("TXT_COPY_TO_POOL", $this->lng->txt("cont_copy_to_mediapool"));
@@ -1504,14 +1518,13 @@ class ilPageObjectGUI
             }
                 
             // content snippets used
-            include_once("./Services/COPage/classes/class.ilPCContentInclude.php");
+            $this->getPageObject()->buildDom();
             $snippets = ilPCContentInclude::collectContentIncludes(
                 $this->getPageObject(),
                 $this->getPageObject()->getDomDoc()
-                );
+            );
             if (count($snippets) > 0) {
                 foreach ($snippets as $s) {
-                    include_once("./Modules/MediaPool/classes/class.ilMediaPoolPage.php");
                     $sn_arr[$s["id"]] = ilMediaPoolPage::lookupTitle($s["id"]);
                 }
                 $tpl->setCurrentBlock("med_link");
@@ -1519,7 +1532,7 @@ class ilPageObjectGUI
                 $tpl->setVariable(
                     "SEL_SNIPPETS",
                     ilUtil::formSelect(0, "ci_id", $sn_arr, false, true)
-                    );
+                );
                 $tpl->setVariable("TXT_SHOW_INFO", $this->lng->txt("cont_show_info"));
                 $tpl->parseCurrentBlock();
             }
@@ -1537,8 +1550,8 @@ class ilPageObjectGUI
                             $this->getPageObject()->getActivationStart(),
                             IL_CAL_DATETIME
                         )
-                        )
-                    );
+                    )
+                );
                 $tpl->setVariable(
                     "SA_TO",
                     ilDatePresentation::formatDate(
@@ -1546,18 +1559,18 @@ class ilPageObjectGUI
                             $this->getPageObject()->getActivationEnd(),
                             IL_CAL_DATETIME
                         )
-                        )
-                    );
+                    )
+                );
                 $tpl->parseCurrentBlock();
             }
         }
 
-        if ($_GET["reloadTree"] == "y") {
+        if (isset($_GET["reloadTree"]) && $_GET["reloadTree"] == "y") {
             $tpl->setCurrentBlock("reload_tree");
             $tpl->setVariable(
                 "LINK_TREE",
                 $this->ctrl->getLinkTargetByClass("ilobjlearningmodulegui", "explorer", "", false, false)
-                );
+            );
             $tpl->parseCurrentBlock();
         }
         //		}
@@ -1629,14 +1642,13 @@ class ilPageObjectGUI
             $this->setDefaultLinkXml();
         }
 
-        //$content = $this->obj->getXMLFromDom(false, true, true,
-        //	$this->getLinkXML().$this->getQuestionXML().$this->getComponentPluginsXML());
+        $template_xml = '';
+
         $link_xml = $this->getLinkXML();
-        //echo "<br>-".htmlentities($link_xml)."-"; exit;
+
         // disable/enable auto margins
         if ($this->getStyleId() > 0) {
             if (ilObject::_lookupType($this->getStyleId()) == "sty") {
-                include_once("./Services/Style/Content/classes/class.ilObjStyleSheet.php");
                 $style = new ilObjStyleSheet($this->getStyleId());
                 $template_xml = $style->getTemplateXML();
                 $disable_auto_margins = "n";
@@ -1646,10 +1658,19 @@ class ilPageObjectGUI
             }
         }
 
+        $append_footnotes = "y";
         if ($this->getAbstractOnly()) {
-            $content = "<dummy><PageObject><PageContent><Paragraph>" .
-                $this->obj->getFirstParagraphText() . $link_xml .
-                "</Paragraph></PageContent></PageObject></dummy>";
+            if (!$this->abstract_pcid) {
+                $content = "<dummy><PageObject><PageContent><Paragraph>" .
+                    $this->obj->getFirstParagraphText() . $link_xml .
+                    "</Paragraph></PageContent></PageObject></dummy>";
+            } else {
+                $append_footnotes = "n";
+                $par = $this->obj->getParagraphForPCID($this->abstract_pcid);
+                $content = "<dummy><PageObject><PageContent><Paragraph Characteristic='" . $par->getCharacteristic() . "'>" .
+                    $par->getText() . $link_xml .
+                    "</Paragraph></PageContent></PageObject></dummy>";
+            }
         } else {
             $content = $this->obj->getXMLFromDom(
                 false,
@@ -1663,13 +1684,17 @@ class ilPageObjectGUI
         if ($builded !== true) {
             $this->displayValidationError($builded);
         } else {
-            $this->displayValidationError($_SESSION["il_pg_error"]);
+            $this->displayValidationError((string) ilSession::get("il_pg_error"));
         }
         unset($_SESSION["il_pg_error"]);
 
         // get title
         $pg_title = $this->getPresentationTitle();
 
+        $col_path = '';
+        $row_path = '';
+        $cell_path = '';
+        $item_path = '';
         if ($this->getOutputMode() == "edit") {
             $col_path = ilUtil::getImagePath("col.svg");
             $row_path = ilUtil::getImagePath("row.svg");
@@ -1710,9 +1735,6 @@ class ilPageObjectGUI
 
         
         if ($this->getPageConfig()->getEnablePCType("Tabs")) {
-            //include_once("./Services/YUI/classes/class.ilYuiUtil.php");
-            //ilYuiUtil::initTabView();
-            include_once("./Services/Accordion/classes/class.ilAccordionGUI.php");
             ilAccordionGUI::addJavaScript();
             ilAccordionGUI::addCss();
         }
@@ -1730,12 +1752,9 @@ class ilPageObjectGUI
             ? $this->user->getPref("ilPageEditor_MediaMode")
             : "enable";
 
-        include_once("./Modules/LearningModule/classes/class.ilEditClipboard.php");
         $paste = (ilEditClipboard::getAction() == "copy" &&
             $this->getOutputMode() == "edit");
         
-        include_once("./Services/MediaObjects/classes/class.ilPlayerUtil.php");
-
         $flv_video_player = ($this->getOutputMode() != "offline")
             ? ilPlayerUtil::getFlashVideoPlayerFilename(true)
             : ilPlayerUtil::getFlashVideoPlayerFilename(true);
@@ -1743,10 +1762,7 @@ class ilPageObjectGUI
         $cfg = $this->getPageConfig();
 
         $current_ts = time();
-        include_once("./Services/MediaObjects/classes/class.ilObjMediaObject.php");
-
         // added UTF-8 encoding otherwise umlaute are converted too
-        include_once("./Services/Maps/classes/class.ilMapUtil.php");
         $params = array('mode' => $this->getOutputMode(), 'pg_title' => htmlentities($pg_title, ENT_QUOTES, "UTF-8"),
                          'enable_placeholder' => $cfg->getEnablePCType("PlaceHolder") ? "y" : "n",
                          'pg_id' => $this->obj->getId(), 'pg_title_class' => $pg_title_class,
@@ -1755,6 +1771,7 @@ class ilPageObjectGUI
                          'img_row' => $row_path,
                          'img_cell' => $cell_path,
                          'img_item' => $item_path,
+                         'append_footnotes' => $append_footnotes,
                          'compare_mode' => $this->getCompareMode() ? "y" : "n",
                          'enable_split_new' => $enable_split_new,
                          'enable_split_next' => $enable_split_next,
@@ -1806,9 +1823,7 @@ class ilPageObjectGUI
 
 
         // should be modularized
-        include_once("./Services/COPage/classes/class.ilPCSection.php");
         $md5_adds = ilPCSection::getCacheTriggerString($this->getPageObject());
-
         // run xslt
         $md5 = md5(serialize($params) . $link_xml . $template_xml . $md5_adds);
         
@@ -1816,6 +1831,7 @@ class ilPageObjectGUI
         
         // check cache (same parameters, non-edit mode and rendered time
         // > last change
+        $is_error = false;
         if (($this->getOutputMode() == "preview" || $this->getOutputMode() == "presentation") &&
             !$this->getCompareMode() &&
             !$this->getAbstractOnly() &&
@@ -1827,12 +1843,18 @@ class ilPageObjectGUI
             $output = $this->obj->getRenderedContent();
         } else {
             $xsl = file_get_contents("./Services/COPage/xsl/page.xsl");
-
             $this->log->debug("Calling XSLT, content: " . substr($content, 0, 100));
-            $args = array( '/_xml' => $content, '/_xsl' => $xsl );
-            $xh = xslt_create();
-            $output = xslt_process($xh, "arg:/_xml", "arg:/_xsl", null, $args, $params);
-            
+            try {
+                $args = array( '/_xml' => $content, '/_xsl' => $xsl );
+                $xh = xslt_create();
+                $output = xslt_process($xh, "arg:/_xml", "arg:/_xsl", null, $args, $params);
+            } catch (Exception $e) {
+                $output = "";
+                if ($this->getOutputMode() == "edit") {
+                    $output = "<pre>" . $e->getMessage() . "<br>" . htmlentities($content) . "</pre>";
+                    $is_error = true;
+                }
+            }
             if (($this->getOutputMode() == "presentation" || $this->getOutputMode() == "preview")
                 && !$this->getAbstractOnly()
                 && $this->obj->old_nr == 0) {
@@ -1841,61 +1863,61 @@ class ilPageObjectGUI
             xslt_free($xh);
         }
 
-        // unmask user html
-        if (($this->getOutputMode() != "edit" ||
-                $this->user->getPref("ilPageEditor_HTMLMode") != "disable")
-            && !$this->getPageConfig()->getPreventHTMLUnmasking()) {
-            $output = str_replace("&lt;", "<", $output);
-            $output = str_replace("&gt;", ">", $output);
-        }
-        $output = str_replace("&amp;", "&", $output);
-        
-        include_once './Services/MathJax/classes/class.ilMathJax.php';
-        $output = ilMathJax::getInstance()->insertLatexImages($output);
+        if (!$is_error) {
+            // unmask user html
+            if (($this->getOutputMode() != "edit" ||
+                    $this->user->getPref("ilPageEditor_HTMLMode") != "disable")
+                && !$this->getPageConfig()->getPreventHTMLUnmasking()) {
+                $output = str_replace("&lt;", "<", $output);
+                $output = str_replace("&gt;", ">", $output);
+            }
+            $output = str_replace("&amp;", "&", $output);
 
-        // insert page snippets
-        //$output = $this->insertContentIncludes($output);
+            $output = ilMathJax::getInstance()->insertLatexImages($output);
 
-        // insert resource blocks
-        $output = $this->insertResources($output);
+            // insert page snippets
+            //$output = $this->insertContentIncludes($output);
 
-        // insert page toc
-        if ($this->getPageConfig()->getEnablePageToc()) {
-            $output = $this->insertPageToc($output);
-        }
+            // insert resource blocks
+            $output = $this->insertResources($output);
 
-        // insert advanced output trigger
-        $output = $this->insertAdvTrigger($output);
+            // insert page toc
+            if ($this->getPageConfig()->getEnablePageToc()) {
+                $output = $this->insertPageToc($output);
+            }
 
-        // workaround for preventing template engine
-        // from hiding paragraph text that is enclosed
-        // in curly brackets (e.g. "{a}", see ilLMEditorGUI::executeCommand())
-        $output = $this->replaceCurlyBrackets($output);
+            // insert advanced output trigger
+            $output = $this->insertAdvTrigger($output);
 
-        // remove all newlines (important for code / pre output)
-        $output = str_replace("\n", "", $output);
+            // workaround for preventing template engine
+            // from hiding paragraph text that is enclosed
+            // in curly brackets (e.g. "{a}", see ilLMEditorGUI::executeCommand())
+            $output = $this->replaceCurlyBrackets($output);
 
-        //echo htmlentities($output);
-        $output = $this->postOutputProcessing($output);
-        //echo htmlentities($output);
-        if ($this->getOutputMode() == "edit" &&
-            !$this->getPageObject()->getActive($this->getPageConfig()->getEnableScheduledActivation())) {
-            $output = '<div class="il_editarea_disabled"><div class="ilCopgDisabledText">' . $this->getDisabledText() . '</div>' . $output . '</div>';
-        }
-        
-        // for all page components...
-        include_once("./Services/COPage/classes/class.ilCOPagePCDef.php");
-        $defs = ilCOPagePCDef::getPCDefinitions();
-        foreach ($defs as $def) {
-            ilCOPagePCDef::requirePCClassByName($def["name"]);
-            $pc_class = $def["pc_class"];
-            $pc_obj = new $pc_class($this->getPageObject());
-            $pc_obj->setSourcecodeDownloadScript($this->determineSourcecodeDownloadScript());
-            $pc_obj->setFileDownloadLink($this->determineFileDownloadLink());
-            $pc_obj->setFullscreenLink($this->determineFullscreenLink());
+            // remove all newlines (important for code / pre output)
+            $output = str_replace("\n", "", $output);
 
-            // post xsl page content modification by pc elements
-            $output = $pc_obj->modifyPageContentPostXsl($output, $this->getOutputMode(), $this->getAbstractOnly());
+            //echo htmlentities($output);
+            $output = $this->postOutputProcessing($output);
+            //echo htmlentities($output);
+            if ($this->getOutputMode() == "edit" &&
+                !$this->getPageObject()->getActive($this->getPageConfig()->getEnableScheduledActivation())) {
+                $output = '<div class="il_editarea_disabled"><div class="ilCopgDisabledText">' . $this->getDisabledText() . '</div>' . $output . '</div>';
+            }
+
+            // for all page components...
+            $defs = ilCOPagePCDef::getPCDefinitions();
+            foreach ($defs as $def) {
+                ilCOPagePCDef::requirePCClassByName($def["name"]);
+                $pc_class = $def["pc_class"];
+                $pc_obj = new $pc_class($this->getPageObject());
+                $pc_obj->setSourcecodeDownloadScript($this->determineSourcecodeDownloadScript());
+                $pc_obj->setFileDownloadLink($this->determineFileDownloadLink());
+                $pc_obj->setFullscreenLink($this->determineFullscreenLink());
+
+                // post xsl page content modification by pc elements
+                $output = $pc_obj->modifyPageContentPostXsl($output, $this->getOutputMode(), $this->getAbstractOnly());
+            }
         }
 
         $this->addResourcesToTemplate($main_tpl);
@@ -1959,215 +1981,11 @@ class ilPageObjectGUI
     /**
      * Get captions for activation action menu entries
      */
-    protected function getActivationCaptions()
+    public function getActivationCaptions()
     {
         return array("deactivatePage" => $this->lng->txt("cont_deactivate_page"),
                 "activatePage" => $this->lng->txt("cont_activate_page"));
     }
-    
-    /**
-     * Add actions menu
-     */
-    public function addActionsMenu($a_tpl, $sel_media_mode, $sel_html_mode, $sel_js_mode)
-    {
-        global $DIC;
-        
-        $ui = $DIC->ui();
-        
-        // actions
-        include_once("./Services/UIComponent/AdvancedSelectionList/classes/class.ilAdvancedSelectionListGUI.php");
-
-        // activate/deactivate
-        $list = new ilAdvancedSelectionListGUI();
-        $list->setListTitle($this->lng->txt("actions"));
-        $list->setId("copage_act");
-        $entries = false;
-        if ($this->getPageConfig()->getEnableActivation()) {
-            $entries = true;
-            $captions = $this->getActivationCaptions();
-
-            if ($this->getPageObject()->getActive()) {
-                $list->addItem(
-                    $captions["deactivatePage"],
-                    "",
-                    $this->ctrl->getLinkTarget($this, "deactivatePage")
-                );
-            } else {
-                $list->addItem(
-                    $captions["activatePage"],
-                    "",
-                    $this->ctrl->getLinkTarget($this, "activatePage")
-                );
-            }
-            
-            $a_tpl->setVariable("PAGE_ACTIONS", $list->getHTML());
-        }
-
-        // initially opened content
-        if ($this->getPageConfig()->getUseAttachedContent()) {
-            $entries = true;
-            $list->addItem(
-                $this->lng->txt("cont_initial_attached_content"),
-                "",
-                $this->ctrl->getLinkTarget($this, "initialOpenedContent")
-            );
-        }
-        
-        // multi-lang actions
-        if ($this->addMultiLangActionsAndInfo($list, $a_tpl)) {
-            $entries = true;
-        }
-        
-        if ($entries) {
-            $items = $list->getItems();
-            if (count($items) > 1) {
-                $a_tpl->setVariable("PAGE_ACTIONS", $list->getHTML());
-            } elseif (count($items) == 1) {
-                $b = $ui->factory()->button()->standard($items[0]["title"], $items[0]["link"]);
-                $a_tpl->setVariable("PAGE_ACTIONS", $ui->renderer()->render($b));
-            }
-        }
-
-        $this->lng->loadLanguageModule("content");
-        $list = new ilAdvancedSelectionListGUI();
-        $list->setListTitle($this->lng->txt("cont_edit_mode"));
-        $list->setId("copage_ed_mode");
-
-        // media mode
-        if ($sel_media_mode == "enable") {
-            $this->ctrl->setParameter($this, "media_mode", "disable");
-            $list->addItem(
-                $this->lng->txt("cont_deactivate_media"),
-                "",
-                $this->ctrl->getLinkTarget($this, "setEditMode")
-            );
-        } else {
-            $this->ctrl->setParameter($this, "media_mode", "enable");
-            $list->addItem(
-                $this->lng->txt("cont_activate_media"),
-                "",
-                $this->ctrl->getLinkTarget($this, "setEditMode")
-            );
-        }
-        $this->ctrl->setParameter($this, "media_mode", "");
-
-        // html mode
-        if (!$this->getPageConfig()->getPreventHTMLUnmasking()) {
-            if ($sel_html_mode == "enable") {
-                $this->ctrl->setParameter($this, "html_mode", "disable");
-                $list->addItem(
-                    $this->lng->txt("cont_deactivate_html"),
-                    "",
-                    $this->ctrl->getLinkTarget($this, "setEditMode")
-                );
-            } else {
-                $this->ctrl->setParameter($this, "html_mode", "enable");
-                $list->addItem(
-                    $this->lng->txt("cont_activate_html"),
-                    "",
-                    $this->ctrl->getLinkTarget($this, "setEditMode")
-                );
-            }
-        }
-        $this->ctrl->setParameter($this, "html_mode", "");
-
-        // js mode
-        if ($sel_js_mode == "enable") {
-            $this->ctrl->setParameter($this, "js_mode", "disable");
-            $list->addItem(
-                $this->lng->txt("cont_deactivate_js"),
-                "",
-                $this->ctrl->getLinkTarget($this, "setEditMode")
-            );
-        } else {
-            $this->ctrl->setParameter($this, "js_mode", "enable");
-            $list->addItem(
-                $this->lng->txt("cont_activate_js"),
-                "",
-                $this->ctrl->getLinkTarget($this, "setEditMode")
-            );
-        }
-        $this->ctrl->setParameter($this, "js_mode", "");
-
-        $a_tpl->setVariable("EDIT_MODE", $list->getHTML());
-    }
-
-    /**
-     * Add multi-language actions to menu
-     *
-     * @param
-     * @return
-     */
-    public function addMultiLangActionsAndInfo($a_list, $a_tpl)
-    {
-        $any_items = false;
-        
-        $cfg = $this->getPageConfig();
-        
-        // general multi lang support and single page mode?
-        if ($cfg->getMultiLangSupport()) {
-            //include_once("./Services/COPage/classes/class.ilPageMultiLang.php");
-            //$ml = new ilPageMultiLang($this->getPageObject()->getParentType(),
-            //	$this->getPageObject()->getParentId());
-
-            include_once("./Services/Object/classes/class.ilObjectTranslation.php");
-            $ot = ilObjectTranslation::getInstance($this->getPageObject()->getParentId());
-            
-            if (!$ot->getContentActivated()) {
-                /*				if ($cfg->getSinglePageMode())
-                                {
-                                    $a_list->addItem($this->lng->txt("cont_activate_multi_lang"), "",
-                                        $this->ctrl->getLinkTargetByClass("ilpagemultilanggui", "activateMultilinguality"));
-
-                                    $any_items = true;
-                                }*/
-            } else {
-                $this->lng->loadLanguageModule("meta");
-                //echo $this->getPageObject()->getLanguage();
-                if ($this->getPageObject()->getLanguage() != "-") {
-                    $l = $ot->getMasterLanguage();
-                    $a_list->addItem(
-                        $this->lng->txt("cont_edit_language_version") . ": " .
-                        $this->lng->txt("meta_l_" . $l),
-                        "",
-                        $this->ctrl->getLinkTarget($this, "editMasterLanguage")
-                    );
-                }
-
-                foreach ($ot->getLanguages() as $al => $lang) {
-                    if ($this->getPageObject()->getLanguage() != $al &&
-                        $al != $ot->getMasterLanguage()) {
-                        $this->ctrl->setParameter($this, "totransl", $al);
-                        $a_list->addItem(
-                            $this->lng->txt("cont_edit_language_version") . ": " .
-                            $this->lng->txt("meta_l_" . $al),
-                            "",
-                            $this->ctrl->getLinkTarget($this, "switchToLanguage")
-                        );
-                        $this->ctrl->setParameter($this, "totransl", $_GET["totransl"]);
-                    }
-                }
-
-                /*				if ($cfg->getSinglePageMode())
-                                {
-                                    $a_list->addItem($this->lng->txt("cont_manage_multilang"), "",
-                                        $this->ctrl->getLinkTargetByClass("ilpagemultilanggui", "settings"));
-                                }*/
-
-                include_once("./Services/COPage/classes/class.ilPageMultiLangGUI.php");
-                $ml_gui = new ilPageMultiLangGUI(
-                    $this->getPageObject()->getParentType(),
-                    $this->getPageObject()->getParentId()
-                );
-                $a_tpl->setVariable("MULTI_LANG_INFO", $ml_gui->getMultiLangInfo($this->getPageObject()->getLanguage()));
-
-                $any_items = true;
-            }
-        }
-        
-        return $any_items;
-    }
-    
 
     /**
      * Set edit mode
@@ -2213,281 +2031,230 @@ class ilPageObjectGUI
         $a_save_return = true,
         $a_anchors = false,
         $a_save_new = true,
-        $a_user_links = false
+        $a_user_links = false,
+        \ILIAS\COPage\Editor\Server\UIWrapper $ui_wrapper = null
     ) {
         global $DIC;
 
         $lng = $DIC->language();
         $ctrl = $DIC->ctrl();
-
-        $mathJaxSetting = new ilSetting("MathJax");
-        
-        include_once("./Services/COPage/classes/class.ilPageEditorSettings.php");
-
-        include_once("./Services/UIComponent/Tooltip/classes/class.ilTooltipGUI.php");
-        
-        $btpl = new ilTemplate("tpl.tiny_menu.html", true, true, "Services/COPage");
-        
-        // debug ghost element
-        if (DEVMODE == 1) {
-//            $btpl->touchBlock("debug_ghost");
-        }
-
-        // bullet list
-        $btpl->touchBlock("blist_button");
-        ilTooltipGUI::addTooltip(
-            "il_edm_blist",
-            $lng->txt("cont_blist"),
-            "iltinymenu_bd"
-        );
-
-        // numbered list
-        $btpl->touchBlock("nlist_button");
-        ilTooltipGUI::addTooltip(
-            "il_edm_nlist",
-            $lng->txt("cont_nlist"),
-            "iltinymenu_bd"
-        );
-
-        // list indent
-        $btpl->touchBlock("list_indent");
-        ilTooltipGUI::addTooltip(
-            "ilIndentBut",
-            $lng->txt("cont_list_indent"),
-            "iltinymenu_bd"
-        );
-
-        // list outdent
-        $btpl->touchBlock("list_outdent");
-        ilTooltipGUI::addTooltip(
-            "ilOutdentBut",
-            $lng->txt("cont_list_outdent"),
-            "iltinymenu_bd"
-        );
-
-        if ($a_int_links) {
-            $btpl->touchBlock("bb_ilink_button");
-            ilTooltipGUI::addTooltip(
-                "iosEditInternalLinkTrigger",
-                $lng->txt("cont_link_to_internal"),
-                "iltinymenu_bd"
-            );
-        }
-        ilTooltipGUI::addTooltip(
-            "il_edm_xlink",
-            $lng->txt("cont_link_to_external"),
-            "iltinymenu_bd"
-        );
-
-        if ($a_user_links) {
-            $btpl->touchBlock("bb_ulink_button");
-        }
-
-        // remove format
-        $btpl->touchBlock("rformat_button");
-        ilTooltipGUI::addTooltip(
-            "il_edm_rformat",
-            $lng->txt("cont_remove_format"),
-            "iltinymenu_bd"
-        );
-
-        if ($a_paragraph_styles) {
-            // new paragraph
-            $btpl->setCurrentBlock("new_par");
-            $btpl->setVariable("IMG_NEWPAR", "+");
-            $btpl->parseCurrentBlock();
-            ilTooltipGUI::addTooltip(
-                "il_edm_newpar",
-                $lng->txt("cont_insert_new_paragraph"),
-                "iltinymenu_bd"
-            );
-            
-            $btpl->setCurrentBlock("par_edit");
-            $btpl->setVariable("TXT_PAR_FORMAT", $lng->txt("cont_par_format"));
-            include_once("./Services/COPage/classes/class.ilPCParagraphGUI.php");
-            $btpl->setVariable("STYLE_SELECTOR", ilPCParagraphGUI::getStyleSelector(
-                $a_selected,
-                ilPCParagraphGUI::_getCharacteristics($a_style_id),
-                true
-            ));
-            
-            ilTooltipGUI::addTooltip(
-                "ilAdvSelListAnchorText_style_selection",
-                $lng->txt("cont_paragraph_styles"),
-                "iltinymenu_bd"
-            );
-
-            $btpl->parseCurrentBlock();
-        }
-
-        if ($a_keywords) {
-            $btpl->setCurrentBlock("bb_kw_button");
-            $btpl->setVariable("CC_KW", "kw");
-            $btpl->parseCurrentBlock();
-            ilTooltipGUI::addTooltip(
-                "il_edm_kw",
-                $lng->txt("cont_text_keyword"),
-                "iltinymenu_bd"
-            );
-        }
-
-        if ($a_wiki_links) {
-            $btpl->setCurrentBlock("bb_wikilink_button2");
-            $btpl->setVariable("TXT_WIKI_BUTTON2", $lng->txt("obj_wiki"));
-            $btpl->setVariable("WIKI_BUTTON2_URL", $ctrl->getLinkTargetByClass("ilwikipagegui", ""));
-            $btpl->parseCurrentBlock();
-            ilTooltipGUI::addTooltip(
-                "il_edm_wlinkd",
-                $lng->txt("cont_wiki_link_dialog"),
-                "iltinymenu_bd"
-            );
-
-            $btpl->setCurrentBlock("bb_wikilink_button");
-            $btpl->setVariable("TXT_WLN2", $lng->txt("obj_wiki"));
-            $btpl->parseCurrentBlock();
-            ilTooltipGUI::addTooltip(
-                "il_edm_wlink",
-                $lng->txt("cont_link_to_wiki"),
-                "iltinymenu_bd"
-            );
-        }
+        $ui = $DIC->ui();
 
         $aset = new ilSetting("adve");
-        
-        include_once("./Services/COPage/classes/class.ilPageContentGUI.php");
-        foreach (ilPageContentGUI::_getCommonBBButtons() as $c => $st) {
-            // these are handled via drop down now...
-            if (in_array($c, array("com", "quot", "acc", "code"))) {
-                continue;
+
+        // character styles
+        $chars = array(
+            "Comment" => array("code" => "com", "txt" => $lng->txt("cont_char_style_com")),
+            "Quotation" => array("code" => "quot", "txt" => $lng->txt("cont_char_style_quot")),
+            "Accent" => array("code" => "acc", "txt" => $lng->txt("cont_char_style_acc")),
+            "Code" => array("code" => "code", "txt" => $lng->txt("cont_char_style_code"))
+        );
+        foreach (ilPCParagraphGUI::_getTextCharacteristics($a_style_id) as $c) {
+            if (!isset($chars[$c])) {
+                $chars[$c] = array("code" => "", "txt" => $c);
             }
+        }
+        $char_formats = [];
+        foreach ($chars as $key => $char) {
+            if (ilPageEditorSettings::lookupSettingByParentType(
+                $a_par_type,
+                "active_" . $char["code"],
+                true
+            )) {
+                $t = "text_inline";
+                $tag = "span";
+                switch ($key) {
+                    case "Code": $tag = "code"; break;
+                }
+                $html = '<' . $tag . ' class="ilc_' . $t . '_' . $key . '" style="font-size:90%; margin-top:2px; margin-bottom:2px; position:static;">' . $char["txt"] . "</" . $tag . ">";
+                $char_formats[] = ["text" => $html, "action" => "selection.format", "data" => ["format" => $key]];
+            }
+        }
+
+
+        $numbered_list = '<svg width="24" height="24"><path d="M10 17h8c.6 0 1 .4 1 1s-.4 1-1 1h-8a1 1 0 010-2zm0-6h8c.6 0 1 .4 1 1s-.4 1-1 1h-8a1 1 0 010-2zm0-6h8c.6 0 1 .4 1 1s-.4 1-1 1h-8a1 1 0 110-2zM6 4v3.5c0 .3-.2.5-.5.5a.5.5 0 01-.5-.5V5h-.5a.5.5 0 010-1H6zm-1 8.8l.2.2h1.3c.3 0 .5.2.5.5s-.2.5-.5.5H4.9a1 1 0 01-.9-1V13c0-.4.3-.8.6-1l1.2-.4.2-.3a.2.2 0 00-.2-.2H4.5a.5.5 0 01-.5-.5c0-.3.2-.5.5-.5h1.6c.5 0 .9.4.9 1v.1c0 .4-.3.8-.6 1l-1.2.4-.2.3zM7 17v2c0 .6-.4 1-1 1H4.5a.5.5 0 010-1h1.2c.2 0 .3-.1.3-.3 0-.2-.1-.3-.3-.3H4.4a.4.4 0 110-.8h1.3c.2 0 .3-.1.3-.3 0-.2-.1-.3-.3-.3H4.5a.5.5 0 110-1H6c.6 0 1 .4 1 1z" fill-rule="evenodd"></path></svg>';
+
+        $bullet_list = '<svg width="24" height="24"><path d="M11 5h8c.6 0 1 .4 1 1s-.4 1-1 1h-8a1 1 0 010-2zm0 6h8c.6 0 1 .4 1 1s-.4 1-1 1h-8a1 1 0 010-2zm0 6h8c.6 0 1 .4 1 1s-.4 1-1 1h-8a1 1 0 010-2zM4.5 6c0-.4.1-.8.4-1 .3-.4.7-.5 1.1-.5.4 0 .8.1 1 .4.4.3.5.7.5 1.1 0 .4-.1.8-.4 1-.3.4-.7.5-1.1.5-.4 0-.8-.1-1-.4-.4-.3-.5-.7-.5-1.1zm0 6c0-.4.1-.8.4-1 .3-.4.7-.5 1.1-.5.4 0 .8.1 1 .4.4.3.5.7.5 1.1 0 .4-.1.8-.4 1-.3.4-.7.5-1.1.5-.4 0-.8-.1-1-.4-.4-.3-.5-.7-.5-1.1zm0 6c0-.4.1-.8.4-1 .3-.4.7-.5 1.1-.5.4 0 .8.1 1 .4.4.3.5.7.5 1.1 0 .4-.1.8-.4 1-.3.4-.7.5-1.1.5-.4 0-.8-.1-1-.4-.4-.3-.5-.7-.5-1.1z" fill-rule="evenodd"></path></svg>';
+
+        $indent = '<svg width="24" height="24"><path d="M7 5h12c.6 0 1 .4 1 1s-.4 1-1 1H7a1 1 0 110-2zm5 4h7c.6 0 1 .4 1 1s-.4 1-1 1h-7a1 1 0 010-2zm0 4h7c.6 0 1 .4 1 1s-.4 1-1 1h-7a1 1 0 010-2zm-5 4h12a1 1 0 010 2H7a1 1 0 010-2zm-2.6-3.8L6.2 12l-1.8-1.2a1 1 0 011.2-1.6l3 2a1 1 0 010 1.6l-3 2a1 1 0 11-1.2-1.6z" fill-rule="evenodd"></path></svg>';
+
+        $outdent = '<svg width="24" height="24"><path d="M7 5h12c.6 0 1 .4 1 1s-.4 1-1 1H7a1 1 0 110-2zm5 4h7c.6 0 1 .4 1 1s-.4 1-1 1h-7a1 1 0 010-2zm0 4h7c.6 0 1 .4 1 1s-.4 1-1 1h-7a1 1 0 010-2zm-5 4h12a1 1 0 010 2H7a1 1 0 010-2zm1.6-3.8a1 1 0 01-1.2 1.6l-3-2a1 1 0 010-1.6l3-2a1 1 0 011.2 1.6L6.8 12l1.8 1.2z" fill-rule="evenodd"></path></svg>';
+
+        // menu
+        $str = "str";
+        $emp = "emp";
+        $imp = "imp";
+        if ($aset->get("use_physical")) {
+            $str = "B";
+            $emp = "I";
+            $imp = "U";
+        }
+        $c_formats = [];
+        foreach (["str", "emp", "imp", "sup", "sub"] as $c) {
             if (ilPageEditorSettings::lookupSettingByParentType(
                 $a_par_type,
                 "active_" . $c,
                 true
             )) {
-                $cc_code = $c;
-                if ($aset->get("use_physical")) {
-                    $cc_code = str_replace(array("str", "emp", "imp"), array("B", "I", "U"), $cc_code);
-                }
-                
-                if ($c != "tex" || $mathJaxSetting->get("enable") || defined("URL_TO_LATEX")) {
-                    $btpl->setCurrentBlock("bb_" . $c . "_button");
-                    $btpl->setVariable("CC_" . strtoupper($c), $cc_code);
-                    $btpl->parseCurrentBlock();
-                    ilTooltipGUI::addTooltip(
-                        "il_edm_cc_" . $c,
-                        $lng->txt("cont_cc_" . $c),
-                        "iltinymenu_bd"
-                    );
-
-                    //					$btpl->setVariable("TXT_".strtoupper($c), $this->lng->txt("cont_text_".$c));
+                switch ($c) {
+                    case "str":
+                        $c_formats[] = ["text" => '<span class="ilc_text_inline_Strong">' . $str . '</span>',
+                                        "action" => "selection.format",
+                                        "data" => ["format" => "Strong"]
+                        ];
+                        break;
+                    case "emp":
+                        $c_formats[] = ["text" => '<span class="ilc_text_inline_Emph">' . $emp . '</span>',
+                                        "action" => "selection.format",
+                                        "data" => ["format" => "Emph"]
+                        ];
+                        break;
+                    case "imp":
+                        $c_formats[] = ["text" => '<span class="ilc_text_inline_Important">' . $imp . '</span>',
+                                        "action" => "selection.format",
+                                        "data" => ["format" => "Important"]
+                        ];
+                        break;
+                    case "sup":
+                        $c_formats[] = ["text" => 'x<sup>2</sup>',
+                                        "action" => "selection.format",
+                                        "data" => ["format" => "Sup"]
+                        ];
+                        break;
+                    case "sub":
+                        $c_formats[] = ["text" => 'x<sub>2</sub>',
+                                        "action" => "selection.format",
+                                        "data" => ["format" => "Sub"]
+                        ];
+                        break;
                 }
             }
         }
-        
-        if ($mathJaxSetting->get("enable") || defined("URL_TO_LATEX")) {
-            ilTooltipGUI::addTooltip(
-                "il_edm_tex",
-                $lng->txt("cont_tex"),
-                "iltinymenu_bd"
-            );
+        $c_formats[] = ["text" => "<i>A</i>",
+                        "action" => $char_formats
+        ];
+        $c_formats[] = ["text" => '<i><b><u>T</u></b><sub>x</sub></i>',
+                        "action" => "selection.removeFormat",
+                        "data" => []
+        ];
+        $menu = [
+            "cont_char_format" => $c_formats,
+            "cont_lists" => [
+                ["text" => $bullet_list, "action" => "list.bullet", "data" => []],
+                ["text" => $numbered_list, "action" => "list.number", "data" => []],
+                ["text" => $outdent, "action" => "list.outdent", "data" => []],
+                ["text" => $indent, "action" => "list.indent", "data" => []]
+            ]
+        ];
+
+        // more...
+
+        // links
+        $links = [];
+        if ($a_wiki_links) {
+            $links[] = ["text" => $lng->txt("cont_wiki_link_dialog"), "action" => "link.wikiSelection", "data" => [
+                "url" => $ctrl->getLinkTargetByClass("ilwikipagegui", "")]];
+            $links[] = ["text" => "[[" . $lng->txt("cont_wiki_page") . "]]", "action" => "link.wiki", "data" => []];
         }
-        ilTooltipGUI::addTooltip(
-            "il_edm_fn",
-            $lng->txt("cont_fn"),
-            "iltinymenu_bd"
+        if ($a_int_links) {
+            $links[] = ["text" => $lng->txt("cont_text_iln_link"), "action" => "link.internal", "data" => []];
+        }
+        if (ilPageEditorSettings::lookupSettingByParentType(
+            $a_par_type,
+            "active_xln",
+            true
+        )) {
+            $links[] = ["text" => $lng->txt("cont_text_xln"), "action" => "link.external", "data" => []];
+        }
+        if ($a_user_links) {
+            $links[] = ["text" => $lng->txt("cont_link_user"), "action" => "link.user", "data" => []];
+        }
+
+
+        // more
+        $menu["cont_more_functions"] = [];
+        $menu["cont_more_functions"][] = ["text" => $lng->txt("cont_link") . '<i class="mce-ico mce-i-link"></i>', "action" => $links];
+
+        if ($a_keywords) {
+            $menu["cont_more_functions"][] = ["text" => $lng->txt("cont_keyword"), "action" => "selection.keyword", "data" => []];
+        }
+        $mathJaxSetting = new ilSetting("MathJax");
+        if (ilPageEditorSettings::lookupSettingByParentType(
+            $a_par_type,
+            "active_tex",
+            true
+        )) {
+            if ($mathJaxSetting->get("enable") || defined("URL_TO_LATEX")) {
+                $menu["cont_more_functions"][] = ["text" => 'Tex', "action" => "selection.tex", "data" => []];
+            }
+        }
+        if (ilPageEditorSettings::lookupSettingByParentType(
+            $a_par_type,
+            "active_fn",
+            true
+        )) {
+            $menu["cont_more_functions"][] = ["text" => $lng->txt("cont_footnote"), "action" => "selection.fn", "data" => []];
+        }
+        if ($a_anchors) {
+            $menu["cont_more_functions"][] = ["text" => $lng->txt("cont_anchor"), "action" => "selection.anchor", "data" => []];
+        }
+
+        $btpl = new ilTemplate("tpl.tiny_menu.html", true, true, "Services/COPage");
+
+        foreach ($menu as $section_title => $section) {
+            foreach ($section as $item) {
+                if (is_array($item["action"])) {
+                    $buttons = [];
+                    foreach ($item["action"] as $i) {
+                        $buttons[] = $ui_wrapper->getButton($i["text"], "par-action", $i["action"], $i["data"]);
+                    }
+                    $dd = $ui->factory()->dropdown()->standard($buttons)->withLabel($item["text"]);
+                    $btpl->setCurrentBlock("button");
+                    $btpl->setVariable("BUTTON", $ui->renderer()->renderAsync($dd));
+                    $btpl->parseCurrentBlock();
+                } else {
+                    $b = $ui_wrapper->getRenderedButton($item["text"], "par-action", $item["action"], $item["data"]);
+                    $btpl->setCurrentBlock("button");
+                    $btpl->setVariable("BUTTON", $b);
+                    $btpl->parseCurrentBlock();
+                }
+            }
+            $btpl->setCurrentBlock("section");
+            $btpl->setVariable("TXT_SECTION", $lng->txt($section_title));
+            $btpl->parseCurrentBlock();
+        }
+
+
+        if ($a_paragraph_styles) {
+            $sel = new \ILIAS\COPage\Editor\Components\Paragraph\ParagraphStyleSelector($ui_wrapper, $a_style_id);
+            $dd = $sel->getStyleSelector("");
+            $btpl->setCurrentBlock("par_edit");
+            $btpl->setVariable("TXT_PAR_FORMAT", $lng->txt("cont_par_format"));
+
+            $btpl->setVariable("STYLE_SELECTOR", $ui->renderer()->render($dd));
+
+            $btpl->parseCurrentBlock();
+        }
+
+        // block styles
+        $sel = new \ILIAS\COPage\Editor\Components\Section\SectionStyleSelector($ui_wrapper, $a_style_id);
+        $dd = $sel->getStyleSelector("", $type = "par-action", $action = "sec.class", $attr = "class", true);
+        $btpl->setVariable("TXT_BLOCK", $lng->txt("cont_block_format"));
+        $btpl->setVariable("BLOCK_STYLE_SELECTOR", $ui->renderer()->render($dd));
+
+
+        $btpl->setVariable(
+            "SPLIT_BUTTON",
+            $ui_wrapper->getRenderedButton($lng->txt("save_return"), "par-action", "save.return")
         );
 
-        include_once("./Services/UIComponent/AdvancedSelectionList/classes/class.ilAdvancedSelectionListGUI.php");
+        $btpl->setVariable(
+            "CANCEL_BUTTON",
+            $ui_wrapper->getRenderedButton($lng->txt("cancel"), "par-action", "component.cancel")
+        );
 
-        $split_button = ilSplitButtonGUI::getInstance();
-        $split_button->isPrimary(true);
-        $split_button_items = [];
-
-
-        $sdd = new ilAdvancedSelectionListGUI();
-        $sdd->setPullRight(false);
-        $sdd->setListTitle($lng->txt("save") . "...");
-
-        if ($a_save_return) {
-            //$btpl->setCurrentBlock("save_return");
-            //$btpl->setVariable("TXT_SAVE_RETURN", $lng->txt("save_return"));
-            //$btpl->parseCurrentBlock();
-            $sdd->addItem($lng->txt("save_return"), "", "#", "", "", "", "", "", "ilCOPage.cmdSaveReturn(false); return false;");
-
-            $item = ilLinkButton::getInstance();
-            $item->setCaption('save_return');
-            $item->setOnClick("ilCOPage.cmdSaveReturn(false); return false;");
-            $split_button_items[] = $item;
-        }
-
-        if ($a_save_new) {
-            //$btpl->setCurrentBlock("save_new");
-            //$btpl->setVariable("TXT_SAVE_NEW", $lng->txt("save_new"));
-            //$btpl->parseCurrentBlock();
-            $sdd->addItem($lng->txt("save_new"), "", "#", "", "", "", "", "", "ilCOPage.cmdSaveReturn(true); return false;");
-            $item = ilLinkButton::getInstance();
-            $item->setCaption('save_new');
-            $item->setOnClick("ilCOPage.cmdSaveReturn(true); return false;");
-            $split_button_items[] = $item;
-        }
-
-        $sdd->addItem($lng->txt("save"), "", "#", "", "", "", "", "", "ilCOPage.cmdSave(null); return false;");
-        $item = ilLinkButton::getInstance();
-        $item->setCaption('save');
-        $item->setOnClick("ilCOPage.cmdSave(null); return false;");
-        $split_button_items[] = $item;
-
-        $sdd->addItem($lng->txt("cancel"), "", "#", "", "", "", "", "", "ilCOPage.cmdCancel(); return false;");
-        /*
-        $item = ilLinkButton::getInstance();
-        $item->setCaption('cancel');
-        $item->setOnClick("\"ilCOPage.cmdCancel(); return false;");
-        $split_button_items[] = $item;*/
-
-
-        if ($a_anchors) {
-            $btpl->setCurrentBlock("bb_anc_button");
-            $btpl->setVariable("CC_ANC", "anc");
-            $btpl->parseCurrentBlock();
-            ilTooltipGUI::addTooltip(
-                "il_edm_anc",
-                $lng->txt("cont_anchor"),
-                "iltinymenu_bd"
-            );
-        }
-
-        $first = true;
-        foreach ($split_button_items as $item) {
-            if ($first) {
-                $item->setPrimary(true);
-                $split_button->setDefaultButton($item);
-            } else {
-                $split_button->addMenuItem(new ilButtonToSplitButtonMenuItemAdapter($item));
-            }
-            $first = false;
-        }
-        $btpl->setVariable("SPLIT_BUTTON", $split_button->render());
-        //$btpl->setVariable("SAVE_DROPDOWN", $sdd->getHTML());
-
-        /*		// footnote
-                $btpl->setVariable("TXT_ILN", $this->lng->txt("cont_text_iln"));
-                $btpl->setVariable("TXT_BB_TIP", $this->lng->txt("cont_bb_tip"));
-                $btpl->setVariable("TXT_WLN", $lng->txt("wiki_wiki_page"));
-        */
-        //		$btpl->setVariable("PAR_TA_NAME", $a_ta_name);
-
-        $btpl->setVariable("TXT_SAVE", $lng->txt("save"));
-        $btpl->setVariable("TXT_CANCEL", $lng->txt("cancel"));
-
-        $btpl->setVariable("TXT_CHAR_FORMAT", $lng->txt("cont_char_format"));
-        $btpl->setVariable("TXT_LISTS", $lng->txt("cont_lists"));
-        $btpl->setVariable("TXT_LINKS", $lng->txt("cont_links"));
-        $btpl->setVariable("TXT_MORE_FUNCTIONS", $lng->txt("cont_more_functions"));
         $btpl->setVariable("TXT_SAVING", $lng->txt("cont_saving"));
         
-        include_once("./Services/COPage/classes/class.ilPCParagraphGUI.php");
-
         $btpl->setVariable("CHAR_STYLE_SELECTOR", ilPCParagraphGUI::getCharStyleSelector($a_par_type, true, $a_style_id));
         ilTooltipGUI::addTooltip(
             "ilAdvSelListAnchorElement_char_style_selection",
@@ -2535,7 +2302,6 @@ class ilPageObjectGUI
     {
         $download_ok = false;
 
-        require_once("./Modules/File/classes/class.ilObjFile.php");
         $pg_obj = $this->getPageObject();
         $pg_obj->buildDom();
         $int_links = $pg_obj->getInternalLinks();
@@ -2593,9 +2359,7 @@ class ilPageObjectGUI
         // @todo
         $link_xml = $this->page_linker->getLinkXML($med_links);
         
-        require_once("./Services/MediaObjects/classes/class.ilObjMediaObject.php");
         $media_obj = new ilObjMediaObject($_GET["mob_id"]);
-        require_once("./Services/COPage/classes/class.ilPageObject.php");
         $pg_obj = $this->getPageObject();
         $pg_obj->buildDom();
 
@@ -2635,7 +2399,6 @@ class ilPageObjectGUI
         xslt_free($xh);
 
         // unmask user html
-        require_once('./Services/Style/Content/classes/class.ilObjStyleSheet.php');
         $tpl->setVariable(
             "LOCATION_CONTENT_STYLESHEET",
             ilObjStyleSheet::getContentStylePath(0)
@@ -2644,7 +2407,6 @@ class ilPageObjectGUI
         $tpl->setVariable("MEDIA_CONTENT", $output);
 
         // add js
-        include_once("./Services/MediaObjects/classes/class.ilObjMediaObjectGUI.php");
         ilObjMediaObjectGUI::includePresentationJS($tpl);
         $tpl->fillJavaScriptFiles();
         $tpl->fillCssFiles();
@@ -2670,8 +2432,6 @@ class ilPageObjectGUI
      */
     public function insertPageToc($a_output)
     {
-        include_once("./Services/Utilities/classes/class.ilStr.php");
-
         // extract all headings
         $offsets = ilStr::strPosAll($a_output, "ilPageTocH");
         $page_heads = array();
@@ -2699,7 +2459,6 @@ class ilPageObjectGUI
         }
 
         if (count($page_heads) > 1) {
-            include_once("./Services/UIComponent/NestedList/classes/class.ilNestedList.php");
             $list = new ilNestedList();
             $list->setAutoNumbering(true);
             $list->setListClass("ilc_page_toc_PageTOCList");
@@ -2762,7 +2521,6 @@ class ilPageObjectGUI
             $numbers = $list->getNumbers();
 
             if (count($numbers) > 0) {
-                include_once("./Services/Utilities/classes/class.ilStr.php");
                 foreach ($numbers as $n) {
                     $a_output =
                         ilStr::replaceFirsOccurence("<!--PageTocPH-->", $n . " ", $a_output);
@@ -2791,7 +2549,6 @@ class ilPageObjectGUI
         
         if ($this->getEnablePCType("Resources") &&
             ($this->getOutputMode() == "edit" || $this->getOutputMode() == "preview")) {
-            include_once("./Services/COPage/classes/class.ilPCResourcesGUI.php");
             $a_output = ilPCResourcesGUI::insertResourcesIntoPageContent($a_output, $this->getOutputMode());
         }
         return $a_output;
@@ -2863,9 +2620,24 @@ class ilPageObjectGUI
     }
 
     /**
-     * edit ("view" before)
+     * Set editor tool context
      */
-    public function edit()
+    protected function setEditorToolContext()
+    {
+        $collection = $this->tool_context->current()->getAdditionalData();
+        if ($collection->exists(ilCOPageEditGSToolProvider::SHOW_EDITOR)) {
+            $collection->replace(ilCOPageEditGSToolProvider::SHOW_EDITOR, true);
+        } else {
+            $collection->add(ilCOPageEditGSToolProvider::SHOW_EDITOR, true);
+        }
+    }
+
+    /**
+     * Init editing
+     * @param
+     * @return
+     */
+    protected function initEditing()
     {
         // editing allowed?
         if (!$this->getEnableEditing()) {
@@ -2873,7 +2645,7 @@ class ilPageObjectGUI
             $this->ctrl->redirect($this, "preview");
         }
 
-        $this->tool_context->current()->addAdditionalData(ilCOPageEditGSToolProvider::SHOW_EDITOR, true);
+        $this->setEditorToolContext();
 
         // not so nive workaround for container pages, bug #0015831
         $ptype = $this->getParentType();
@@ -2882,7 +2654,6 @@ class ilPageObjectGUI
         }
         $this->help->setScreenId("edit_" . $ptype);
 
-        require_once 'Services/Captcha/classes/class.ilCaptchaUtil.php';
         if (
             $this->user->isAnonymous() &&
             !$this->user->isCaptchaVerified() &&
@@ -2895,16 +2666,15 @@ class ilPageObjectGUI
                 return $form->getHTML();
             }
         }
-        
+
         // edit lock
         if (!$this->getPageObject()->getEditLock()) {
-            include_once("./Services/User/classes/class.ilUserUtil.php");
             $info = $this->lng->txt("content_no_edit_lock");
             $lock = $this->getPageObject()->getEditLockInfo();
             $info .= "</br>" . $this->lng->txt("content_until") . ": " .
-                    ilDatePresentation::formatDate(new ilDateTime($lock["edit_lock_until"], IL_CAL_UNIX));
+                ilDatePresentation::formatDate(new ilDateTime($lock["edit_lock_until"], IL_CAL_UNIX));
             $info .= "</br>" . $this->lng->txt("obj_usr") . ": " .
-                    ilUserUtil::getNamePresentation($lock["edit_lock_user"]);
+                ilUserUtil::getNamePresentation($lock["edit_lock_user"]);
             if (!$this->ctrl->isAsynch()) {
                 ilUtil::sendInfo($info);
                 return "";
@@ -2913,27 +2683,44 @@ class ilPageObjectGUI
                 exit;
             }
         } else {
-            if ($this->getPageObject()->getEffectiveEditLockTime() > 0) {
+            /*if ($this->getPageObject()->getEffectiveEditLockTime() > 0) {
                 $mess = $this->getBlockingInfoMessage();
-            }
+            }*/
         }
-        
-        $this->setOutputMode(self::EDIT);
 
+        $this->lng->toJS("paste");
+        $this->lng->toJS("delete");
+        $this->lng->toJS("cont_delete_content");
+        $this->lng->toJS("copg_confirm_el_deletion");
+        $this->lng->toJS("cont_saving");
+        $this->lng->toJS("cont_ed_par");
+        $this->lng->toJS("cont_no_block");
+        $this->lng->toJS("copg_error");
+        // workaroun: we need this js for the new editor version, e.g. for new section form to work
+        // @todo: solve this in a smarter way
+        $this->tpl->addJavascript("./Services/UIComponent/AdvancedSelectionList/js/AdvancedSelectionList.js");
+    }
+
+    /**
+     * edit ("view" before)
+     */
+    public function edit()
+    {
+        $this->setOutputMode(self::EDIT);
         $html = $this->showPage();
         
         if ($this->isEnabledNotes()) {
             $html .= "<br /><br />" . $this->getNotesHTML();
         }
     
-        return $mess . $html;
+        return $html;
     }
 
     /**
      * Get block info message
      * @return string
      */
-    protected function getBlockingInfoMessage() : string
+    public function getBlockingInfoMessage() : string
     {
         $ctrl = $this->ctrl;
         $lng = $this->lng;
@@ -2943,8 +2730,7 @@ class ilPageObjectGUI
         $info = $this->lng->txt("cont_got_lock_release");
         $info = str_replace("%1", ilDatePresentation::formatDate(new ilDateTime($lock["edit_lock_until"], IL_CAL_UNIX)), $info);
 
-        $mbox = $ui->factory()->messageBox()->info($info)
-            ->withButtons([$ui->factory()->button()->standard($lng->txt("cont_finish_editing"), $ctrl->getLinkTarget($this, "releasePageLock"))]);
+        $mbox = $ui->factory()->messageBox()->info($info);
 
         return $ui->renderer()->render($mbox);
     }
@@ -2969,12 +2755,9 @@ class ilPageObjectGUI
         
         //		  'pl_hier_id' => string '2_1_1_1' (length=7)
         //  'pl_pc_id' => string '1f77eb1d8a478497d69b99d938fda8f' (length=31)
+        $this->setOpenPlaceHolder($_GET["pl_pc_id"]);
+
         $html = $this->edit();
-
-        $tpl->addOnLoadCode("ilCOPage.insertJSAtPlaceholder('" .
-            $_GET["pl_hier_id"] . ":" . $_GET["pl_pc_id"] .
-            "');", 3);
-
         return $html;
     }
     
@@ -2983,10 +2766,8 @@ class ilPageObjectGUI
      */
     public function initCaptchaForm()
     {
-        require_once  'Services/Form/classes/class.ilPropertyFormGUI.php';
         $form = new ilPropertyFormGUI();
         
-        require_once 'Services/Captcha/classes/class.ilCaptchaInputGUI.php';
         $ci = new ilCaptchaInputGUI($this->lng->txt('cont_captcha_code'), 'captcha_code');
         $ci->setRequired(true);
         $form->addItem($ci);
@@ -3029,10 +2810,8 @@ class ilPageObjectGUI
         $this->tpl->setVariable("LOCATION_STYLESHEET", ilUtil::getStyleSheetLocation());
         $this->tpl->setCurrentBlock("ilMedia");
 
-        require_once("./Services/MediaObjects/classes/class.ilObjMediaObject.php");
         $media_obj = new ilObjMediaObject($_GET["mob_id"]);
         if (!empty($_GET["pg_id"])) {
-            include_once("./Services/COPage/classes/class.ilPageObjectFactory.php");
             $pg_obj = ilPageObjectFactory::getInstance($this->obj->getParentType(), $_GET["pg_id"]);
             $pg_obj->buildDom();
 
@@ -3099,7 +2878,6 @@ class ilPageObjectGUI
         
         $this->tpl->addJavaScript("./Services/COPage/js/page_history.js");
         
-        include_once("./Services/COPage/classes/class.ilPageHistoryTableGUI.php");
         $table_gui = new ilPageHistoryTableGUI($this, "history");
         $table_gui->setId("hist_table");
         $entries = $this->getPageObject()->getHistoryEntries();
@@ -3123,7 +2901,6 @@ class ilPageObjectGUI
             return;
         }
         
-        include_once("Services/Utilities/classes/class.ilConfirmationGUI.php");
         $c_gui = new ilConfirmationGUI();
         
         // set confirm/cancel commands
@@ -3184,7 +2961,7 @@ class ilPageObjectGUI
     public function getTabs($a_activate = "")
     {
         $this->setScreenIdComponent();
-        
+
         if (!$this->getEnabledTabs()) {
             return;
         }
@@ -3192,23 +2969,11 @@ class ilPageObjectGUI
         // back to upper context
         if (!$this->getEditPreview()) {
             $this->tabs_gui->addTarget("pg", $this->ctrl->getLinkTarget($this, "preview"), array("", "preview"));
-    
-            if ($this->getEnableEditing()) {
-                $this->tabs_gui->addTarget("edit", $this->ctrl->getLinkTarget($this, "edit"), array("", "edit"));
-            }
         } else {
-            if ($this->getEnableEditing()) {
-                $this->tabs_gui->addTarget("edit", $this->ctrl->getLinkTarget($this, "edit"), array("", "edit"));
-            }
-
             $this->tabs_gui->addTarget("cont_preview", $this->ctrl->getLinkTarget($this, "preview"), array("", "preview"));
         }
             
-        //$tabs_gui->addTarget("properties", $this->ctrl->getLinkTarget($this, "properties")
-        //	, "properties", get_class($this));
-
         if ($this->use_meta_data) {
-            include_once "Services/Object/classes/class.ilObjectMetaDataGUI.php";
             $mdgui = new ilObjectMetaDataGUI(
                 $this->meta_data_rep_obj,
                 $this->meta_data_type,
@@ -3229,7 +2994,7 @@ class ilPageObjectGUI
         
         if ($this->getEnableEditing() && $lm_set->get("page_history", 1)) {
             $this->tabs_gui->addTarget("history", $this->ctrl->getLinkTarget($this, "history"), "history", get_class($this));
-            if ($_GET["history_mode"] == "1" || $this->ctrl->getCmd() == "compareVersion") {
+            if ($this->requested_history_mode == 1 || $this->ctrl->getCmd() == "compareVersion") {
                 $this->tabs_gui->activateTab("history");
             }
         }
@@ -3352,7 +3117,6 @@ class ilPageObjectGUI
     */
     public function initActivationForm()
     {
-        include_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
         $this->form = new ilPropertyFormGUI();
         $this->form->setFormAction($this->ctrl->getFormAction($this));
         $this->form->setTitle($this->lng->txt("cont_page_activation"));
@@ -3460,10 +3224,8 @@ class ilPageObjectGUI
      * @param bool $a_enable_notes_deletion
      * @return string
      */
-    public function getNotesHTML($a_content_object = null, $a_enable_private_notes = true, $a_enable_public_notes = false, $a_enable_notes_deletion = false, $a_callback = null)
+    public function getNotesHTML($a_content_object = null, $a_enable_private_notes = true, $a_enable_public_notes = false, $a_enable_notes_deletion = false, $a_callback = null, $export = false)
     {
-        include_once("Services/Notes/classes/class.ilNoteGUI.php");
-
         // scorm 2004 page gui
         if (!$a_content_object) {
             $notes_gui = new ilNoteGUI(
@@ -3484,7 +3246,7 @@ class ilPageObjectGUI
                 $a_content_object->getParentType()
             );
         }
-    
+
         if ($a_enable_private_notes) {
             $notes_gui->enablePrivateNotes();
         }
@@ -3493,6 +3255,9 @@ class ilPageObjectGUI
             if ((bool) $a_enable_notes_deletion) {
                 $notes_gui->enablePublicNotesDeletion(true);
             }
+        }
+        if ($export) {
+            $notes_gui->setExportMode();
         }
         
         if ($a_callback) {
@@ -3513,7 +3278,6 @@ class ilPageObjectGUI
      */
     public function processAnswer()
     {
-        include_once("./Services/COPage/classes/class.ilPageQuestionProcessor.php");
         ilPageQuestionProcessor::saveQuestionAnswer(
             ilUtil::stripSlashes($_POST["type"]),
             ilUtil::stripSlashes($_POST["id"]),
@@ -3550,11 +3314,9 @@ class ilPageObjectGUI
      */
     public function initOpenedContentForm()
     {
-        include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
         
         // link input
-        include_once 'Services/Form/classes/class.ilLinkInputGUI.php';
         $ac = new ilLinkInputGUI($this->lng->txt('cont_resource'), 'opened_content');
         $ac->setAllowedLinkTypes(ilLinkInputGUI::INT);
         $ac->setInternalLinkDefault("Media_Media", 0);
@@ -3586,7 +3348,7 @@ class ilPageObjectGUI
             ilUtil::stripSlashes($_POST["opened_content_ajax_type"]),
             ilUtil::stripSlashes($_POST["opened_content_ajax_id"]),
             ilUtil::stripSlashes($_POST["opened_content_ajax_target"])
-            );
+        );
         
         ilUtil::sendSuccess($this->lng->txt("msg_obj_modified"));
         $this->ctrl->redirect($this, "edit");
@@ -3621,7 +3383,6 @@ class ilPageObjectGUI
         $this->ctrl->setParameter($this, "totransl", $l);
         $this->lng->loadLanguageModule("meta");
         
-        include_once("./Services/Utilities/classes/class.ilConfirmationGUI.php");
         $cgui = new ilConfirmationGUI();
         $cgui->setFormAction($this->ctrl->getFormAction($this));
         $cgui->setHeaderText($this->lng->txt("cont_page_translation_does_not_exist") . ": " .
@@ -3647,7 +3408,6 @@ class ilPageObjectGUI
     {
         $l = ilUtil::stripSlashes($_GET["totransl"]);
 
-        include_once("./Services/COPage/classes/class.ilPageObjectFactory.php");
         $p = ilPageObjectFactory::getInstance(
             $this->getPageObject()->getParentType(),
             $this->getPageObject()->getId(),
@@ -3666,13 +3426,18 @@ class ilPageObjectGUI
     {
         $this->getPageObject()->releasePageLock();
         ilUtil::sendSuccess($this->lng->txt("cont_page_lock_released"), true);
+        $this->finishEditing();
+    }
+
+    public function finishEditing()
+    {
         $this->ctrl->redirect($this, "preview");
     }
     
     protected function isPageContainerToBeRendered()
     {
         return (
-            $this->getRenderPageContainer() || $this->getOutputMode() == self::PREVIEW
+            $this->getRenderPageContainer() || ($this->getOutputMode() == self::PREVIEW && $this->getPageConfig()->getUsePageContainer())
         );
     }
 

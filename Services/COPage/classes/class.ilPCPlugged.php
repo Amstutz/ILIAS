@@ -1,18 +1,13 @@
 <?php
 
-/* Copyright (c) 1998-2013 ILIAS open source, Extended GPL, see docs/LICENSE */
-
-require_once("./Services/COPage/classes/class.ilPageContent.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* Class ilPCPlugged
-* Plugged content object (see ILIAS DTD)
-*
-* @author Alex Killing <alex.killing@gmx.de>
-* @version $Id$
-*
-* @ingroup ServicesCOPage
-*/
+ * Class ilPCPlugged
+ * Plugged content object (see ILIAS DTD)
+ *
+ * @author Alex Killing <alex.killing@gmx.de>
+ */
 class ilPCPlugged extends ilPageContent
 {
     /**
@@ -262,14 +257,13 @@ class ilPCPlugged extends ilPageContent
     {
         $lng = $this->lng;
         $ilPluginAdmin = $this->plugin_admin;
-        
-        $c_pos = 0;
+
+        $end = 0;
         $start = strpos($a_html, "{{{{{Plugged<pl");
         //echo htmlentities($a_html)."-";
         if (is_int($start)) {
             $end = strpos($a_html, "}}}}}", $start);
         }
-        $i = 1;
 
         while ($end > 0) {
             $param = substr($a_html, $start + 5, $end - $start - 5);

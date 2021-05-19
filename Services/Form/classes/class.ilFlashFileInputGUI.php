@@ -1,13 +1,12 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
+
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* This class represents an image file property in a property form.
-*
-* @author Helmut Schottmüller <ilias@aurealis.de>
-* @version $Id$
-* @ingroup	ServicesForm
-*/
+ * This class represents an image file property in a property form.
+ *
+ * @author Helmut Schottmüller <ilias@aurealis.de>
+ */
 class ilFlashFileInputGUI extends ilFileInputGUI
 {
     /**
@@ -333,10 +332,10 @@ class ilFlashFileInputGUI extends ilFileInputGUI
                     $index++;
                 }
                 $template->setCurrentBlock("applet_parameter");
-                $template->setVariable("PARAM_VALUE", join($params, "&"));
+                $template->setVariable("PARAM_VALUE", join("&", $params));
                 $template->parseCurrentBlock();
                 $template->setCurrentBlock("flash_vars");
-                $template->setVariable("PARAM_VALUE", join($params, "&"));
+                $template->setVariable("PARAM_VALUE", join("&", $params));
                 $template->parseCurrentBlock();
             }
             $template->setCurrentBlock("applet");
@@ -379,7 +378,6 @@ class ilFlashFileInputGUI extends ilFileInputGUI
         $a_tpl->setVariable("PROP_GENERIC", $template->get());
         $a_tpl->parseCurrentBlock();
         
-        include_once "./Services/YUI/classes/class.ilYuiUtil.php";
         ilYuiUtil::initConnectionWithAnimation();
     }
 

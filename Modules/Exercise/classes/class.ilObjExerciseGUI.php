@@ -48,7 +48,7 @@ class ilObjExerciseGUI extends ilObjectGUI
     /**
      * @var ilExerciseUIRequest
      */
-    protected $request;
+    protected $exercise_request;
 
     /**
      * @var ilExerciseUI
@@ -88,12 +88,12 @@ class ilObjExerciseGUI extends ilObjectGUI
         $this->ctrl->saveParameter($this, "ass_id");
 
         $this->service = $DIC->exercise()->internal()->service();
-        $this->request = $DIC->exercise()->internal()->request();
+        $this->exercise_request = $DIC->exercise()->internal()->request();
         $this->exercise_ui = $DIC->exercise()->internal()->ui();
-        $this->requested_ass_id = $this->request->getRequestedAssId();
+        $this->requested_ass_id = $this->exercise_request->getRequestedAssId();
 
         if ($this->requested_ass_id > 0 && is_object($this->object) && ilExAssignment::lookupExerciseId($this->requested_ass_id) == $this->object->getId()) {
-            $this->ass = $this->request->getRequestedAssignment();
+            $this->ass = $this->exercise_request->getRequestedAssignment();
         } elseif ($this->requested_ass_id > 0) {
             throw new ilExerciseException("Assignment ID does not match Exercise.");
         }
@@ -196,7 +196,7 @@ class ilObjExerciseGUI extends ilObjectGUI
                     'edit_submissions_grades',
                     'edit_submissions_grades',
                     $this->object->getRefId()
-                    )) {
+                )) {
                     $ilTabs->activateTab("grades");
                     $mgmt_gui = new ilExerciseManagementGUI($this->getService(), $this->ass);
                     $this->ctrl->forwardCommand($mgmt_gui);
@@ -307,19 +307,19 @@ class ilObjExerciseGUI extends ilObjectGUI
             $this->lng->txt("exc_pass_all"),
             ilObjExercise::PASS_MODE_ALL,
             $this->lng->txt("exc_pass_all_info")
-            );
+        );
         $radg->addOption($op1);
         $op2 = new ilRadioOption(
             $this->lng->txt("exc_pass_minimum_nr"),
             ilObjExercise::PASS_MODE_NR,
             $this->lng->txt("exc_pass_minimum_nr_info")
-            );
+        );
         $radg->addOption($op2);
         $op3 = new ilRadioOption(
             $this->lng->txt("exc_random_selection"),
             ilObjExercise::PASS_MODE_RANDOM,
             $this->lng->txt("exc_random_selection_info")
-            );
+        );
         if (!$random_manager->canBeActivated() && $this->object->getPassMode() != ilObjExercise::PASS_MODE_RANDOM) {
             $op3->setDisabled(true);
             $op3->setInfo($this->lng->txt("exc_random_selection_not_changeable_info") . " " .

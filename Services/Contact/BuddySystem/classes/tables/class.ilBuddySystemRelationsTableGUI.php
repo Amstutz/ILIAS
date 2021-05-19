@@ -8,13 +8,13 @@
 class ilBuddySystemRelationsTableGUI extends ilTable2GUI
 {
     /** @var string */
-    const APPLY_FILTER_CMD = 'applyContactsTableFilter';
+    private const APPLY_FILTER_CMD = 'applyContactsTableFilter';
 
     /** @var string */
-    const RESET_FILTER_CMD = 'resetContactsTableFilter';
+    private const RESET_FILTER_CMD = 'resetContactsTableFilter';
 
     /** @var string */
-    const STATE_FILTER_ELM_ID = 'relation_state_type';
+    private const STATE_FILTER_ELM_ID = 'relation_state_type';
 
     /** @var ilTemplate */
     protected $containerTemplate;
@@ -29,10 +29,10 @@ class ilBuddySystemRelationsTableGUI extends ilTable2GUI
     protected $user;
 
     /**
-     * @param        $a_parent_obj
+     * @param object $a_parent_obj
      * @param string $a_parent_cmd
      */
-    public function __construct($a_parent_obj, $a_parent_cmd)
+    public function __construct(object $a_parent_obj, string $a_parent_cmd)
     {
         global $DIC;
 
@@ -50,7 +50,7 @@ class ilBuddySystemRelationsTableGUI extends ilTable2GUI
         );
 
         $chatSettings = new ilSetting('chatroom');
-        $this->isChatEnabled = (bool) $chatSettings->get("chat_enabled", false);
+        $this->isChatEnabled = (bool) $chatSettings->get('chat_enabled');
 
         $this->setDefaultOrderDirection('ASC');
         $this->setDefaultOrderField('public_name');
@@ -70,7 +70,7 @@ class ilBuddySystemRelationsTableGUI extends ilTable2GUI
 
         $this->addColumn($this->lng->txt('name'), 'public_name');
         $this->addColumn($this->lng->txt('login'), 'login');
-        $this->addColumn('', '');
+        $this->addColumn('');
 
         $this->setRowTemplate('tpl.buddy_system_relation_table_row.html', 'Services/Contact/BuddySystem');
         $this->setFormAction($this->ctrl->getFormAction($a_parent_obj, $a_parent_cmd));
@@ -95,7 +95,7 @@ class ilBuddySystemRelationsTableGUI extends ilTable2GUI
         );
 
         $options = [];
-        $state = ilBuddySystemRelationStateFactory::getInstance()->getStatesAsOptionArray(false);
+        $state = ilBuddySystemRelationStateFactory::getInstance()->getStatesAsOptionArray();
         foreach ($state as $key => $option) {
             $options[$key] = $option;
         }
@@ -141,18 +141,29 @@ class ilBuddySystemRelationsTableGUI extends ilTable2GUI
             ) ? $matches[1][count($matches[1]) - 1] : '';
         }, $logins);
 
-        $public_name = (string) $this->filter['public_name'];
-        $relations = $relations->filter(function (ilBuddySystemRelation $relation) use (
-            $public_name,
+        $public_name_query = (string) $this->filter['public_name'];
+        $relations = $relations->filter(static function (ilBuddySystemRelation $relation) use (
+            $public_name_query,
             $relations,
             $public_names,
             $logins
-        ) {
-            return (
-                !strlen($public_name) ||
-                strpos(strtolower($public_names[$relations->getKey($relation)]), strtolower($public_name)) !== false ||
-                strpos(strtolower($logins[$relations->getKey($relation)]), strtolower($public_name)) !== false
+        ) : bool {
+            $usrId = $relations->getKey($relation);
+
+            $hasMatchingName = (
+                0 === ilStr::strlen($public_name_query) ||
+                ilStr::strpos(
+                    ilStr::strtolower($public_names[$usrId]),
+                    ilStr::strtolower($public_name_query)
+                ) !== false ||
+                ilStr::strpos(ilStr::strtolower($logins[$usrId]), ilStr::strtolower($public_name_query)) !== false
             );
+
+            if (!$hasMatchingName) {
+                return false;
+            }
+
+            return ilObjUser::_lookupActive($usrId);
         });
 
         foreach ($relations->toArray() as $usr_id => $relation) {
@@ -176,7 +187,7 @@ class ilBuddySystemRelationsTableGUI extends ilTable2GUI
         }
 
         $public_profile = ilObjUser::_lookupPref($a_set['usr_id'], 'public_profile');
-        if (!$this->user->isAnonymous() && $public_profile == 'y' || $public_profile == 'g') {
+        if ((!$this->user->isAnonymous() && $public_profile === 'y') || $public_profile === 'g') {
             $this->ctrl->setParameterByClass('ilpublicuserprofilegui', 'user', $a_set['usr_id']);
             $profile_target = $this->ctrl->getLinkTargetByClass('ilpublicuserprofilegui', 'getHTML');
             $a_set['profile_link'] = $profile_target;

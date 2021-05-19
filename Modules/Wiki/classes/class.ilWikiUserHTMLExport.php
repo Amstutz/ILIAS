@@ -42,18 +42,25 @@ class ilWikiUserHTMLExport
     protected $log;
 
     /**
+     * @var bool
+     */
+    protected $with_comments = false;
+
+    /**
      * Construct
      *
      * @param
      * @return
      */
-    public function __construct(ilObjWiki $a_wiki, ilDBInterface $a_db, ilObjUser $a_user)
+    public function __construct(ilObjWiki $a_wiki, ilDBInterface $a_db, ilObjUser $a_user, $with_comments = false)
     {
         $this->db = $a_db;
         $this->wiki = $a_wiki;
         $this->user = $a_user;
         $this->read();
         $this->log = ilLoggerFactory::getLogger('wiki');
+        $this->with_comments = $with_comments;
+        $this->log->debug("comments: " . $this->with_comments);
     }
 
     /**
@@ -66,8 +73,9 @@ class ilWikiUserHTMLExport
     {
         $set = $this->db->query(
             "SELECT * FROM wiki_user_html_export " .
-            " WHERE wiki_id  = " . $this->db->quote($this->wiki->getId(), "integer")
-            );
+            " WHERE wiki_id  = " . $this->db->quote($this->wiki->getId(), "integer") .
+            " AND with_comments = " . $this->db->quote($this->with_comments, "integer")
+        );
         if (!$this->data = $this->db->fetchAssoc($set)) {
             $this->data = array();
         }
@@ -83,11 +91,12 @@ class ilWikiUserHTMLExport
     {
         $this->log->debug("getProcess");
         $last_change = ilPageObject::getLastChangeByParent("wpg", $this->wiki->getId());
+        $file_exists = $this->doesFileExist();
 
         $ilAtomQuery = $this->db->buildAtomQuery();
         $ilAtomQuery->addTableLock('wiki_user_html_export');
 
-        $ilAtomQuery->addQueryCallable(function (ilDBInterface $ilDB) use ($last_change, &$ret) {
+        $ilAtomQuery->addQueryCallable(function (ilDBInterface $ilDB) use ($last_change, &$ret, $file_exists) {
             $this->log->debug("atom query start");
             
             $this->read();
@@ -95,23 +104,28 @@ class ilWikiUserHTMLExport
 
             if ($this->data["start_ts"] != "" &&
                 $this->data["start_ts"] > $last_change) {
-                $ret = self::PROCESS_UPTODATE;
-                $this->log->debug("return: " . self::PROCESS_UPTODATE);
-                return;
+                if ($file_exists) {
+                    $ret = self::PROCESS_UPTODATE;
+                    $this->log->debug("return: " . self::PROCESS_UPTODATE);
+                    return;
+                }
             }
 
             if (!isset($this->data["wiki_id"])) {
-                $this->log->debug("insert, wiki id: " . $this->wiki->getId() . ", user id: " . $this->user->getId() . ", ts: " . $ts);
+                $this->log->debug("insert, wiki id: " . $this->wiki->getId() . ", user id: " . $this->user->getId() .
+                    ", ts: " . $ts . ", with_comments: " . $this->with_comments);
                 $ilDB->manipulate("INSERT INTO wiki_user_html_export  " .
-                    "(wiki_id, usr_id, progress, start_ts, status) VALUES (" .
+                    "(wiki_id, usr_id, progress, start_ts, status, with_comments) VALUES (" .
                     $ilDB->quote($this->wiki->getId(), "integer") . "," .
                     $ilDB->quote($this->user->getId(), "integer") . "," .
                     $ilDB->quote(0, "integer") . "," .
                     $ilDB->quote($ts, "timestamp") . "," .
-                    $ilDB->quote(self::RUNNING, "integer") .
+                    $ilDB->quote(self::RUNNING, "integer") . "," .
+                    $ilDB->quote($this->with_comments, "integer") .
                     ")");
             } else {
-                $this->log->debug("update, wiki id: " . $this->wiki->getId() . ", user id: " . $this->user->getId() . ", ts: " . $ts);
+                $this->log->debug("update, wiki id: " . $this->wiki->getId() . ", user id: " . $this->user->getId() .
+                    ", ts: " . $ts . ", with_comments: " . $this->with_comments);
                 $ilDB->manipulate(
                     "UPDATE wiki_user_html_export SET " .
                     " start_ts = " . $ilDB->quote($ts, "timestamp") . "," .
@@ -119,7 +133,8 @@ class ilWikiUserHTMLExport
                     " progress = " . $ilDB->quote(0, "integer") . "," .
                     " status = " . $ilDB->quote(self::RUNNING, "integer") .
                     " WHERE status = " . $ilDB->quote(self::NOT_RUNNING, "integer") .
-                    " AND wiki_id = " . $ilDB->quote($this->wiki->getId(), "integer")
+                    " AND wiki_id = " . $ilDB->quote($this->wiki->getId(), "integer") .
+                    " AND with_comments = " . $ilDB->quote($this->with_comments, "integer")
                 );
                 $this->read();
             }
@@ -156,8 +171,9 @@ class ilWikiUserHTMLExport
             " progress = " . $this->db->quote((int) $a_progress, "integer") . "," .
             " status = " . $this->db->quote((int) $a_status, "integer") .
             " WHERE wiki_id = " . $this->db->quote($this->wiki->getId(), "integer") .
-            " AND usr_id = " . $this->db->quote($this->user->getId(), "integer")
-            );
+            " AND usr_id = " . $this->db->quote($this->user->getId(), "integer") .
+            " AND with_comments = " . $this->db->quote($this->with_comments, "integer")
+        );
 
         $this->read();
     }
@@ -172,8 +188,9 @@ class ilWikiUserHTMLExport
     {
         $set = $this->db->query(
             "SELECT progress, status FROM wiki_user_html_export " .
-            " WHERE wiki_id = " . $this->db->quote($this->wiki->getId(), "integer")
-            );
+            " WHERE wiki_id = " . $this->db->quote($this->wiki->getId(), "integer") .
+            " AND with_comments = " . $this->db->quote($this->with_comments, "integer")
+        );
         $rec = $this->db->fetchAssoc($set);
 
         return array("progress" => (int) $rec["progress"], "status" => (int) $rec["status"]);
@@ -201,11 +218,30 @@ class ilWikiUserHTMLExport
         ignore_user_abort(true);
         // do the export
         $exp = new WikiHtmlExport($this->wiki);
-        $exp->setMode(WikiHtmlExport::MODE_USER);
+        if (!$this->with_comments) {
+            $exp->setMode(WikiHtmlExport::MODE_USER);
+        } else {
+            $exp->setMode(WikiHtmlExport::MODE_USER_COMMENTS);
+        }
         $exp->buildExportFile();
         // reset user export status
         $this->updateStatus(100, self::NOT_RUNNING);
         exit;
+    }
+
+    /**
+     * Does file exist?
+     */
+    protected function doesFileExist()
+    {
+        $exp = new WikiHtmlExport($this->wiki);
+        if ($this->with_comments) {
+            $exp->setMode(WikiHtmlExport::MODE_USER_COMMENTS);
+        } else {
+            $exp->setMode(WikiHtmlExport::MODE_USER);
+        }
+        $file = $exp->getUserExportFile();
+        return is_file($file);
     }
 
     /**
@@ -216,7 +252,11 @@ class ilWikiUserHTMLExport
         $this->log->debug("deliver");
 
         $exp = new WikiHtmlExport($this->wiki);
-        $exp->setMode(WikiHtmlExport::MODE_USER);
+        if ($this->with_comments) {
+            $exp->setMode(WikiHtmlExport::MODE_USER_COMMENTS);
+        } else {
+            $exp->setMode(WikiHtmlExport::MODE_USER);
+        }
         $file = $exp->getUserExportFile();
         $this->log->debug("file: " . $file);
         ilUtil::deliverFile($file, pathinfo($file, PATHINFO_BASENAME));

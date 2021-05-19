@@ -409,7 +409,6 @@ class ilCalendarCategoryGUI
         }
          */
         
-        include_once('./Services/Utilities/classes/class.ilConfirmationGUI.php');
         $confirmation_gui = new ilConfirmationGUI();
         
         $confirmation_gui->setFormAction($this->ctrl->getFormAction($this));
@@ -702,7 +701,7 @@ class ilCalendarCategoryGUI
             ilUtil::sendFailure($this->lng->txt('select_one'), true);
             $this->ctrl->returnToParent($this);
         }
-        if (!count($_POST['user_ids'])) {
+        if (!isset($_POST['user_ids']) || !count($_POST['user_ids'])) {
             ilUtil::sendFailure($this->lng->txt('select_one'));
             $this->sharePerformSearch();
             return false;
@@ -753,7 +752,7 @@ class ilCalendarCategoryGUI
             ilUtil::sendFailure($this->lng->txt('select_one'), true);
             $this->ctrl->returnToParent($this);
         }
-        if (!count($_POST['role_ids'])) {
+        if (!isset($_POST['role_ids']) || !count($_POST['role_ids'])) {
             ilUtil::sendFailure($this->lng->txt('select_one'));
             $this->sharePerformSearch();
             return false;
@@ -789,7 +788,7 @@ class ilCalendarCategoryGUI
             ilUtil::sendFailure($this->lng->txt('select_one'), true);
             $this->ctrl->returnToParent($this);
         }
-        if (!count($_POST['obj_ids'])) {
+        if (!isset($_POST['obj_ids']) || !count($_POST['obj_ids'])) {
             ilUtil::sendFailure($this->lng->txt('select_one'));
             $this->shareSearch();
             return false;
@@ -1123,13 +1122,12 @@ class ilCalendarCategoryGUI
 
         $tpl = $DIC['tpl'];
         
-        if (!count($_POST['appointments'])) {
+        if (!isset($_POST['appointments']) || !count($_POST['appointments'])) {
             ilUtil::sendFailure($this->lng->txt('select_one'));
             $this->details();
             return true;
         }
 
-        include_once('./Services/Utilities/classes/class.ilConfirmationGUI.php');
         $confirmation_gui = new ilConfirmationGUI();
         
         $this->ctrl->setParameter($this, 'category_id', $this->category_id);
@@ -1155,7 +1153,7 @@ class ilCalendarCategoryGUI
      */
     protected function deleteAppointments()
     {
-        if (!count($_POST['appointments'])) {
+        if (!isset($_POST['appointments']) || !count($_POST['appointments'])) {
             ilUtil::sendFailure($this->lng->txt('select_one'));
             $this->details();
             return true;
@@ -1541,14 +1539,11 @@ class ilCalendarCategoryGUI
         $status = new ilCalendarSharedStatus($this->user_id);
         $calendars = $status->getOpenInvitations();
 
-        //if (count($calendars) > 0)
-        //{
         $ilTabs->addSubTab(
             "invitations",
             $lng->txt("cal_shared_calendars"),
             $ilCtrl->getLinkTarget($this, "invitations")
             );
-        //}
 
         $ilTabs->activateSubTab($a_active);
     }

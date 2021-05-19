@@ -81,9 +81,10 @@ class ilRepositoryExplorerGUI extends ilTreeExplorerGUI
         $ilSetting = $DIC->settings();
         $objDefinition = $DIC["objDefinition"];
 
-        $this->cur_ref_id = (int) $_GET["ref_id"];
+        $this->cur_ref_id = (int) ($_GET["ref_id"] ?? 0);
 
         $this->top_node_id = 0;
+        $top_node = 0; // This was never defined before
         if ($ilSetting->get("rep_tree_limit_grp_crs") && $this->cur_ref_id > 0) {
             $path = $tree->getPathId($this->cur_ref_id);
             foreach ($path as $n) {
@@ -117,7 +118,8 @@ class ilRepositoryExplorerGUI extends ilTreeExplorerGUI
             }
             $this->setTypeWhiteList($white);
         }
-        if ((int) $_GET["ref_id"] > 0) {
+
+        if (isset($_GET["ref_id"]) && (int) $_GET["ref_id"] > 0) {
             $this->setPathOpen((int) $_GET["ref_id"]);
         }
 
@@ -467,10 +469,10 @@ class ilRepositoryExplorerGUI extends ilTreeExplorerGUI
 
         foreach ($this->type_grps[$parent_type] as $t => $g) {
             // type group
-            if (is_array($group[$t])) {
+            if (isset($group[$t]) && is_array($group[$t])) {
                 // see bug #0015978
                 // custom sorted igroups
-                if (is_array($igroup[$t])) {
+                if (isset($igroup[$t]) && is_array($igroup[$t])) {
                     foreach ($igroup[$t] as $k => $item) {
                         if (!in_array($item["child"], $done)) {
                             $childs[] = $item;
@@ -499,6 +501,7 @@ class ilRepositoryExplorerGUI extends ilTreeExplorerGUI
             }
             // item groups (if not custom block sorting)
             elseif ($t == "itgr" &&
+                isset($g["ref_ids"]) &&
                 is_array($g["ref_ids"])) {
                 foreach ($g["ref_ids"] as $ref_id) {
                     if (isset($group[$ref_id])) {

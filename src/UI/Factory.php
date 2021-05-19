@@ -150,7 +150,7 @@ interface Factory
      *      bear text.
      *   effect: >
      *      On-click, the action indicated by the button is carried out.
-     *      A stateful button will indicate its state by an aria-attribute.
+     *      A stateful button will indicate its state with the engaged state.
      *   rivals:
      *      glyph: >
      *          Glyphs are used if the enclosing Container Collection can not provide
@@ -159,13 +159,11 @@ interface Factory
      *      links: >
      *          Links are used to trigger Interactions that do not change the systems
      *          status. They are usually contained inside a Navigational Collection.
-     *
      * background: >
      *      Wording rules have been inspired by the iOS Human Interface Guidelines
      *      (UI-Elements->Controls->System Button)
-     *
      *      Style rules have been inspired from the GNOME Human Interface Guidelines->Buttons.
-     *
+     *      Concerning aria-roles, see: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/button_role
      * rules:
      *   usage:
      *      1: >
@@ -180,6 +178,9 @@ interface Factory
      *      1: >
      *           If Text is used inside a Button, the Button MUST be at least six characters
      *           wide.
+     *      2: >
+     *           The Button MUST be designed in a way it is perceived as important and active,
+     *           but not clickable, if the Button is engaged.
      *   wording:
      *      1: >
      *           The caption of a Button SHOULD contain no more than two words.
@@ -210,6 +211,10 @@ interface Factory
      *      4: >
      *           All Buttons visible in a view MUST be accessible by keyboard by using the
      *           ‘Tab’-Key.
+     *      5: >
+     *          The engaged state MUST be reflected in the "aria-pressed" -, respectively
+     *          the "aria-checked"-attribute if active.
+     *          If the Button is not engaged (which is the default), the aria-attribute can be omitted.
      * ---
      * @return  \ILIAS\UI\Component\Button\Factory
      */
@@ -535,6 +540,9 @@ interface Factory
      *     3: Modals SHOULD not be used to perform complex workflows.
      *     4: Modals MUST be closable by a little “x”-button on the right side of the header.
      *     5: Modals MUST contain a title in the header.
+     *     6: >
+     *       If a Modal contains a form, it MUST NOT be rendered within another form. This
+     *       will break the HTML-engine of the client, since forms in forms are not allowed.
      * ---
      *
      * @return \ILIAS\UI\Component\Modal\Factory
@@ -754,6 +762,16 @@ interface Factory
      *     2: >
      *       A Tree SHOULD NOT mix different kind of nodes, i.e.
      *       all nodes in the same Tree SHOULD be identical in structure.
+     *   accessibility:
+     *     1: All tree nodes are contained in or owned by an element with role "tree".
+     *     2: Each element serving as a tree node has role "treeitem".
+     *     3: Each root node is contained in the element with role "tree".
+     *     4: >
+     *       Each parent node contains an an element with role "group" that contains
+     *       the subnodes of that parent.
+     *     5: >
+     *       Each parent node uses "aria-expanded" (with values "true" or "false") to
+     *       indicate if it is expanded or not.
      *
      * ---
      * @return \ILIAS\UI\Component\Tree\Factory

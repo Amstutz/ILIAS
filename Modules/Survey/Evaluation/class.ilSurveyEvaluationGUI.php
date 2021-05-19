@@ -455,7 +455,7 @@ class ilSurveyEvaluationGUI
                 $separator = ";";
                 foreach ($csvfile as $csvrow) {
                     $csvrow = $this->processCSVRow($csvrow, true, $separator);
-                    $csv .= join($csvrow, $separator) . "\n";
+                    $csv .= join($separator, $csvrow) . "\n";
                 }
                 ilUtil::deliverData($csv, $surveyname . ".csv");
                 exit();
@@ -732,15 +732,16 @@ class ilSurveyEvaluationGUI
         return $modal->getHTML();
     }
     
-    public function evaluation($details = 0)
+    public function evaluation($details = 0, $pdf = false, $return_pdf = false)
     {
-        $rbacsystem = $this->rbacsystem;
         $ilToolbar = $this->toolbar;
         $tree = $this->tree;
         $ui = $this->ui;
 
         $ui_factory = $ui->factory();
         $ui_renderer = $ui->renderer();
+
+        $this->lng->loadLanguageModule("survey");
 
         $this->log->debug("check access");
 
@@ -767,17 +768,20 @@ class ilSurveyEvaluationGUI
         }
 
         $this->log->debug("check access ok");
-        
-        $ilToolbar->setFormAction($this->ctrl->getFormAction($this));
 
-        $this->tpl->addBlockFile("ADM_CONTENT", "adm_content", "tpl.il_svy_svy_evaluation.html", "Modules/Survey");
-                
-        if ($this->object->get360Mode()) {
-            $appr_id = $this->getAppraiseeId();
-            $this->addApprSelectionToToolbar();
+        // setup toolbar
+
+        if (!$pdf) {
+            $ilToolbar->setFormAction($this->ctrl->getFormAction($this));
+            if ($this->object->get360Mode()) {
+                $appr_id = $this->getAppraiseeId();
+                $this->addApprSelectionToToolbar();
+            }
         }
-
         $results = array();
+
+        $eval_tpl = new ilTemplate("tpl.il_svy_svy_evaluation.html", true, true, "Modules/Survey");
+
         if (!$this->object->get360Mode() || $appr_id) {
             if ($details) {
                 $captions = new ilSelectInputGUI($this->lng->txt("svy_eval_captions"), "cp");
@@ -812,38 +816,40 @@ class ilSurveyEvaluationGUI
                 $this->lng->loadLanguageModule("content");
                 $toc_tpl->setVariable("TITLE_TOC", $this->lng->txt('cont_toc'));
             }
-            
-            $modal_id = "svy_ev_exp";
-            $modal = $this->buildExportModal($modal_id, $details
-                ? 'exportDetailData'
-                : 'exportData');
-            
-            $button = ilLinkButton::getInstance();
-            $button->setCaption("export");
-            $button->setOnClick('$(\'#' . $modal_id . '\').modal(\'show\')');
-            $ilToolbar->addButtonInstance($button);
-            
-            $ilToolbar->addSeparator();
 
-            $button = ilLinkButton::getInstance();
-            $button->setCaption("print");
-            $button->setOnClick("if(il.Accordion) { il.Accordion.preparePrint(); } window.print(); return false;");
-            $button->setOmitPreventDoubleSubmission(true);
-            $ilToolbar->addButtonInstance($button);
+            if (!$pdf) {
+                $modal_id = "svy_ev_exp";
+                $modal = $this->buildExportModal($modal_id, $details
+                    ? 'exportDetailData'
+                    : 'exportData');
 
-            // patch BGHW jluetzen-ilias
-            $this->ctrl->setParameter($this, "cp", $_POST["cp"]);
-            $this->ctrl->setParameter($this, "vw", $_POST["vw"]);
-            $url = $this->ctrl->getLinkTarget($this, $details
-                ? "evaluationdetailspdf"
-                : "evaluationpdf");
-            $this->ctrl->setParameter($this, "cp", "");
-            $this->ctrl->setParameter($this, "vw", "");
-            $button = ilLinkButton::getInstance();
-            $button->setCaption("svy_export_pdf");
-            $button->setUrl($url);
-            $button->setOmitPreventDoubleSubmission(true);
-            $ilToolbar->addButtonInstance($button);
+                $button = ilLinkButton::getInstance();
+                $button->setCaption("export");
+                $button->setOnClick('$(\'#' . $modal_id . '\').modal(\'show\')');
+                $ilToolbar->addButtonInstance($button);
+
+                $ilToolbar->addSeparator();
+
+                $button = ilLinkButton::getInstance();
+                $button->setCaption("print");
+                $button->setOnClick("if(il.Accordion) { il.Accordion.preparePrint(); } window.print(); return false;");
+                $button->setOmitPreventDoubleSubmission(true);
+                $ilToolbar->addButtonInstance($button);
+
+                // patch BGHW jluetzen-ilias
+                $this->ctrl->setParameter($this, "cp", $_POST["cp"]);
+                $this->ctrl->setParameter($this, "vw", $_POST["vw"]);
+                $url = $this->ctrl->getLinkTarget($this, $details
+                    ? "evaluationdetailspdf"
+                    : "evaluationpdf");
+                $this->ctrl->setParameter($this, "cp", "");
+                $this->ctrl->setParameter($this, "vw", "");
+                $button = ilLinkButton::getInstance();
+                $button->setCaption("svy_export_pdf");
+                $button->setUrl($url);
+                $button->setOmitPreventDoubleSubmission(true);
+                $ilToolbar->addButtonInstance($button);
+            }
 
             $finished_ids = null;
             if ($appr_id) {
@@ -878,8 +884,7 @@ class ilSurveyEvaluationGUI
                 $results[] = $q_res;
                         
                 if ($details) {
-                    //$this->renderDetails($details_view, $details_figure, $dtmpl, $qdata, $q_eval, $q_res);
-                    $this->renderDetails($details_view, $details_figure, $qdata, $q_eval, $q_res);
+                    $this->renderDetails($details_view, $details_figure, $qdata, $q_eval, $q_res, $pdf);
 
                     // TABLE OF CONTENTS
                     if ($qdata["questionblock_id"] &&
@@ -887,6 +892,8 @@ class ilSurveyEvaluationGUI
                         $qblock = ilObjSurvey::_getQuestionblock($qdata["questionblock_id"]);
                         if ($qblock["show_blocktitle"]) {
                             $list->addListNode($qdata["questionblock_title"], "q" . $qdata["questionblock_id"]);
+                        } else {
+                            $list->addListNode("", "q" . $qdata["questionblock_id"]);
                         }
                         $this->last_questionblock_id = $qdata["questionblock_id"];
                     }
@@ -912,21 +919,23 @@ class ilSurveyEvaluationGUI
                 $dtmpl->setVariable("PANEL_REPORT", $render_report);
 
                 //print the main template
-                $this->tpl->setVariable('DETAIL', $dtmpl->get());
+                $eval_tpl->setVariable('DETAIL', $dtmpl->get());
             }
         }
-        
-        $this->tpl->setVariable('MODAL', $modal);
+
+        $eval_tpl->setVariable('MODAL', $modal);
         if (!$details) {
             $table_gui = new ilSurveyResultsCumulatedTableGUI($this, $details ? 'evaluationdetails' : 'evaluation', $results);
-            $this->tpl->setVariable('CUMULATED', $table_gui->getHTML());
+            $eval_tpl->setVariable('CUMULATED', $table_gui->getHTML());
         }
         unset($dtmpl);
         unset($table_gui);
         unset($modal);
         
-        
+
+        //
         // print header
+        //
         
         $path = "";
         $path_full = $tree->getPathFull($this->object->getRefId());
@@ -934,9 +943,8 @@ class ilSurveyEvaluationGUI
             $path .= " &raquo; ";
             $path .= $data['title'];
         }
-        
-        ilDatePresentation::setUseRelativeDates(false);
 
+        ilDatePresentation::setUseRelativeDates(false);
         $props = array(
             $this->lng->txt("link") => ilLink::_getStaticLink($this->object->getRefId()),
             $this->lng->txt("path") => $path,
@@ -945,15 +953,34 @@ class ilSurveyEvaluationGUI
                 : $this->lng->txt("svy_eval_detail"),
             $this->lng->txt("date") => ilDatePresentation::formatDate(new ilDateTime(time(), IL_CAL_UNIX)),
         );
-        
-        $this->tpl->setCurrentBlock("print_header_bl");
+        $eval_tpl->setCurrentBlock("print_header_bl");
         foreach ($props as $key => $value) {
-            $this->tpl->setVariable("HEADER_PROP_KEY", $key);
-            $this->tpl->setVariable("HEADER_PROP_VALUE", $value);
-            $this->tpl->parseCurrentBlock();
+            $eval_tpl->setVariable("HEADER_PROP_KEY", $key);
+            $eval_tpl->setVariable("HEADER_PROP_VALUE", $value);
+            $eval_tpl->parseCurrentBlock();
         }
 
         $this->log->debug("end");
+
+        $this->tpl->setContent($eval_tpl->get());
+
+        if ($pdf) {
+            $this->tpl->setTitle($this->object->getTitle());
+            $this->tpl->setTitleIcon(
+                ilObject::_getIcon("", "big", $this->object->getType()),
+                $this->lng->txt("obj_" . $this->object->getType())
+            );
+            $this->tpl->setDescription($this->object->getDescription());
+
+
+            $html = $this->tpl->printToString();
+
+            if ($return_pdf) {
+                return $html;
+            } else {
+                $this->generateAndSendPDF($html);
+            }
+        }
 
         // $this->tpl->addCss("./Modules/Survey/templates/default/survey_print.css", "print");
     }
@@ -969,7 +996,7 @@ class ilSurveyEvaluationGUI
      * @param ilSurveyEvaluationResults|array $a_results
      */
     //protected function renderDetails($a_details_parts, $a_details_figure, ilTemplate $a_tpl, array $a_qdata, SurveyQuestionEvaluation $a_eval, $a_results)
-    protected function renderDetails($a_details_parts, $a_details_figure, array $a_qdata, SurveyQuestionEvaluation $a_eval, $a_results)
+    protected function renderDetails($a_details_parts, $a_details_figure, array $a_qdata, SurveyQuestionEvaluation $a_eval, $a_results, $pdf)
     {
         $ui_factory = $this->ui->factory();
         $a_tpl = new ilTemplate("tpl.svy_results_details_panel.html", true, true, "Modules/Survey");
@@ -1026,12 +1053,12 @@ class ilSurveyEvaluationGUI
         $anchor_id = "svyrdq" . $question->getId();
         $title = "<span id='$anchor_id'>$qst_title</span>";
         $panel_qst_card = $ui_factory->panel()->sub($title, $ui_factory->legacy($svy_text))
-            ->withCard($ui_factory->card()->standard($svy_type_title)->withSections(array($ui_factory->legacy($card_table_tpl->get()))));
+            ->FurtherInformation($ui_factory->card()->standard($svy_type_title)->withSections(array($ui_factory->legacy($card_table_tpl->get()))));
 
         //commit 715c28815 from phantom patch
         //$anchor = "<a name='".$anchor_id."'></a>";
         //$panel_qst_card = $ui_factory->panel()->sub($anchor.$qst_title, $ui_factory->legacy($svy_text))
-        //->withCard($ui_factory->card($svy_type_title)->withSections(array($ui_factory->legacy($card_table_tpl->get()))));
+        //->withFurtherInformation($ui_factory->card($svy_type_title)->withSections(array($ui_factory->legacy($card_table_tpl->get()))));
         
         array_push($this->array_panels, $panel_qst_card);
 
@@ -1123,9 +1150,11 @@ class ilSurveyEvaluationGUI
                 }
 
                 // patch BGHW jluezen
-                $this->ctrl->setParameter($this, "qid", $question->getId());
-                $url = $this->ctrl->getLinkTarget($this, "downloadChart");
-                $this->ctrl->setParameter($this, "qid", "");
+                if (!$pdf) {
+                    $this->ctrl->setParameter($this, "qid", $question->getId());
+                    $url = $this->ctrl->getLinkTarget($this, "downloadChart");
+                    $this->ctrl->setParameter($this, "qid", "");
+                }
 
                 $a_tpl->setVariable("CHART", $chart);
                 $a_tpl->setVariable("CHART_DL_URL", $url);
@@ -1378,7 +1407,7 @@ class ilSurveyEvaluationGUI
                 $separator = ";";
                 foreach ($rows as $csvrow) {
                     $csvrow = str_replace("\n", " ", $this->processCSVRow($csvrow, true, $separator));
-                    $csv .= join($csvrow, $separator) . "\n";
+                    $csv .= join($separator, $csvrow) . "\n";
                 }
                 ilUtil::deliverData($csv, "$surveyname.csv");
                 exit();
@@ -1673,32 +1702,14 @@ class ilSurveyEvaluationGUI
         return $this->access->checkRbacOrPositionPermissionAccess('read_results', 'access_results', $this->object->getRefId());
     }
 
-    //
-    // PATCH BGHW
-    //
-
     public function evaluationpdf()
     {
-        $this->ctrl->setParameter($this, "pdf", 1);
-        $this->ctrl->setParameter($this, "cp", $_GET["cp"]);
-        $this->ctrl->setParameter($this, "vw", $_GET["vw"]);
-        $this->callPhantom(
-            $this->ctrl->getLinkTarget($this, "evaluation", "", false, false),
-            "pdf",
-            $this->object->getTitle() . ".pdf"
-        );
+        $this->evaluation(0, true);
     }
 
     public function evaluationdetailspdf()
     {
-        $this->ctrl->setParameter($this, "pdf", 1);
-        $this->ctrl->setParameter($this, "cp", $_GET["cp"]);
-        $this->ctrl->setParameter($this, "vw", $_GET["vw"]);
-        $this->callPhantom(
-            $this->ctrl->getLinkTarget($this, "evaluationdetails", "", false, false),
-            "pdf",
-            $this->object->getTitle() . ".pdf"
-        );
+        $this->evaluation(1, true);
     }
 
     public function downloadChart()
@@ -1708,14 +1719,7 @@ class ilSurveyEvaluationGUI
             return;
         }
 
-        $this->ctrl->setParameter($this, "qid", $qid);
-        $url = $this->ctrl->getLinkTarget($this, "renderChartOnly", "", false, false);
-        $this->ctrl->setParameter($this, "qid", "");
-
-        include_once "./Modules/SurveyQuestionPool/classes/class.SurveyQuestion.php";
-        $file = $this->object->getTitle() . " - " . SurveyQuestion::_getTitle($qid);
-
-        $this->callPhantom($url, "png", $file . ".png");
+        $this->renderChartOnly();
     }
 
     public function renderChartOnly()
@@ -1737,7 +1741,6 @@ class ilSurveyEvaluationGUI
         }
 
         // parse answer data in evaluation results
-        include_once "./Modules/SurveyQuestionPool/classes/class.SurveyQuestion.php";
         foreach ($this->object->getSurveyQuestions() as $qdata) {
             if ($qid == $qdata["question_id"]) {
                 $q_eval = SurveyQuestion::_instanciateQuestionEvaluation($qdata["question_id"], $finished_ids);
@@ -1766,26 +1769,37 @@ class ilSurveyEvaluationGUI
         }
 
         // "print view"
-        $ptpl = new ilTemplate("tpl.main.html", true, true);
-        foreach ($tpl->css_files as $css) {
-            $ptpl->setCurrentBlock("css_file");
-            $ptpl->setVariable("CSS_FILE", $css["file"]);
-            $ptpl->setVariable("CSS_MEDIA", $css["media"]);
-            $ptpl->parseCurrentBlock();
-        }
-        foreach ($tpl->js_files as $js) {
-            $ptpl->setCurrentBlock("js_file");
-            $ptpl->setVariable("JS_FILE", $js);
-            $ptpl->parseCurrentBlock();
-        }
-        $ptpl->setVariable("LOCATION_STYLESHEET", ilUtil::getStyleSheetLocation());
-        $ptpl->setVariable("LOCATION_CONTENT_STYLESHEET", ilUtil::getNewContentStyleSheetLocation());
-        $ptpl->setVariable("CONTENT", $dtmpl->get());
-        echo $ptpl->get();
-        exit();
+        $this->tpl->setContent($dtmpl->get());
+
+        $html = $this->tpl->printToString();
+        $this->generateAndSendPDF($html, $this->object->getTitle() . " - " . SurveyQuestion::_getTitle($qid) . ".pdf");
     }
 
-    public function callPhantom($a_url, $a_suffix, $a_filename, $a_return = false)
+    /**
+     *
+     * @param $html
+     * @param $filename
+     * @throws Exception
+     */
+    public function generateAndSendPDF($html, $filename = "")
+    {
+        // :TODO: fixing css dummy parameters
+        $html = preg_replace("/\?dummy\=[0-9]+/", "", $html);
+        $html = preg_replace("/\?vers\=[0-9A-Za-z\-]+/", "", $html);
+        $html = str_replace('.css$Id$', ".css", $html);
+        $html = preg_replace("/src=\"\\.\\//ims", "src=\"" . ILIAS_HTTP_PATH . "/", $html);
+        $html = preg_replace("/href=\"\\.\\//ims", "href=\"" . ILIAS_HTTP_PATH . "/", $html);
+
+        //echo $html; exit;
+
+        if ($filename == "") {
+            $filename = $this->object->getTitle() . ".pdf";
+        }
+        $pdf_factory = new ilHtmlToPdfTransformerFactory();
+        $pdf_factory->deliverPDFFromHTMLString($html, $filename, ilHtmlToPdfTransformerFactory::PDF_OUTPUT_DOWNLOAD, "Survey", "Results");
+    }
+
+    public function callPdfGeneration($a_url, $a_suffix, $a_filename, $a_return = false)
     {
         $script = ILIAS_ABSOLUTE_PATH . "/Modules/Survey/js/phantom.js";
 
@@ -1839,18 +1853,17 @@ class ilSurveyEvaluationGUI
     /**
      * Show sum score table
      */
-    function sumscore()
+    public function sumscore()
     {
         $ilToolbar = $this->toolbar;
 
-        if(!$this->hasResultsAccess() &&
-            $this->object->getMode() != ilObjSurvey::MODE_SELF_EVAL)
-        {
-            ilUtil::sendFailure($this->lng->txt("no_permission"), TRUE);
+        if (!$this->hasResultsAccess() &&
+            $this->object->getMode() != ilObjSurvey::MODE_SELF_EVAL) {
+            ilUtil::sendFailure($this->lng->txt("no_permission"), true);
             $this->ctrl->redirectByClass("ilObjSurveyGUI", "infoScreen");
         }
 
-        ilUtil::sendInfo($this->lng->txt("svy_max_sum_score").": " . $this->object->getMaxSumScore());
+        ilUtil::sendInfo($this->lng->txt("svy_max_sum_score") . ": " . $this->object->getMaxSumScore());
 
         $ilToolbar->setFormAction($this->ctrl->getFormAction($this, "evaluationuser"));
 
@@ -1868,10 +1881,10 @@ class ilSurveyEvaluationGUI
         $sum_scores = $this->getSumScores($finished_ids);
         $table_gui = new ilSumScoreTableGUI($this, 'sumscore', $this->object->hasAnonymizedResults());
         $table_gui->setSumScores($sum_scores);
-        $this->tpl->setContent($table_gui->getHTML().$modal);
+        $this->tpl->setContent($table_gui->getHTML() . $modal);
     }
 
-    protected function getSumScores(array $a_finished_ids = null): array
+    protected function getSumScores(array $a_finished_ids = null) : array
     {
         $sum_scores = [];
         foreach ($this->filterSurveyParticipantsByAccess($a_finished_ids) as $p) {
@@ -1881,10 +1894,9 @@ class ilSurveyEvaluationGUI
             ];
         }
 
-        foreach($this->object->getSurveyQuestions() as $qdata)
-        {
+        foreach ($this->object->getSurveyQuestions() as $qdata) {
             $q_eval = SurveyQuestion::_instanciateQuestionEvaluation($qdata["question_id"], $a_finished_ids);
-            foreach($q_eval->getSumScores() as $finished_id => $sum_score) {
+            foreach ($q_eval->getSumScores() as $finished_id => $sum_score) {
                 if ($sum_score === null) {
                     $sum_scores[$finished_id]["score"] = null;
                 }

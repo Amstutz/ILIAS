@@ -10,16 +10,16 @@ class Factory implements I\Factory
 {
     public function text(string $title) : I\Text
     {
-        return new Text($title);
+        throw new \ILIAS\UI\NotImplementedException('NYI');
     }
 
     public function number(string $title) : I\Number
     {
-        return new Number($title);
+        throw new \ILIAS\UI\NotImplementedException('NYI');
     }
 
-    public function date(string $title, \ILIAS\Data\DateFormat\DateFormat $format) : I\Date
+    public function date(string $title, \ILIAS\Data\DateFormat\DateFormat $format) //:@Todo: Does not yet exit
     {
-        return new Date($title, $format);
+        throw new \ILIAS\UI\NotImplementedException('NYI');
     }
 }

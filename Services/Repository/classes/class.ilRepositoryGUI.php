@@ -80,6 +80,7 @@ class ilRepositoryGUI
     public $cmd;
     public $mode;
     public $ctrl;
+    private $http;
 
     /**
     * Constructor
@@ -105,6 +106,7 @@ class ilRepositoryGUI
         $ilUser = $DIC->user();
         $ilSetting = $DIC->settings();
         $this->tool_context = $DIC->globalScreen()->tool()->context();
+        $this->http = $DIC->http();
 
         $this->lng = $lng;
         $this->tpl = $tpl;
@@ -181,15 +183,15 @@ class ilRepositoryGUI
         }
 
         // get user setting
-        if ($_SESSION["il_rep_mode"] == "") {
+        if (!ilSession::get("il_rep_mode")) {
             if ($ilUser->getId() != ANONYMOUS_USER_ID) {
-                $_SESSION["il_rep_mode"] = $ilUser->getPref("il_rep_mode");
+                ilSession::set("il_rep_mode", $ilUser->getPref("il_rep_mode"));
             }
         }
 
         // if nothing set, get default view
-        if ($_SESSION["il_rep_mode"] == "") {
-            $_SESSION["il_rep_mode"] = $ilSetting->get("default_repository_view");
+        if (!ilSession::get("il_rep_mode")) {
+            ilSession::set("il_rep_mode", $ilSetting->get("default_repository_view"));
         }
 
         $this->mode = ($_SESSION["il_rep_mode"] != "")
@@ -221,6 +223,15 @@ class ilRepositoryGUI
         $ilHelp = $this->help;
         $ilErr = $this->error;
 
+        if (
+            ($this->user->isAnonymous() || !($this->user->getId() >= 1)) &&
+            !ilPublicSectionSettings::getInstance()->isEnabledForDomain(
+                $this->http->request()->getServerParams()['SERVER_NAME']
+            )
+        ) {
+            $this->ctrl->redirectToURL('./login.php?cmd=force_login');
+        }
+
         $this->tool_context->claim()->repository();
         $show_tree = ($_SESSION["il_rep_mode"] == "flat")
             ? true
@@ -228,9 +239,12 @@ class ilRepositoryGUI
 
         // check creation mode
         // determined by "new_type" parameter
-        $new_type = ($_POST["new_type"] != "" && $ilCtrl->getCmd() == "create")
-            ? $_POST["new_type"]
-            : $_GET["new_type"];
+        $new_type = '';
+        if (isset($_POST["new_type"]) && is_string($_POST["new_type"]) && $_POST["new_type"] !== '') {
+            $new_type = $_POST["new_type"];
+        } elseif (isset($_GET["new_type"]) && is_string($_GET["new_type"]) && $_GET["new_type"] !== '') {
+            $new_type = $_GET["new_type"];
+        }
 
         if ($new_type != "" && $new_type != "sty") {
             $this->creation_mode = true;
@@ -240,7 +254,7 @@ class ilRepositoryGUI
 
         // handle frameset command
         $cmd = $this->ctrl->getCmd();
-        if (($cmd == "frameset" || $_GET["rep_frame"] == 1) && $_SESSION["il_rep_mode"] == "tree") {
+        if (($cmd == "frameset" || (isset($_GET["rep_frame"]) && $_GET["rep_frame"] == 1)) && (isset($_SESSION["il_rep_mode"]) && $_SESSION["il_rep_mode"] === "tree")) {
             $next_class = "";
             $cmd = "frameset";
         } elseif ($cmd == "frameset" && $_SESSION["il_rep_mode"] != "tree") {

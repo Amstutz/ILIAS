@@ -115,6 +115,10 @@ class ilObjCourse extends ilContainer implements ilMembershipRegistrationCodes
      */
     private $target_group = '';
 
+    protected $activation_start;
+    protected $activation_end;
+    protected $activation_visibility;
+
 
     /**
     * Constructor
@@ -509,97 +513,19 @@ class ilObjCourse extends ilContainer implements ilMembershipRegistrationCodes
         $a_get_single = 0,
         \ilContainerUserFilter $container_user_filter = null
     ) {
-        global $DIC;
-
-        $ilUser = $DIC['ilUser'];
-        $access = $DIC->access();
-
         // Caching
-        if (is_array($this->items[(int) $a_admin_panel_enabled][(int) $a_include_side_block])) {
+        if (isset($this->items[(int) $a_admin_panel_enabled][(int) $a_include_side_block])) {
             return $this->items[(int) $a_admin_panel_enabled][(int) $a_include_side_block];
         }
-        
+
         // Results are stored in $this->items
         parent::getSubItems($a_admin_panel_enabled, $a_include_side_block, $a_get_single);
-        
-        $limit_sess = false;
-        if (!$a_admin_panel_enabled &&
-            !$a_include_side_block &&
-            $this->items['sess'] &&
-            is_array($this->items['sess']) &&
-            $this->isSessionLimitEnabled() &&
-            $this->getViewMode() == ilContainer::VIEW_SESSIONS) { // #16686
-            $limit_sess = true;
-        }
-        
-        if (!$limit_sess) {
-            return $this->items[(int) $a_admin_panel_enabled][(int) $a_include_side_block];
-        }
-                
-        
-        // do session limit
-    
-        // @todo move to gui class
-        if (isset($_GET['crs_prev_sess'])) {
-            $ilUser->writePref('crs_sess_show_prev_' . $this->getId(), (string) (int) $_GET['crs_prev_sess']);
-        }
-        if (isset($_GET['crs_next_sess'])) {
-            $ilUser->writePref('crs_sess_show_next_' . $this->getId(), (string) (int) $_GET['crs_next_sess']);
-        }
-
-        $session_rbac_checked = [];
-        foreach ($this->items['sess'] as $session_tree_info) {
-            if ($access->checkAccess('visible', '', $session_tree_info['ref_id'])) {
-                $session_rbac_checked[] = $session_tree_info;
-            }
-        }
-        $sessions = ilUtil::sortArray($session_rbac_checked, 'start', 'ASC', true, false);
-        //$sessions = ilUtil::sortArray($this->items['sess'],'start','ASC',true,false);
-        $today = new ilDate(date('Ymd', time()), IL_CAL_DATE);
-        $previous = $current = $next = array();
-        foreach ($sessions as $key => $item) {
-            $start = new ilDateTime($item['start'], IL_CAL_UNIX);
-            $end = new ilDateTime($item['end'], IL_CAL_UNIX);
-            
-            if (ilDateTime::_within($today, $start, $end, IL_CAL_DAY)) {
-                $current[] = $item;
-            } elseif (ilDateTime::_before($start, $today, IL_CAL_DAY)) {
-                $previous[] = $item;
-            } elseif (ilDateTime::_after($start, $today, IL_CAL_DAY)) {
-                $next[] = $item;
-            }
-        }
-        $num_previous_remove = max(
-            count($previous) - $this->getNumberOfPreviousSessions(),
-            0
+        $this->items = ilContainerSessionsContentGUI::prepareSessionPresentationLimitation(
+            $this->items,
+            $this,
+            (bool) $a_admin_panel_enabled,
+            (bool) $a_include_side_block
         );
-        while ($num_previous_remove--) {
-            if (!$ilUser->getPref('crs_sess_show_prev_' . $this->getId())) {
-                array_shift($previous);
-            }
-            $this->items['sess_link']['prev']['value'] = 1;
-        }
-        
-        $num_next_remove = max(
-            count($next) - $this->getNumberOfNextSessions(),
-            0
-        );
-        while ($num_next_remove--) {
-            if (!$ilUser->getPref('crs_sess_show_next_' . $this->getId())) {
-                array_pop($next);
-            }
-            // @fixme
-            $this->items['sess_link']['next']['value'] = 1;
-        }
-        
-        $sessions = array_merge($previous, $current, $next);
-        $this->items['sess'] = $sessions;
-        
-        // #15389 - see ilContainer::getSubItems()
-        include_once('Services/Container/classes/class.ilContainerSorting.php');
-        $sort = ilContainerSorting::_getInstance($this->getId());
-        $this->items[(int) $a_admin_panel_enabled][(int) $a_include_side_block] = $sort->sortItems($this->items);
-        
         return $this->items[(int) $a_admin_panel_enabled][(int) $a_include_side_block];
     }
     
@@ -1931,7 +1857,7 @@ class ilObjCourse extends ilContainer implements ilMembershipRegistrationCodes
         $local_roles = $this->__getLocalRoles();
 
         foreach ($local_roles as $role_id) {
-            if ($tmp_role = &ilObjectFactory::getInstanceByObjId($role_id, false)) {
+            if ($tmp_role = ilObjectFactory::getInstanceByObjId($role_id, false)) {
                 if (!strcmp($tmp_role->getTitle(), "il_crs_tutor_" . $this->getRefId())) {
                     return $role_id;
                 }
@@ -1944,7 +1870,7 @@ class ilObjCourse extends ilContainer implements ilMembershipRegistrationCodes
         $local_roles = $this->__getLocalRoles();
 
         foreach ($local_roles as $role_id) {
-            if ($tmp_role = &ilObjectFactory::getInstanceByObjId($role_id, false)) {
+            if ($tmp_role = ilObjectFactory::getInstanceByObjId($role_id, false)) {
                 if (!strcmp($tmp_role->getTitle(), "il_crs_admin_" . $this->getRefId())) {
                     return $role_id;
                 }
@@ -1974,14 +1900,8 @@ class ilObjCourse extends ilContainer implements ilMembershipRegistrationCodes
      * @access public
      *
      */
-    public function MDUpdateListener($a_element)
+    protected function doMDUpdateListener(string $a_element) : void
     {
-        global $DIC;
-
-        $ilLog = $DIC['ilLog'];
-
-        parent::MDUpdateListener($a_element);
-
         switch ($a_element) {
             case 'General':
                 // Update ecs content
@@ -1989,9 +1909,6 @@ class ilObjCourse extends ilContainer implements ilMembershipRegistrationCodes
                 $ecs = new ilECSCourseSettings($this);
                 $ecs->handleContentUpdate();
                 break;
-                
-            default:
-                return true;
         }
     }
     
@@ -2020,6 +1937,7 @@ class ilObjCourse extends ilContainer implements ilMembershipRegistrationCodes
         switch ($a_mode) {
             case 'create':
             case 'update':
+                $apps = [];
                 if (!$this->getActivationUnlimitedStatus() and !$this->getOfflineStatus()) {
                     $app = new ilCalendarAppointmentTemplate(self::CAL_ACTIVATION_START);
                     $app->setTitle($this->getTitle());
@@ -2100,7 +2018,7 @@ class ilObjCourse extends ilContainer implements ilMembershipRegistrationCodes
                         }
                     }
                 }
-                return $apps ? $apps : array();
+                return $apps;
                 
             case 'delete':
                 // Nothing to do: The category and all assigned appointments will be deleted.

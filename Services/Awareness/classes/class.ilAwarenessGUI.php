@@ -1,13 +1,11 @@
 <?php
 
-/* Copyright (c) 1998-2015 ILIAS open source, Extended GPL, see docs/LICENSE */
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
  * Awareness GUI class
  *
  * @author Alex Killing <alex.killing@gmx.de>
- * @version $Id$
- * @ingroup ServicesAwareness
  */
 class ilAwarenessGUI
 {
@@ -42,7 +40,7 @@ class ilAwarenessGUI
         global $DIC;
         $this->ui = $DIC->ui();
 
-        $this->ref_id = (int) $_GET["ref_id"];
+        $this->ref_id = (int) ($_GET["ref_id"] ?? 0);
         $this->ctrl = $DIC->ctrl();
         $this->lng = $DIC->language();
         $this->lng->loadLanguageModule("awrn");
@@ -88,8 +86,6 @@ class ilAwarenessGUI
         $GLOBALS["tpl"]->addOnloadCode("il.Awareness.init();");
 
         // include user action js
-        include_once("./Services/User/Actions/classes/class.ilUserActionGUI.php");
-        include_once("./Services/Awareness/classes/class.ilAwarenessUserActionContext.php");
         $ua_gui = ilUserActionGUI::getInstance(new ilAwarenessUserActionContext(), $GLOBALS["tpl"], $ilUser->getId());
         $ua_gui->init();
     }
@@ -114,7 +110,6 @@ class ilAwarenessGUI
 
         $tpl = new ilTemplate("tpl.awareness.html", true, true, "Services/Awareness");
 
-        include_once("./Services/Awareness/classes/class.ilAwarenessAct.php");
         $act = ilAwarenessAct::getInstance($ilUser->getId());
         $act->setRefId($this->ref_id);
         var_dump("1");
@@ -180,11 +175,10 @@ class ilAwarenessGUI
     {
         $ilUser = $this->user;
 
-        $filter = $_GET["filter"];
+        $filter = $_GET["filter"] ?? '';
 
         $tpl = new ilTemplate("tpl.awareness_list.html", true, true, "Services/Awareness");
 
-        include_once("./Services/Awareness/classes/class.ilAwarenessAct.php");
         $act = ilAwarenessAct::getInstance($ilUser->getId());
         $act->setRefId($this->ref_id);
 
@@ -252,7 +246,7 @@ class ilAwarenessGUI
             if ($u->public_profile) {
                 $tpl->setVariable("UNAME", $u->lastname . ", " . $u->firstname);
             } else {
-                $tpl->setVariable("UNAME", "&nbsp;");
+                $tpl->setVariable("UNAME", "-");
             }
             $tpl->setVariable("UACCOUNT", $u->login);
 
@@ -263,9 +257,9 @@ class ilAwarenessGUI
             $tpl->parseCurrentBlock();
         }
 
-        include_once("./Services/UIComponent/Glyph/classes/class.ilGlyphGUI.php");
         $tpl->setCurrentBlock("filter");
         $tpl->setVariable("GL_FILTER", ilGlyphGUI::get(ilGlyphGUI::FILTER));
+        $tpl->setVariable("FILTER_INPUT_LABEL", $this->lng->txt("awrn_filter"));
         $tpl->parseCurrentBlock();
 
 

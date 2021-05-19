@@ -48,6 +48,7 @@
 <xsl:param name="img_cell"/>
 <xsl:param name="img_item"/>
 <xsl:param name="img_path"/>
+<xsl:param name="append_footnotes"/>
 <xsl:param name="med_disabled_path"/>
 <xsl:param name="map_item" />
 <xsl:param name="map_mob_id" />
@@ -108,13 +109,9 @@
 			<div data-copg-ed-type="add-area">
 				<xsl:attribute name="data-hierid"><xsl:value-of select="@HierId"/></xsl:attribute>
 				<xsl:attribute name="data-pcid"><xsl:value-of select="@PCID"/></xsl:attribute>
+				<xsl:attribute name="id">add<xsl:value-of select="@PCID"/></xsl:attribute>
 				<xsl:comment>dummy</xsl:comment>
 			</div>
-			<!-- insert menu for drop area -->
-			<xsl:call-template name="EditMenu">
-				<xsl:with-param name="hier_id" select="@HierId" />
-				<xsl:with-param name="droparea">y</xsl:with-param>
-			</xsl:call-template>
 		</xsl:if>
 		<xsl:if test="@HierId != 'pg' or $javascript != 'enable'">
 			<xsl:call-template name="EditMenu">
@@ -129,7 +126,7 @@
 	<div style="clear:both;"><xsl:comment>Break</xsl:comment></div>
 
     <!-- Footnote List -->
-	<xsl:if test="count(//Footnote) > 0">
+	<xsl:if test="count(//Footnote) > 0 and $append_footnotes = 'y'">
 		<hr />
 		<xsl:for-each select="//Footnote">
 			<xsl:choose>
@@ -291,20 +288,22 @@
 	<xsl:if test="$mode = 'edit'">
 		<xsl:variable name="content_type" select="name(./*[1])"/>
 		<div>
+			<xsl:attribute name="id">pc<xsl:value-of select="@PCID"/></xsl:attribute>
 			<xsl:if test="(./MediaObject/MediaAliasItem[@Purpose = 'Standard']/Layout/@HorizontalAlign = 'RightFloat') or
 				(./Map/Layout/@HorizontalAlign = 'RightFloat') or
 				(./Table/@HorizontalAlign = 'RightFloat')">
-				<xsl:attribute name="style"><!--<xsl:if test="./Table/@Width">width:<xsl:value-of select="./Table/@Width"/>;</xsl:if>--> float:right; clear:both; background-color:#FFFFFF;</xsl:attribute>
+				<xsl:attribute name="style"><!--<xsl:if test="./Table/@Width">width:<xsl:value-of select="./Table/@Width"/>;</xsl:if>--> float:right; clear:both; position:relative; z-index:1;</xsl:attribute>
 			</xsl:if>
 			<xsl:if test="(./MediaObject/MediaAliasItem[@Purpose = 'Standard']/Layout/@HorizontalAlign = 'LeftFloat') or
 				(./Map/Layout/@HorizontalAlign = 'LeftFloat') or
 				(./Table/@HorizontalAlign = 'LeftFloat')">
-				<xsl:attribute name="style"><!--<xsl:if test="./Table/@Width">width:<xsl:value-of select="./Table/@Width"/>;</xsl:if>--> float:left; clear:both; background-color:#FFFFFF;</xsl:attribute>
+				<xsl:attribute name="style"><!--<xsl:if test="./Table/@Width">width:<xsl:value-of select="./Table/@Width"/>;</xsl:if>--> float:left; clear:both; position:relative; z-index:1;</xsl:attribute>
 			</xsl:if>
-			<div data-copg-ed-type="pc-area">
+			<div>
 				<xsl:if test="not(../../../@DataTable) or (../../../@DataTable = 'n')">
 					<xsl:if test="$javascript='enable'">
 						<xsl:attribute name="class">il_editarea</xsl:attribute>
+						<xsl:attribute name="data-copg-ed-type">pc-area</xsl:attribute>
 					</xsl:if>
 					<xsl:if test="$javascript!='enable'">
 						<xsl:attribute name="class">il_editarea_nojs</xsl:attribute>
@@ -313,43 +312,33 @@
 						<xsl:attribute name="class">il_editarea_disabled</xsl:attribute>
 					</xsl:if>
 					<xsl:if test="$javascript = 'enable'">
-						<xsl:attribute name="onMouseOver">doMouseOver(this.id, 'il_editarea_active', '<xsl:value-of select="$content_type"/>','<xsl:value-of select="./*[1]/@Characteristic"/>');</xsl:attribute>
-						<xsl:attribute name="onMouseOut">doMouseOut(this.id, 'il_editarea', '<xsl:value-of select="$content_type"/>','<xsl:value-of select="./*[1]/@Characteristic"/>');</xsl:attribute>
-						<xsl:attribute name="onMouseDown">doMouseDown(this.id);</xsl:attribute>
-						<xsl:attribute name="onMouseUp">doMouseUp(this.id);</xsl:attribute>
-						<xsl:attribute name="onClick">doMouseClick(event,this.id,'<xsl:value-of select="$content_type"/>','<xsl:value-of select="./*[1]/@Characteristic"/>');</xsl:attribute>
 					</xsl:if>
 				</xsl:if>
 				<xsl:attribute name="id">CONTENT<xsl:value-of select="@HierId"/>:<xsl:value-of select="@PCID"/></xsl:attribute>
 				<xsl:attribute name="data-hierid"><xsl:value-of select="@HierId"/></xsl:attribute>
 				<xsl:attribute name="data-pcid"><xsl:value-of select="@PCID"/></xsl:attribute>
-				<xsl:attribute name="data-ctype"><xsl:value-of select="$content_type"/></xsl:attribute>
+				<xsl:if test="not(./*[1][@DataTable])">
+					<xsl:attribute name="data-cname"><xsl:value-of select="$content_type"/></xsl:attribute>
+				</xsl:if>
+				<xsl:if test="./*[1][@DataTable]">
+					<xsl:attribute name="data-cname">DataTable</xsl:attribute>
+				</xsl:if>
 				<xsl:attribute name="data-characteristic"><xsl:value-of select="./*[1]/@Characteristic"/></xsl:attribute>
 				<xsl:apply-templates>
 					<xsl:with-param name="par_counter" select ="position()" />
 				</xsl:apply-templates>
 			</div>
-			
-			<!-- drop area -->
-			<xsl:if test="(not(../../../@DataTable) or (../../../@DataTable = 'n')) and ($javascript != 'disable')">
-				<div data-copg-ed-type="add-area">
-					<xsl:attribute name="data-hierid"><xsl:value-of select="@HierId"/></xsl:attribute>
-					<xsl:attribute name="data-pcid"><xsl:value-of select="@PCID"/></xsl:attribute>
-					<xsl:comment>dummy</xsl:comment>
-				</div>
-			</xsl:if>
-	
-			<!-- insert menu for drop area -->
-			<xsl:if test="$mode = 'edit'">
-				<xsl:if test="$javascript='enable'">
-					<xsl:call-template name="EditMenu">
-						<xsl:with-param name="hier_id" select="@HierId" />
-						<xsl:with-param name="droparea">y</xsl:with-param>
-					</xsl:call-template>
-				</xsl:if>
-			</xsl:if>
-		
 		</div>
+		<!-- drop area -->
+		<xsl:if test="(not(../../../@DataTable) or (../../../@DataTable = 'n')) and ($javascript != 'disable')">
+			<div data-copg-ed-type="add-area">
+				<xsl:attribute name="data-hierid"><xsl:value-of select="@HierId"/></xsl:attribute>
+				<xsl:attribute name="data-pcid"><xsl:value-of select="@PCID"/></xsl:attribute>
+				<xsl:attribute name="id">add<xsl:value-of select="@PCID"/></xsl:attribute>
+				<xsl:comment>dummy</xsl:comment>
+			</div>
+		</xsl:if>
+
 	</xsl:if>
 	<xsl:if test="$mode != 'edit' and (not(@Enabled) or @Enabled='True')">
 		<xsl:if test="//PageObject/DivClass/@HierId = current()/@HierId">
@@ -891,15 +880,10 @@
 		<div data-copg-ed-type="add-area">
 			<xsl:attribute name="data-hierid"><xsl:value-of select="@HierId"/></xsl:attribute>
 			<xsl:attribute name="data-pcid"><xsl:value-of select="@PCID"/></xsl:attribute>
+			<xsl:attribute name="id">add<xsl:value-of select="@PCID"/></xsl:attribute>
 			<xsl:comment>dummy</xsl:comment>
 		</div>
 	</xsl:if>
-	<!-- insert menu for drop area -->
-	<xsl:call-template name="EditMenu">
-		<xsl:with-param name="hier_id" select="$hier_id" />
-		<xsl:with-param name="droparea">y</xsl:with-param>
-	</xsl:call-template>
-
 </xsl:template>
 
 <!-- Paragraph -->
@@ -1506,36 +1490,6 @@
 		</tr>
 	</xsl:for-each>
 	</table>
-	<!-- command selectbox -->
-	<xsl:if test="$mode = 'edit'">
-		<xsl:if test="$javascript = 'disable'">
-			<!-- <xsl:value-of select="../@HierId"/> -->
-			<input type="checkbox" name="target[]">
-				<xsl:attribute name="value"><xsl:value-of select="../@HierId"/>:<xsl:value-of select="../@PCID"/>
-				</xsl:attribute>
-			</input>
-			<select size="1" class="ilEditSelect">
-				<xsl:attribute name="name">command<xsl:value-of select="../@HierId"/>
-				</xsl:attribute>
-				<xsl:call-template name="TableMenu">
-					<xsl:with-param name="hier_id" select="../@HierId"/>
-				</xsl:call-template>
-			</select>
-			<input class="ilEditSubmit" type="submit">
-				<xsl:attribute name="value"><xsl:value-of select="//LVs/LV[@name='ed_go']/@value"/></xsl:attribute>
-				<xsl:attribute name="name">cmd[exec_<xsl:value-of select="../@HierId"/>:<xsl:value-of select="../@PCID"/>]</xsl:attribute>
-			</input>
-			<br/>
-		</xsl:if>
-		<xsl:if test="$javascript = 'enable'">
-			<div class="ilOverlay il_editmenu ilNoDisplay">
-				<xsl:attribute name="id">contextmenu_<xsl:value-of select="../@HierId"/></xsl:attribute>
-				<xsl:call-template name="TableMenu">
-					<xsl:with-param name="hier_id" select="../@HierId"/>
-				</xsl:call-template>
-			</div>
-		</xsl:if>
-	</xsl:if>
 </xsl:template>
 
 <!-- Table Tag -->
@@ -1621,39 +1575,7 @@
 		</xsl:if>
 		<!-- insert select list -->
 		<xsl:if test="$mode = 'edit'">
-			<xsl:if test= "$javascript = 'disable'">
-				<select size="1" class="ilEditSelect">
-					<xsl:attribute name="name">command<xsl:value-of select="@HierId"/>
-					</xsl:attribute>
-					<xsl:call-template name="TableDataMenu"/>
-				</select>
-				<input class="ilEditSubmit" type="submit">
-					<xsl:attribute name="value"><xsl:value-of select="//LVs/LV[@name='ed_go']/@value"/></xsl:attribute>
-					<xsl:attribute name="name">cmd[exec_<xsl:value-of select="@HierId"/>:<xsl:value-of select="@PCID"/>]</xsl:attribute>
-				</input>
-				<br/>
-			</xsl:if>
 			<xsl:if test= "$javascript = 'enable'">
-				<xsl:if test = "position() = 1">
-					<xsl:call-template name="Icon">
-						<xsl:with-param name="img_src"><xsl:value-of select="$img_row"/></xsl:with-param>
-						<xsl:with-param name="img_id">CONTENTr<xsl:value-of select="@HierId"/>:<xsl:value-of select="@PCID"/></xsl:with-param>
-					</xsl:call-template>
-					<div class="ilOverlay il_editmenu ilNoDisplay">
-						<xsl:attribute name="id">contextmenu_r<xsl:value-of select="@HierId"/></xsl:attribute>
-						<xsl:call-template name="TableRowMenu"/>
-					</div>
-				</xsl:if>
-				<xsl:if test = "$rowpos = 1">
-					<xsl:call-template name="Icon">
-						<xsl:with-param name="img_src"><xsl:value-of select="$img_col"/></xsl:with-param>
-						<xsl:with-param name="img_id">CONTENTc<xsl:value-of select="@HierId"/>:<xsl:value-of select="@PCID"/></xsl:with-param>
-					</xsl:call-template>
-					<div class="ilOverlay il_editmenu ilNoDisplay">
-						<xsl:attribute name="id">contextmenu_c<xsl:value-of select="@HierId"/></xsl:attribute>
-						<xsl:call-template name="TableColMenu"/>
-					</div>
-				</xsl:if>
 				<xsl:call-template name="DropArea">
 					<xsl:with-param name="hier_id"><xsl:value-of select="@HierId"/></xsl:with-param>
 					<xsl:with-param name="pc_id"><xsl:value-of select="@PCID"/></xsl:with-param>
@@ -1686,116 +1608,6 @@
 	<!-- <xsl:value-of select = "$ttemp" /> -->
 </xsl:template>
 
-<!-- Table Data Menu -->
-<xsl:template name="TableDataMenu">
-
-	<xsl:call-template name="EditMenuInsertItems"/>
-	
-	<xsl:call-template name="TableRowMenu"/>
-	
-	<xsl:call-template name="TableColMenu"/>
-		
-</xsl:template>
-
-<!-- Table Row Menu -->
-<xsl:template name="TableRowMenu">
-	<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">newRowAfter</xsl:with-param>
-	<xsl:with-param name="langvar">ed_new_row_after</xsl:with-param></xsl:call-template>
-
-	<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">newRowBefore</xsl:with-param>
-	<xsl:with-param name="langvar">ed_new_row_before</xsl:with-param></xsl:call-template>
-	
-	<xsl:variable name="ni"><xsl:number from="PageContent" level="single" count="TableRow"/></xsl:variable>
-
-	<xsl:if test= "$ni != 1">
-		<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">moveRowUp</xsl:with-param>
-		<xsl:with-param name="langvar">ed_row_up</xsl:with-param></xsl:call-template>
-	</xsl:if>
-	
-	<xsl:if test= "../../TableRow[number($ni + 1)]">
-		<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">moveRowDown</xsl:with-param>
-		<xsl:with-param name="langvar">ed_row_down</xsl:with-param></xsl:call-template>
-	</xsl:if>
-
-	<xsl:if test= "count(../../TableRow) != 1">
-		<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">deleteRow</xsl:with-param>
-		<xsl:with-param name="langvar">ed_delete_row</xsl:with-param></xsl:call-template>
-	</xsl:if>
-
-</xsl:template>
-
-<!-- Table Col Menu -->
-<xsl:template name="TableColMenu">
-	<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">newColAfter</xsl:with-param>
-	<xsl:with-param name="langvar">ed_new_col_after</xsl:with-param></xsl:call-template>
-
-	<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">newColBefore</xsl:with-param>
-	<xsl:with-param name="langvar">ed_new_col_before</xsl:with-param></xsl:call-template>
-
-	<xsl:variable name="ni"><xsl:number from="TableRow" level="single" count="TableData"/></xsl:variable>
-	
-	<xsl:if test= "$ni != 1">
-		<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">moveColLeft</xsl:with-param>
-		<xsl:with-param name="langvar">ed_col_left</xsl:with-param></xsl:call-template>
-	</xsl:if>
-	
-	<xsl:if test= "../TableData[number($ni + 1)]">
-		<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">moveColRight</xsl:with-param>
-		<xsl:with-param name="langvar">ed_col_right</xsl:with-param></xsl:call-template>
-	</xsl:if>
-
-	<xsl:if test= "count(../TableData) != 1">
-		<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">deleteCol</xsl:with-param>
-			<xsl:with-param name="langvar">ed_delete_col</xsl:with-param></xsl:call-template>
-	</xsl:if>
-</xsl:template>
-
-<!-- Table Menu -->
-<xsl:template name="TableMenu">
-	<xsl:param name="hier_id"/>
-
-	<xsl:if test="@DataTable = 'y'">
-		<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">editData</xsl:with-param>
-		<xsl:with-param name="langvar">ed_edit_data</xsl:with-param></xsl:call-template>
-	</xsl:if>
-
-	<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">edit</xsl:with-param>
-	<xsl:with-param name="langvar">ed_edit_prop</xsl:with-param></xsl:call-template>
-	
-	<xsl:if test = "$javascript = 'disable'">
-		<xsl:call-template name="EditMenuInsertItems"/>
-	</xsl:if>
-	
-	<xsl:call-template name="EditMenuItem"><xsl:with-param name="command">delete</xsl:with-param>
-	<xsl:with-param name="langvar">ed_delete</xsl:with-param></xsl:call-template>
-
-	<xsl:call-template name="EditMenuItem">
-		<xsl:with-param name="command">copy</xsl:with-param>
-		<xsl:with-param name="langvar">ed_copy</xsl:with-param>
-	</xsl:call-template>
-	<xsl:call-template name="EditMenuItem">
-		<xsl:with-param name="command">cut</xsl:with-param>
-		<xsl:with-param name="langvar">ed_cut</xsl:with-param>
-	</xsl:call-template>
-
-	<xsl:if test = "$javascript = 'enable'">
-		<xsl:call-template name="EditMenuItem">
-			<xsl:with-param name="command">deactivate</xsl:with-param>
-			<xsl:with-param name="langvar">de_activate</xsl:with-param>
-		</xsl:call-template>
-	</xsl:if>
-
-	<!-- move menu items -->
-	<xsl:call-template name="MoveMenuItems"/>
-
-	<!-- split page menu items -->
-	<xsl:call-template name="SplitMenuItems">
-		<xsl:with-param name="hier_id" select="$hier_id"/>
-	</xsl:call-template>
-
-	<xsl:call-template name="EditMenuAlignItems"/>
-		
-</xsl:template>
 
 
 <!-- Lists -->
@@ -2914,7 +2726,7 @@
 					(../MediaAliasItem[@Purpose = $curPurpose]/Parameter[@Name = 'autostart']/@Value = 'true' or
 					( not(../MediaAliasItem[@Purpose = $curPurpose]/Parameter) and
 					//MediaObject[@Id=$cmobid]/MediaItem[@Purpose=$curPurpose]/Parameter[@Name = 'autostart']/@Value = 'true'))">
-					<xsl:attribute name="autoplay">true</xsl:attribute>
+					<!-- <xsl:attribute name="autoplay">true</xsl:attribute> -->
 				</xsl:if>
 			</audio>
 		</xsl:when>
@@ -2930,7 +2742,7 @@
 					(../MediaAliasItem[@Purpose = $curPurpose]/Parameter[@Name = 'autostart']/@Value = 'true' or
 					( not(../MediaAliasItem[@Purpose = $curPurpose]/Parameter) and
 					//MediaObject[@Id=$cmobid]/MediaItem[@Purpose=$curPurpose]/Parameter[@Name = 'autostart']/@Value = 'true'))">
-					<xsl:attribute name="autoplay">true</xsl:attribute>
+					<!-- <xsl:attribute name="autoplay">true</xsl:attribute> -->
 				</xsl:if>
 			</audio>
 		</xsl:when>
@@ -2939,7 +2751,7 @@
 		<xsl:when test = "substring-before($data,'.flv') != '' or $type = 'video/mp4' or $type = 'video/webm'">
 			<!-- info on video preload attribute: http://www.stevesouders.com/blog/2013/04/12/html5-video-preload/ -->
 			<!-- see #bug12622 -->
-			<video class="ilPageVideo" controls="controls" preload="none">
+			<video class="ilPageVideo" controls="controls" preload="metadata">
 				<xsl:if test="$width != ''">
 					<xsl:attribute name="width"><xsl:value-of select="$width"/></xsl:attribute>
 				</xsl:if>
@@ -2948,13 +2760,13 @@
 				</xsl:if>
 				<!-- see #bug22632 -->
 				<xsl:if test="$width = '' and $height = ''">
-					<xsl:attribute name="style">max-width: 100%; width: 100%;</xsl:attribute>
+					<xsl:attribute name="style">max-width: 100%; width: 100%; max-height: 100%;</xsl:attribute>
 				</xsl:if>
 				<xsl:if test="$mode != 'edit' and
 					(../MediaAliasItem[@Purpose = $curPurpose]/Parameter[@Name = 'autostart']/@Value = 'true' or
 					( not(../MediaAliasItem[@Purpose = $curPurpose]/Parameter) and
 					//MediaObject[@Id=$cmobid]/MediaItem[@Purpose=$curPurpose]/Parameter[@Name = 'autostart']/@Value = 'true'))">
-					<xsl:attribute name="autoplay">true</xsl:attribute>
+					<!-- <xsl:attribute name="autoplay">true</xsl:attribute> -->
 				</xsl:if>
 				<xsl:choose>
 					<xsl:when test = "$type = 'video/mp4'">
@@ -3329,7 +3141,7 @@
 		<xsl:call-template name="EditLabel"><xsl:with-param name="text"><xsl:value-of select="//LVs/LV[@name='pc_sec']/@value"/> <xsl:if test="@Characteristic"> (<xsl:value-of select="@Characteristic"/>)</xsl:if></xsl:with-param></xsl:call-template>
 		<xsl:if test="($mode = 'edit') or ((not(@ActiveFrom) or (@ActiveFrom &lt; $current_ts)) and (not(@ActiveTo) or (@ActiveTo &gt; $current_ts)))">
 			<xsl:if test="@PermissionRefId">
-				{{{{{Section;Access;PermissionRefId;<xsl:value-of select="@PermissionRefId"/>;Permission;<xsl:value-of select="@Permission"/>}}}}}
+				{{{{{Section;Access;PermissionRefId;<xsl:value-of select="@PermissionRefId"/>;Permission;<xsl:value-of select="@Permission"/>;<xsl:number count="Section" level="any" />}}}}}
 			</xsl:if>
 			<xsl:if test="(./ExtLink or ./IntLink) and not($mode = 'edit')">
 				<a style="display:block;">
@@ -3356,7 +3168,7 @@
 				</div>
 			</xsl:if>
 			<xsl:if test="@PermissionRefId">
-				{{{{{Section;Access}}}}}
+				{{{{{Section;AccessEnd;<xsl:number count="Section" level="any" />}}}}}
 			</xsl:if>
 		</xsl:if>
 	</xsl:template>
@@ -3378,17 +3190,20 @@
 		<xsl:call-template name="EditReturnAnchors"/>
 		<!-- command selectbox -->
 		<xsl:if test="$mode = 'edit'">
-			<xsl:call-template name="DropArea">
-				<xsl:with-param name="hier_id"><xsl:value-of select="@HierId"/></xsl:with-param>
-				<xsl:with-param name="pc_id"><xsl:value-of select="@PCID"/></xsl:with-param>
-			</xsl:call-template>
-		</xsl:if>
-		<xsl:if test="($mode = 'edit')">
 			<xsl:if test="@ActiveFrom or @ActiveTo">
 				<div style="text-align:right;" class="small">{{{{{Section;ActiveFrom;<xsl:value-of select="@ActiveFrom"/>;ActiveTo;<xsl:value-of select="@ActiveTo"/>}}}}}</div>
 			</xsl:if>
+			<div class="copg-edit-container">
+				<xsl:call-template name="DropArea">
+					<xsl:with-param name="hier_id"><xsl:value-of select="@HierId"/></xsl:with-param>
+					<xsl:with-param name="pc_id"><xsl:value-of select="@PCID"/></xsl:with-param>
+				</xsl:call-template>
+				<xsl:apply-templates/>
+			</div>
 		</xsl:if>
-		<xsl:apply-templates/>
+		<xsl:if test="$mode != 'edit'">
+			<xsl:apply-templates/>
+		</xsl:if>
 		<xsl:if test="$mode = 'edit'">
 			<!-- <xsl:value-of select="../@HierId"/> -->
 			<xsl:if test="$javascript='disable'">
@@ -3570,8 +3385,15 @@
 		<xsl:if test="@Type = 'VerticalAccordion' and $cwidth != 'null'">
 			<xsl:attribute name="style">width: <xsl:value-of select="$cwidth" />px; <xsl:value-of select="$halign" /><xsl:if test="$mode='edit'"> background-color:white;</xsl:if></xsl:attribute>
 		</xsl:if>
-		<xsl:if test="@Type = 'Carousel' and $cwidth != 'null'">
-			<xsl:attribute name="style">width: <xsl:value-of select="$cwidth" />px; <xsl:value-of select="$halign" /></xsl:attribute>
+		<xsl:if test="@Type = 'Carousel'">
+			<xsl:choose>
+				<xsl:when test="$cwidth != 'null'">
+					<xsl:attribute name="style">display: grid; width: <xsl:value-of select="$cwidth" />px; <xsl:value-of select="$halign" /></xsl:attribute>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:attribute name="style">display: grid;</xsl:attribute>
+				</xsl:otherwise>
+			</xsl:choose>
 		</xsl:if>
 		<xsl:variable name="cheight">
 			<xsl:choose>
@@ -3605,6 +3427,7 @@
 			<xsl:if test="@Template and //StyleTemplates/StyleTemplate[@Name=$ttemp]/StyleClass[@Type='ca_cntr']/@Value">
 				<xsl:attribute name = "class">ilc_ca_cntr_<xsl:value-of select = "//StyleTemplates/StyleTemplate[@Name=$ttemp]/StyleClass[@Type='ca_cntr']/@Value"/> owl-carousel</xsl:attribute>
 			</xsl:if>
+			<xsl:attribute name="style">overflow: hidden;</xsl:attribute>
 		</xsl:when>
 		</xsl:choose>
 			<xsl:apply-templates select="Tab">
@@ -3765,7 +3588,7 @@
 	</xsl:when>
 	</xsl:choose>
 
-		<div>
+		<div tabindex="0" role="button" aria-expanded="false">
 		<xsl:choose>
 		<xsl:when test="$mode = 'edit' or $mode = 'print' or $compare_mode = 'y'">
 			<xsl:attribute name="class">ilEditVAccordIHead</xsl:attribute>
@@ -3790,42 +3613,6 @@
 		</xsl:when>
 		</xsl:choose>
 		<xsl:attribute name="style"><xsl:if test="$cheight != 'null' and $mode != 'edit' and $mode != 'print' and $compare_mode = 'n' and ../@Type = 'HorizontalAccordion'">height: <xsl:value-of select="$cheight" />px;</xsl:if></xsl:attribute>
-		<xsl:if test="$javascript='disable'">
-			<!-- checkbox -->
-			<!--
-			<input type="checkbox" name="target[]">
-				<xsl:attribute name="value"><xsl:value-of select="@HierId"/>:<xsl:value-of select="@PCID"/>
-				</xsl:attribute>
-			</input>
-			<select size="1" class="ilEditSelect">
-				<xsl:attribute name="name">command<xsl:value-of select="@HierId"/>
-				</xsl:attribute>
-				<xsl:if test = "$javascript = 'disable'">
-					<xsl:call-template name="EditMenuInsertItems"/>
-				</xsl:if>
-				<xsl:call-template name="ListItemMenu"/>
-			</select>
-			<input class="ilEditSubmit" type="submit">
-				<xsl:attribute name="value"><xsl:value-of select="//LVs/LV[@name='ed_go']/@value"/></xsl:attribute>
-				<xsl:attribute name="name">cmd[exec_<xsl:value-of select="@HierId"/>:<xsl:value-of select="@PCID"/>]</xsl:attribute>
-			</input>
-			<br/>-->
-		</xsl:if>
-		<xsl:if test="$javascript = 'enable'">
-		<!--
-			<xsl:call-template name="Icon">
-				<xsl:with-param name="img_id">CONTENTi<xsl:value-of select="@HierId"/>:<xsl:value-of select="@PCID"/></xsl:with-param>
-				<xsl:with-param name="img_src"><xsl:value-of select="$img_item"/></xsl:with-param>
-				<xsl:with-param name="float">y</xsl:with-param>
-			</xsl:call-template>
-			<div style="position:absolute;left:0;top:0;visibility:hidden;">
-				<xsl:attribute name="id">contextmenu_i<xsl:value-of select="@HierId"/></xsl:attribute>
-				<table class="il_editmenu" cellspacing="0" cellpadding="3">
-					<xsl:call-template name="ListItemMenu"/>
-				</table>
-			</div>
-		-->
-		</xsl:if>
 		<div>
 			<xsl:choose>
 			<xsl:when test="$mode = 'edit' or $mode = 'print' or $compare_mode = 'y'">
@@ -3953,15 +3740,13 @@
 				<br/>
 			</xsl:if>
 		</xsl:if>
+		<xsl:comment>Break</xsl:comment>
 	</div>
 </xsl:template>
 
 <!-- GridCell -->
 <xsl:template match="GridCell">
 	<div>
-		<xsl:if test="$mode = 'edit'">
-			<xsl:attribute name="style">border:dashed 1px #C0C0C0;</xsl:attribute>
-		</xsl:if>
 		<xsl:attribute name="class">
 			<xsl:if test="@WIDTH_S != ''"> col-xs-<xsl:value-of select="@WIDTH_S"/></xsl:if>
 			<xsl:if test="@WIDTH_M != ''"> col-sm-<xsl:value-of select="@WIDTH_M"/></xsl:if>
@@ -3971,15 +3756,10 @@
 		</xsl:attribute>
 		<div class="flex-col flex-grow">
 			<xsl:if test="$mode = 'edit'">
+				<xsl:attribute name="class">flex-col flex-grow copg-edit-container</xsl:attribute>
+			</xsl:if>
+			<xsl:if test="$mode = 'edit'">
 				<xsl:call-template name="EditReturnAnchors"/>
-				<xsl:call-template name="Icon">
-					<xsl:with-param name="img_src"><xsl:value-of select="$img_cell"/></xsl:with-param>
-					<xsl:with-param name="img_id">CONTENTg<xsl:value-of select="@HierId"/>:<xsl:value-of select="@PCID"/></xsl:with-param>
-				</xsl:call-template>
-				<div class="ilOverlay il_editmenu ilNoDisplay">
-					<xsl:attribute name="id">contextmenu_g<xsl:value-of select="@HierId"/></xsl:attribute>
-					<xsl:call-template name="GridCellMenu"/>
-				</div>
 			</xsl:if>
 			<!-- insert commands -->
 			<!-- <xsl:value-of select="@HierId"/> -->

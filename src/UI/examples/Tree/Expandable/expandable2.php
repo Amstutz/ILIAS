@@ -1,8 +1,19 @@
 <?php
 declare(strict_types=1);
+namespace ILIAS\UI\examples\Tree\Expandable;
 
 class DataNode
 {
+    /**
+     * @var string
+     */
+    protected $label = "";
+
+    /**
+     * @var array
+     */
+    protected $children = [];
+
     public function __construct(string $label, array $children = [])
     {
         $this->label = $label;
@@ -45,7 +56,7 @@ function expandable2()
         }
     };
 
-    $tree = $f->tree()->expandable($recursion)
+    $tree = $f->tree()->expandable("Label", $recursion)
         ->withData($data);
 
     return $renderer->render($tree);

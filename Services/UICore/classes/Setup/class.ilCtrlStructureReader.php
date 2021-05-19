@@ -14,6 +14,7 @@ class ilCtrlStructureReader
 {
     public $executed;
     public $db = null;
+    protected $read_plugins = false;
 
     public function __construct($a_ini_file = null)
     {
@@ -72,6 +73,10 @@ class ilCtrlStructureReader
 
         // plugin path
         $this->plugin_path = $a_plugin_path;
+
+        if ($this->plugin_path != "" && $this->comp_prefix != "") {
+            $this->read_plugins = true;
+        }
 
         if ($a_dir == "") {
             $a_dir = $this->getILIASAbsolutePath();
@@ -158,7 +163,11 @@ class ilCtrlStructureReader
         $il_absolute_path = $this->getILIASAbsolutePath();
         $data_dir = $this->normalizePath($il_absolute_path . "/data");
         $customizing_dir = $this->normalizePath($il_absolute_path . "/Customizing");
+
         $dir = $this->normalizePath($dir);
+        if ($this->read_plugins) {
+            return $dir != $data_dir;
+        }
         return $dir != $customizing_dir && $dir != $data_dir;
     }
 
@@ -238,8 +247,7 @@ class ilCtrlStructureReader
         }
 
         foreach ($ctrl_structure->getClassScripts() as $class => $script) {
-            $file = substr($script, strlen($start_dir) + 1);
-            
+            $file = substr(realpath($script), strlen(realpath($start_dir)) + 1);
             // store class to file assignment
             $ilDB->manipulate(sprintf(
                 "INSERT INTO ctrl_classfile (class, filename, comp_prefix, plugin_path) " .
@@ -335,7 +343,7 @@ class ilCtrlStructureReader
     // GUI CLASS FINDING
     // ----------------------
 
-    const GUI_CLASS_FILE_REGEXP = "~^.*/class\.(.*GUI)\.php$~i";
+    const GUI_CLASS_FILE_REGEXP = "~^.*[/\\\\]class\.(.*GUI)\.php$~i";
 
     protected function getGUIClassNameFromClassPath(string $path) : ?string
     {
@@ -357,7 +365,7 @@ class ilCtrlStructureReader
     // ILCTRL DECLARATION FINDING
     // ----------------------
 
-    const IL_CTRL_DECLARATION_REGEXP = '~^.*@{WHICH}\s+(\w+)\s*:\s*(\w+(\s*,\s*\w+)*)\s*$~mi';
+    const IL_CTRL_DECLARATION_REGEXP = '~^.*@{WHICH}\s+([\w\\\\]+)\s*:\s*([\w\\\\]+(\s*,\s*[\w\\\\]+)*)\s*$~mi';
 
     /**
      * @return null|(string,string[])

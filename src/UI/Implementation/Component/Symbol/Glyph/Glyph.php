@@ -33,7 +33,7 @@ class Glyph implements C\Symbol\Glyph\Glyph
     private $aria_label;
 
     /**
-     * @var	C\Counter[]
+     * @var	Counter[]
      */
     private $counters;
 
@@ -87,6 +87,11 @@ class Glyph implements C\Symbol\Glyph\Glyph
         , self::LANGUAGE
         , self::LOGIN
         , self::LOGOUT
+        , self::BULLETLIST
+        , self::NUMBEREDLIST
+        , self::LISTINDENT
+        , self::LISTOUTDENT
+        , self::FILTER
         );
 
 

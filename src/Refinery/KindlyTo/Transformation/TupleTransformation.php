@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace ILIAS\Refinery\KindlyTo\Transformation;
 
 use ILIAS\Refinery\DeriveApplyToFromTransform;
+use ILIAS\Refinery\DeriveInvokeFromTransform;
 use ILIAS\Refinery\Transformation;
 use ILIAS\Refinery\ConstraintViolationException;
 
 class TupleTransformation implements Transformation
 {
     use DeriveApplyToFromTransform;
+    use DeriveInvokeFromTransform;
 
     private $transformations;
 
@@ -44,7 +46,7 @@ class TupleTransformation implements Transformation
 
         if ([] === $from) {
             throw new ConstraintViolationException(
-                sprintf('The array "%s" ist empty', $from),
+                sprintf('The array "%s" ist empty', var_export($from, true)),
                 'value_array_is_empty',
                 $from
             ) ;
@@ -79,13 +81,5 @@ class TupleTransformation implements Transformation
                 $countOfValues
             );
         }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function __invoke($from)
-    {
-        return $this->transform($from);
     }
 }

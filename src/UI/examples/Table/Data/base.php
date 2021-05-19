@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+namespace ILIAS\UI\examples\Table\Data;
 
 use ILIAS\UI\Implementation\Component\Table as T;
 use ILIAS\UI\Component\Table as I;
@@ -52,6 +54,8 @@ function base()
 
     // retrieve data and map records to table rows
     $data_retrieval = new class($dummy_records) extends T\DataRetrieval {
+        protected $records;
+
         public function __construct(array $dummy_records)
         {
             $this->records = $dummy_records;

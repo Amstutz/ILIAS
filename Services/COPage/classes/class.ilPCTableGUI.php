@@ -1,18 +1,11 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-require_once("./Services/COPage/classes/class.ilPCTable.php");
-require_once("./Services/COPage/classes/class.ilPageContentGUI.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
- * Class ilPCTableGUI
- *
  * User Interface for Table Editing
  *
  * @author Alex Killing <alex.killing@gmx.de>
- * @version $Id$
- *
- * @ingroup ServicesCOPage
  */
 class ilPCTableGUI extends ilPageContentGUI
 {
@@ -26,6 +19,10 @@ class ilPCTableGUI extends ilPageContentGUI
      */
     protected $user;
 
+    /**
+     * @var \ILIAS\GlobalScreen\ScreenContext\ContextServices
+     */
+    protected $tool_context;
 
     /**
     * Constructor
@@ -42,6 +39,7 @@ class ilPCTableGUI extends ilPageContentGUI
         $this->user = $DIC->user();
         parent::__construct($a_pg_obj, $a_content_obj, $a_hier_id, $a_pc_id);
         $this->setCharacteristics(array("StandardTable" => $this->lng->txt("cont_StandardTable")));
+        $this->tool_context = $DIC->globalScreen()->tool()->context();
     }
 
     /**
@@ -79,7 +77,7 @@ class ilPCTableGUI extends ilPageContentGUI
     /**
     * Set tabs
     */
-    public function setTabs()
+    public function setTabs($data_tab_txt_key = "")
     {
         $ilTabs = $this->tabs;
         $ilCtrl = $this->ctrl;
@@ -89,11 +87,22 @@ class ilPCTableGUI extends ilPageContentGUI
             $lng->txt("pg"),
             $this->ctrl->getParentReturn($this)
         );
-        
+
+        if ($data_tab_txt_key == "") {
+            $data_tab_txt_key = "cont_table_edit_cells";
+        }
+
+        $ilTabs->addTarget(
+            $data_tab_txt_key,
+            $ilCtrl->getLinkTarget($this, "editData"),
+            "editData",
+            get_class($this)
+        );
+
         $ilTabs->addTarget(
             "cont_table_properties",
-            $ilCtrl->getLinkTarget($this, "edit"),
-            "edit",
+            $ilCtrl->getLinkTarget($this, "editProperties"),
+            "editProperties",
             get_class($this)
         );
 
@@ -151,10 +160,15 @@ class ilPCTableGUI extends ilPageContentGUI
         return parent::getTemplateOptions("table");
     }
 
+    public function edit()
+    {
+        $this->ctrl->redirect($this, "editData");
+    }
+
     /**
     * edit properties form
     */
-    public function edit()
+    public function editProperties()
     {
         $ilCtrl = $this->ctrl;
         $lng = $this->lng;
@@ -177,10 +191,8 @@ class ilPCTableGUI extends ilPageContentGUI
     {
         $ilCtrl = $this->ctrl;
         $lng = $this->lng;
-        $tpl = $this->tpl;
         $ilUser = $this->user;
         
-        include_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
         $this->form = new ilPropertyFormGUI();
         $this->form->setFormAction($ilCtrl->getFormAction($this));
         if ($a_mode == "create") {
@@ -234,14 +246,8 @@ class ilPCTableGUI extends ilPageContentGUI
         $spacing = new ilHiddenInputGUI("spacing");
         $spacing->setValue("0px");
         $this->form->addItem($spacing);
-        /*$spacing = new ilTextInputGUI($this->lng->txt("cont_table_cellspacing"), "spacing");
-        $spacing->setValue("0px");
-        $spacing->setSize(6);
-        $spacing->setMaxLength(6);
-        $this->form->addItem($spacing);*/
 
         // table templates and table classes
-        require_once("./Services/Form/classes/class.ilAdvSelectInputGUI.php");
         $char_prop = new ilAdvSelectInputGUI(
             $this->lng->txt("cont_characteristic"),
             "characteristic"
@@ -301,7 +307,6 @@ class ilPCTableGUI extends ilPageContentGUI
 
         if ($a_mode == "create") {
             // first row style
-            require_once("./Services/Form/classes/class.ilAdvSelectInputGUI.php");
             $fr_style = new ilAdvSelectInputGUI(
                 $this->lng->txt("cont_first_row_style"),
                 "first_row_style"
@@ -369,7 +374,6 @@ class ilPCTableGUI extends ilPageContentGUI
         } else {
             $s_lang = $ilUser->getLanguage();
         }
-        require_once("Services/MetaData/classes/class.ilMDLanguageItem.php");
         $lang = ilMDLanguageItem::_getLanguages();
         $language = new ilSelectInputGUI($this->lng->txt("language"), "language");
         $language->setOptions($lang);
@@ -429,7 +433,6 @@ class ilPCTableGUI extends ilPageContentGUI
         $mobs = $this->pg_obj->getMultimediaXML();
         if ($this->getStyleId() > 0) {
             if (ilObject::_lookupType($this->getStyleId()) == "sty") {
-                include_once("./Services/Style/Content/classes/class.ilObjStyleSheet.php");
                 $style = new ilObjStyleSheet($this->getStyleId());
                 $template_xml = $style->getTemplateXML();
             }
@@ -635,13 +638,11 @@ class ilPCTableGUI extends ilPageContentGUI
         $ilTabs->setSubTabActive("cont_style");
         
         // edit form
-        include_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
         $form->setFormAction($ilCtrl->getFormAction($this));
         $form->setTitle($this->lng->txt("cont_table_cell_properties"));
 
         // first row style
-        require_once("./Services/Form/classes/class.ilAdvSelectInputGUI.php");
         $style = new ilAdvSelectInputGUI(
             $this->lng->txt("cont_style"),
             "style"
@@ -828,7 +829,7 @@ class ilPCTableGUI extends ilPageContentGUI
         $this->setProperties();
         $this->updated = $this->pg_obj->update();
         if ($this->updated === true) {
-            $this->ctrl->redirect($this, "edit");
+            $this->ctrl->redirect($this, "editProperties");
         //$this->ctrl->returnToParent($this, "jump".$this->hier_id);
         } else {
             $this->pg_obj->addHierIDs();
@@ -991,7 +992,6 @@ class ilPCTableGUI extends ilPageContentGUI
         $ilTabs->setTabActive("cont_table_cell_properties");
 
         // edit form
-        include_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
         $form->setFormAction($ilCtrl->getFormAction($this));
         $form->setTitle($this->lng->txt("cont_table_cell_properties"));
@@ -1040,5 +1040,179 @@ class ilPCTableGUI extends ilPageContentGUI
         ilUtil::sendSuccess($lng->txt("msg_obj_modified"), true);
 
         $this->ctrl->redirect($this, "editCellAlignment");
+    }
+
+    /**
+     * Set editor tool context
+     */
+    protected function setEditorToolContext()
+    {
+        $collection = $this->tool_context->current()->getAdditionalData();
+        if ($collection->exists(ilCOPageEditGSToolProvider::SHOW_EDITOR)) {
+            $collection->replace(ilCOPageEditGSToolProvider::SHOW_EDITOR, true);
+        } else {
+            $collection->add(ilCOPageEditGSToolProvider::SHOW_EDITOR, true);
+        }
+    }
+
+    /**
+     * Edit data of table
+     */
+    public function editData()
+    {
+        $this->setEditorToolContext();
+
+        $this->setTabs();
+
+        $this->displayValidationError();
+
+        $editor_init = new \ILIAS\COPage\Editor\UI\Init();
+        $editor_init->initUI($this->tpl);
+
+        $this->tpl->setContent($this->getEditDataTable(true));
+    }
+
+    public function getEditDataTable($initial = false)
+    {
+        $ilCtrl = $this->ctrl;
+
+        $dtpl = new ilTemplate("tpl.tabledata2.html", true, true, "Services/COPage");
+        $dtpl->setVariable("FORMACTION", $this->ctrl->getFormAction($this, "tableAction"));
+        $dtpl->setVariable("HIERID", $this->hier_id);
+        $dtpl->setVariable("PCID", $this->pc_id);
+
+        $dtpl->setVariable(
+            "WYSIWYG_ACTION",
+            $ilCtrl->getFormAction($this, "updateJS")
+        );
+
+        // get all rows
+        $xpc = xpath_new_context($this->dom);
+        $path = "//PageContent[@HierId='" . $this->getHierId() . "']" .
+            "/Table/TableRow";
+        $res = xpath_eval($xpc, $path);
+
+        for ($i = 0; $i < count($res->nodeset); $i++) {
+            $xpc2 = xpath_new_context($this->dom);
+            $path2 = "//PageContent[@HierId='" . $this->getHierId() . "']" .
+                "/Table/TableRow[$i+1]/TableData";
+            $res2 = xpath_eval($xpc2, $path2);
+
+            // if this is the first row -> col icons
+            if ($i == 0) {
+                for ($j = 0; $j < count($res2->nodeset); $j++) {
+                    if ($j == 0) {
+                        $dtpl->touchBlock("empty_td");
+                    }
+
+                    $move_forward = false;
+                    $move_backward = false;
+                    if ($j == 0) {
+                        if (count($res2->nodeset) == 1) {
+                            //
+                        } else {
+                            $move_forward = true;
+                        }
+                    } elseif ($j == (count($res2->nodeset) - 1)) {
+                        $move_backward = true;
+                    } else {
+                        $move_forward = true;
+                        $move_backward = true;
+                    }
+                    $dtpl->setCurrentBlock("col_icon");
+                    $dtpl->setVariable("NR_COLUMN", $j + 1);
+                    $dtpl->setVariable("PCID_COLUMN", $res2->nodeset[$j]->get_attribute("PCID"));
+                    $dtpl->setVariable("COLUMN_CAPTION", $j + 1);
+                    $dtpl->parseCurrentBlock();
+                }
+                $dtpl->setCurrentBlock("row");
+                $dtpl->parseCurrentBlock();
+            }
+
+
+            for ($j = 0; $j < count($res2->nodeset); $j++) {
+                // first col: row icons
+                if ($j == 0) {
+                    if ($i == 0) {
+                        if (count($res->nodeset) == 1) {
+                            $move_type = "none";
+                        } else {
+                            $move_type = "forward";
+                        }
+                    } elseif ($i == (count($res->nodeset) - 1)) {
+                        $move_type = "backward";
+                    } else {
+                        $move_type = "both";
+                    }
+                    $dtpl->setCurrentBlock("row_icon");
+                    $dtpl->setVariable("NR_ROW", $i + 1);
+                    $dtpl->setVariable("PCID_ROW", $res2->nodeset[$j]->get_attribute("PCID"));
+                    $dtpl->setVariable("ROW_CAPTION", $i + 1);
+                    $dtpl->parseCurrentBlock();
+                }
+
+                // cell
+                if ($res2->nodeset[$j]->get_attribute("Hidden") != "Y") {
+                    if ($this->content_obj->getType() == "dtab") {
+                        $dtpl->touchBlock("cell_type");
+                        //$dtpl->setCurrentBlock("cell_type");
+                        //$dtpl->parseCurrentBlock();
+                    }
+
+                    $dtpl->setCurrentBlock("cell");
+
+                    if (isset($_POST["cmd"]) && is_array($_POST["cmd"]) && key($_POST["cmd"]) == "update") {
+                        $s_text = ilUtil::stripSlashes("cell_" . $i . "_" . $j, false);
+                    } else {
+                        $s_text = ilPCParagraph::xml2output(
+                            $this->content_obj->getCellText($i, $j),
+                            true,
+                            false
+                        );
+                        $s_text = ilPCParagraphGUI::xml2outputJS(
+                            $s_text,
+                            "TableContent",
+                            $this->content_obj->readPCId() . "_" . $i . "_" . $j
+                        );
+                    }
+
+                    // #20628
+                    $s_text = str_replace("{", "&#123;", $s_text);
+                    $s_text = str_replace("}", "&#125;", $s_text);
+
+                    $dtpl->setVariable("PAR_TA_NAME", "cell[" . $i . "][" . $j . "]");
+                    $dtpl->setVariable("PAR_TA_ID", "cell_" . $i . "_" . $j);
+                    $dtpl->setVariable("PAR_ROW", (string) $i);
+                    $dtpl->setVariable("PAR_COLUMN", (string) $j);
+
+                    $dtpl->setVariable("PAR_TA_CONTENT", $s_text);
+
+                    $cs = $res2->nodeset[$j]->get_attribute("ColSpan");
+                    $rs = $res2->nodeset[$j]->get_attribute("RowSpan");
+                    $dtpl->setVariable("WIDTH", "140");
+                    $dtpl->setVariable("HEIGHT", "80");
+                    if ($cs > 1) {
+                        $dtpl->setVariable("COLSPAN", 'colspan="' . $cs . '"');
+                        $dtpl->setVariable("WIDTH", (140 + ($cs - 1) * 146));
+                    }
+                    if ($rs > 1) {
+                        $dtpl->setVariable("ROWSPAN", 'rowspan="' . $rs . '"');
+                        $dtpl->setVariable("HEIGHT", (80 + ($rs - 1) * 86));
+                    }
+                    $dtpl->parseCurrentBlock();
+                }
+            }
+            $dtpl->setCurrentBlock("row");
+            $dtpl->parseCurrentBlock();
+        }
+
+
+        $dtpl->setVariable("TXT_ACTION", $this->lng->txt("cont_table"));
+
+        if ($initial) {
+            $dtpl->touchBlock("script");
+        }
+
+        return $dtpl->get();
     }
 }

@@ -51,7 +51,7 @@ class ilAwarenessMetaBarProvider extends AbstractStaticMetaBarProvider implement
         $now = time();
 
         $act = ilAwarenessAct::getInstance($ilUser->getId());
-        $act->setRefId((int) $_GET["ref_id"]);
+        $act->setRefId((int) ($_GET["ref_id"] ?? 0));
         if ($last_update == "" || ($now - $last_update) >= $cache_period) {
             $cnt = explode(":", $act->getAwarenessUserCounter());
             $hcnt = $cnt[1];
@@ -103,7 +103,7 @@ class ilAwarenessMetaBarProvider extends AbstractStaticMetaBarProvider implement
                 ->withCounter($f->counter()->status((int) $cnt))
                 ->withCounter($f->counter()->novelty((int) $hcnt))
             )
-            ->withTitle("Who is online")
+            ->withTitle($this->dic->language()->txt("awra"))
             ->withPosition(2)
             ->withAvailableCallable(
                 function () use ($DIC, $online) {

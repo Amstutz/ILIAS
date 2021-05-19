@@ -371,15 +371,15 @@ abstract class ilMailNotification
     /**
      * @return ilMail
      */
-    protected function initMail()
+    protected function initMail() : ilMail
     {
         return $this->mail = new ilMail($this->getSender());
     }
 
     /**
-     * @return ilMail|null
+     * @return ilMail
      */
-    protected function getMail()
+    protected function getMail() : ilMail
     {
         return is_object($this->mail) ? $this->mail : $this->initMail();
     }
@@ -436,12 +436,13 @@ abstract class ilMailNotification
                 !$DIC->access()->checkAccessOfUser($a_user_id, $a_permission, "", $a_ref_id, $this->getObjType())) {
                 return false;
             }
-        } else {
-            if (trim($a_permission) &&
-                !$this->wsp_access_handler->checkAccessOfUser($this->wsp_tree, $a_user_id, $a_permission, "", $a_ref_id, $this->getObjType())) {
-                return false;
-            }
+        } elseif (
+            trim($a_permission) &&
+            !$this->wsp_access_handler->checkAccessOfUser($this->wsp_tree, $a_user_id, $a_permission, "", $a_ref_id, $this->getObjType())
+        ) {
+            return false;
         }
+
         return true;
     }
     

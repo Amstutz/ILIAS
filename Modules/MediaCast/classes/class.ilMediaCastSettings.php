@@ -1,37 +1,25 @@
 <?php
-/*
-    +-----------------------------------------------------------------------------+
-    | ILIAS open source                                                           |
-    +-----------------------------------------------------------------------------+
-    | Copyright (c) 1998-2006 ILIAS open source, University of Cologne            |
-    |                                                                             |
-    | This program is free software; you can redistribute it and/or               |
-    | modify it under the terms of the GNU General Public License                 |
-    | as published by the Free Software Foundation; either version 2              |
-    | of the License, or (at your option) any later version.                      |
-    |                                                                             |
-    | This program is distributed in the hope that it will be useful,             |
-    | but WITHOUT ANY WARRANTY; without even the implied warranty of              |
-    | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the               |
-    | GNU General Public License for more details.                                |
-    |                                                                             |
-    | You should have received a copy of the GNU General Public License           |
-    | along with this program; if not, write to the Free Software                 |
-    | Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. |
-    +-----------------------------------------------------------------------------+
-*/
+
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* Stores all mediacast relevant settings.
-*
-* @author Roland Küstermann <rkuestermann@mps.de>
-* @version $Id$
-*
-*
-* @ingroup ModulesMediaCast
-*/
+ * Stores all mediacast relevant settings.
+ *
+ * @author Roland Küstermann <rkuestermann@mps.de>
+ */
 class ilMediaCastSettings
 {
+    private $supported_suffixes = ["mp4", "mp3", "jpg", "jpeg", "png", "gif", "svg"];
+    private $supported_mime_types = [
+        "video/mp4" => "video/mp4",
+        "audio/mpeg" => "audio/mpeg",
+        "image/jpeg" => "image/jpeg",
+        "image/png" => "image/png",
+        "image/gif" => "image/gif",
+        "image/svg+xml" => "image/svg+xml"
+    ];
+
+
     private static $instance = null;
     private $defaultAccess = "users";
     private $purposeSuffixes = array();
@@ -138,12 +126,21 @@ class ilMediaCastSettings
     {
         foreach ($this->purposeSuffixes as $purpose => $filetypes) {
             if ($this->storage->get($purpose . "_types") != false) {
-                $this->purposeSuffixes[$purpose] = explode(",", $this->storage->get($purpose . "_types"));
+                $sf = explode(",", $this->storage->get($purpose . "_types"));
+                $sf = array_filter($sf, function ($c) {
+                    return in_array($c, $this->supported_suffixes);
+                });
+                $this->purposeSuffixes[$purpose] = $sf;
             }
         }
         $this->setDefaultAccess($this->storage->get("defaultaccess"));
         if ($this->storage->get("mimetypes")) {
-            $this->setMimeTypes(explode(",", $this->storage->get("mimetypes")));
+            $mt = explode(",", $this->storage->get("mimetypes"));
+            $mt = array_filter($mt, function ($c) {
+                return in_array($c, $this->supported_mime_types);
+            });
+
+            $this->setMimeTypes($mt);
         }
     }
     
@@ -154,18 +151,13 @@ class ilMediaCastSettings
      */
     private function initStorage()
     {
-        include_once('./Services/Administration/classes/class.ilSetting.php');
         $this->storage = new ilSetting('mcst');
-        include_once('./Modules/MediaCast/classes/class.ilObjMediaCast.php');
         $this->purposeSuffixes = array_flip(ilObjMediaCast::$purposes);
                
-        $this->purposeSuffixes["Standard"] = array("mp3","flv","mp4","mov","wmv","gif","png", "jpg", "jpeg");
-        $this->purposeSuffixes["AudioPortable"] = array("mp3");
-        $this->purposeSuffixes["VideoPortable"] = array("mp4","mov");
+        $this->purposeSuffixes["Standard"] = $this->supported_suffixes;
         $this->setDefaultAccess("users");
-        include_once("./Services/Utilities/classes/class.ilMimeTypeUtil.php");
         $mimeTypes = array_unique(array_values(ilMimeTypeUtil::getExt2MimeMap()));
         sort($mimeTypes);
-        $this->setMimeTypes($mimeTypes);
+        $this->setMimeTypes($this->supported_mime_types);
     }
 }

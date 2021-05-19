@@ -23,6 +23,11 @@ abstract class ilAdvancedMDFieldDefinition
     protected $required; // [bool]
     protected $adt_def; // [ilADTDefinition]
     protected $adt; // [ilADT]
+
+    /**
+     * @var string
+     */
+    protected $language = '';
     
     const TYPE_SELECT = 1;
     const TYPE_TEXT = 2;
@@ -37,13 +42,26 @@ abstract class ilAdvancedMDFieldDefinition
     const TYPE_INTERNAL_LINK = 10;
 
     /**
+     * @var ilLogger
+     */
+    protected $logger;
+
+    /**
      * Constructor
      *
      * @param init $a_field_id
      * @return self
      */
-    public function __construct($a_field_id = null)
+    public function __construct($a_field_id = null, string $language = '')
     {
+        global $DIC;
+
+        $this->language = $DIC->language()->getLangKey();
+        $this->logger = $DIC->logger()->amet();
+        if ($language) {
+            $this->language = $language;
+        }
+
         $this->init();
         $this->read($a_field_id);
     }
@@ -55,7 +73,7 @@ abstract class ilAdvancedMDFieldDefinition
      * @param int $a_type
      * @return self
      */
-    public static function getInstance($a_field_id, $a_type = null)
+    public static function getInstance($a_field_id, $a_type = null, string $language = '')
     {
         global $DIC;
 
@@ -72,7 +90,7 @@ abstract class ilAdvancedMDFieldDefinition
         if (self::isValidType($a_type)) {
             $class = "ilAdvancedMDFieldDefinition" . self::getTypeString($a_type);
             require_once "Services/AdvancedMetaData/classes/Types/class." . $class . ".php";
-            return new $class($a_field_id);
+            return new $class($a_field_id, $language);
         }
         
         throw new ilException("unknown type " . $a_type);
@@ -133,7 +151,7 @@ abstract class ilAdvancedMDFieldDefinition
      * @param bool $a_only_searchable
      * @return array self
      */
-    public static function getInstancesByRecordId($a_record_id, $a_only_searchable = false)
+    public static function getInstancesByRecordId($a_record_id, $a_only_searchable = false, string $language = '')
     {
         global $DIC;
 
@@ -149,7 +167,7 @@ abstract class ilAdvancedMDFieldDefinition
         $query .= " ORDER BY position";
         $set = $ilDB->query($query);
         while ($row = $ilDB->fetchAssoc($set)) {
-            $field = self::getInstance(null, $row["field_type"]);
+            $field = self::getInstance(null, $row["field_type"], $language);
             $field->import($row);
             $defs[$row["field_id"]] = $field;
         }
@@ -285,7 +303,7 @@ abstract class ilAdvancedMDFieldDefinition
             self::TYPE_ADDRESS
         );
     }
-    
+
     /**
      * Is given type valid
      *
@@ -328,6 +346,19 @@ abstract class ilAdvancedMDFieldDefinition
             );
             return $map[$a_type];
         }
+    }
+
+    /**
+     * Check if default language mode has to be used: no language given or language equals default language
+     * @param string $language
+     */
+    public function useDefaultLanguageMode(string $language)
+    {
+        if (!strlen($language)) {
+            return true;
+        }
+        $record = ilAdvancedMDRecord::_getInstanceByRecordId($this->record_id);
+        return strcmp($record->getDefaultLanguage(), $language) === 0;
     }
     
     /**
@@ -619,7 +650,7 @@ abstract class ilAdvancedMDFieldDefinition
      *
      * @return array
      */
-    public function getFieldDefinitionForTableGUI()
+    public function getFieldDefinitionForTableGUI(string $content_language)
     {
         // type-specific properties
     }
@@ -630,18 +661,18 @@ abstract class ilAdvancedMDFieldDefinition
      * @param ilPropertyFormGUI $a_form
      * @param bool $a_disabled
      */
-    protected function addCustomFieldToDefinitionForm(ilPropertyFormGUI $a_form, $a_disabled = false)
+    protected function addCustomFieldToDefinitionForm(ilPropertyFormGUI $a_form, $a_disabled = false, string $language = '')
     {
         // type-specific
     }
-    
+
     /**
      * Add input elements to definition form
-     *
-     * @param ilPropertyFormGUI $a_form
-     * @param ilAdvancedMDPermissionHelper $a_form
+     * @param ilPropertyFormGUI            $a_form
+     * @param ilAdvancedMDPermissionHelper $a_permissions
+     * @param string                       $language
      */
-    public function addToFieldDefinitionForm(ilPropertyFormGUI $a_form, ilAdvancedMDPermissionHelper $a_permissions)
+    public function addToFieldDefinitionForm(ilPropertyFormGUI $a_form, ilAdvancedMDPermissionHelper $a_permissions, string $language = '')
     {
         global $DIC;
 
@@ -663,11 +694,21 @@ abstract class ilAdvancedMDFieldDefinition
         );
                 
         // title
+        $translations = ilAdvancedMDFieldTranslations::getInstanceByRecordId($this->getRecordId());
+
         $title = new ilTextInputGUI($lng->txt('title'), 'title');
         $title->setValue($this->getTitle());
         $title->setSize(20);
         $title->setMaxLength(70);
         $title->setRequired(true);
+        if ($this->getFieldId()) {
+            $translations->modifyTranslationInfoForTitle($this->getFieldId(), $a_form, $title, $language);
+        }
+        else {
+            $title->setValue($this->getTitle());
+        }
+
+
         $a_form->addItem($title);
         
         if (!$perm[ilAdvancedMDPermissionHelper::ACTION_FIELD_EDIT_PROPERTY][ilAdvancedMDPermissionHelper::SUBACTION_FIELD_TITLE]) {
@@ -679,7 +720,15 @@ abstract class ilAdvancedMDFieldDefinition
         $desc->setValue($this->getDescription());
         $desc->setRows(3);
         $desc->setCols(50);
+        if ($this->getFieldId()) {
+            $translations->modifyTranslationInfoForDescription($this->getFieldId(), $a_form, $desc, $language);
+        }
+        else {
+            $desc->setValue($this->getDescription());
+        }
+
         $a_form->addItem($desc);
+
         
         if (!$perm[ilAdvancedMDPermissionHelper::ACTION_FIELD_EDIT_PROPERTY][ilAdvancedMDPermissionHelper::SUBACTION_FIELD_DESCRIPTION]) {
             $desc->setDisabled(true);
@@ -705,16 +754,17 @@ abstract class ilAdvancedMDFieldDefinition
         
         $this->addCustomFieldToDefinitionForm(
             $a_form,
-            !$perm[ilAdvancedMDPermissionHelper::ACTION_FIELD_EDIT_PROPERTY][ilAdvancedMDPermissionHelper::SUBACTION_FIELD_PROPERTIES]
+            !$perm[ilAdvancedMDPermissionHelper::ACTION_FIELD_EDIT_PROPERTY][ilAdvancedMDPermissionHelper::SUBACTION_FIELD_PROPERTIES],
+            $language
         );
     }
-    
+
     /**
      * Import custom post values from definition form
-     *
      * @param ilPropertyFormGUI $a_form
+     * @param string            $language
      */
-    public function importCustomDefinitionFormPostValues(ilPropertyFormGUI $a_form)
+    public function importCustomDefinitionFormPostValues(ilPropertyFormGUI $a_form, string $language = '')
     {
         // type-specific
     }
@@ -725,12 +775,14 @@ abstract class ilAdvancedMDFieldDefinition
      * @param ilPropertyFormGUI $a_form
      * @param ilAdvancedMDPermissionHelper $a_permissions
      */
-    public function importDefinitionFormPostValues(ilPropertyFormGUI $a_form, ilAdvancedMDPermissionHelper $a_permissions)
+    public function importDefinitionFormPostValues(ilPropertyFormGUI $a_form, ilAdvancedMDPermissionHelper $a_permissions, string $active_language)
     {
-        if (!$a_form->getItemByPostVar("title")->getDisabled()) {
+        $record = ilAdvancedMDRecord::_getInstanceByRecordId($this->record_id);
+        $is_translation = (($active_language !== '') && ($active_language != $record->getDefaultLanguage()));
+        if (!$a_form->getItemByPostVar("title")->getDisabled() && !$is_translation) {
             $this->setTitle($a_form->getInput("title"));
         }
-        if (!$a_form->getItemByPostVar("description")->getDisabled()) {
+        if (!$a_form->getItemByPostVar("description")->getDisabled() && !$is_translation) {
             $this->setDescription($a_form->getInput("description"));
         }
         if (!$a_form->getItemByPostVar("searchable")->getDisabled()) {
@@ -743,7 +795,7 @@ abstract class ilAdvancedMDFieldDefinition
             ilAdvancedMDPermissionHelper::ACTION_FIELD_EDIT_PROPERTY,
             ilAdvancedMDPermissionHelper::SUBACTION_FIELD_PROPERTIES
         )) {
-            $this->importCustomDefinitionFormPostValues($a_form);
+            $this->importCustomDefinitionFormPostValues($a_form, $active_language);
         }
     }
     
@@ -977,6 +1029,16 @@ abstract class ilAdvancedMDFieldDefinition
         
         $a_writer->xmlElement('FieldTitle', null, $this->getTitle());
         $a_writer->xmlElement('FieldDescription', null, $this->getDescription());
+
+        $translations = ilAdvancedMDFieldTranslations::getInstanceByRecordId($this->getRecordId());
+        $a_writer->xmlStartTag('FieldTranslations');
+        foreach ($translations->getTranslations($this->getFieldId()) as $translation) {
+            $a_writer->xmlStartTag('FieldTranslation', ['language' => $translation->getLangKey()]);
+            $a_writer->xmlElement('FieldTranslationTitle', [], (string) $translation->getTitle());
+            $a_writer->xmlElement('FieldTranslationDescription',[], (string) $translation->getDescription());
+            $a_writer->xmlEndTag('FieldTranslation');
+        }
+        $a_writer->xmlEndTag('FieldTranslations');
         $a_writer->xmlElement('FieldPosition', null, $this->getPosition());
         
         $this->addPropertiesToXML($a_writer);
@@ -1160,7 +1222,6 @@ abstract class ilAdvancedMDFieldDefinition
     public function searchObjects(ilADTSearchBridge $a_adt_search, ilQueryParser $a_parser, array $a_object_types, $a_locate, $a_search_type)
     {
         // search type only supported/needed for text
-        
         include_once('Services/ADT/classes/ActiveRecord/class.ilADTActiveRecordByType.php');
         $condition = $a_adt_search->getSQLCondition(ilADTActiveRecordByType::SINGLE_COLUMN_NAME);
         if ($condition) {

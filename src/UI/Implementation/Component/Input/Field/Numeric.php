@@ -6,6 +6,7 @@ docs/LICENSE */
 namespace ILIAS\UI\Implementation\Component\Input\Field;
 
 use ILIAS\Data\Factory as DataFactory;
+use ILIAS\Refinery\Transformation;
 use ILIAS\UI\Component as C;
 use ILIAS\UI\Component\Signal;
 
@@ -14,12 +15,15 @@ use ILIAS\UI\Component\Signal;
  */
 class Numeric extends Input implements C\Input\Field\Numeric
 {
+    /**
+     * @var bool
+     */
+    private $complex = false;
 
     /**
      * Numeric constructor.
      *
      * @param DataFactory $data_factory
-     * @param ValidationFactory $validation_factory
      * @param \ILIAS\Refinery\Factory $refinery
      * @param             $label
      * @param             $byline
@@ -31,17 +35,20 @@ class Numeric extends Input implements C\Input\Field\Numeric
         $byline
     ) {
         parent::__construct($data_factory, $refinery, $label, $byline);
-        $this->setAdditionalTransformation(
-            $this->refinery->logical()->logicalOr([
-                $this->refinery->numeric()->isNumeric(),
-                $this->refinery->null()
-            ])
-            ->withProblemBuilder(function ($txt, $value) {
-                return $txt("ui_numeric_only");
-            })
-        );
-    }
 
+        /**
+         * @var $trafo_numericOrNull Transformation
+         */
+        $trafo_numericOrNull = $this->refinery->byTrying([
+            $this->refinery->kindlyTo()->null(),
+            $this->refinery->kindlyTo()->int()
+        ])
+        ->withProblemBuilder(function ($txt, $value) {
+            return $txt("ui_numeric_only");
+        });
+
+        $this->setAdditionalTransformation($trafo_numericOrNull);
+    }
 
     /**
      * @inheritdoc
@@ -51,13 +58,12 @@ class Numeric extends Input implements C\Input\Field\Numeric
         return is_numeric($value) || $value === "" || $value === null;
     }
 
-
     /**
      * @inheritdoc
      */
     protected function getConstraintForRequirement()
     {
-        return $this->refinery->numeric()->isNumeric();
+        return $this->refinery->kindlyTo()->int();
     }
 
     /**
@@ -72,5 +78,13 @@ class Numeric extends Input implements C\Input\Field\Numeric
 			il.UI.input.onFieldUpdate(event, '$id', $('#$id').val());";
             return $code;
         };
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function isComplex() : bool
+    {
+        return $this->complex;
     }
 }

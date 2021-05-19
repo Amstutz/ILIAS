@@ -1,4 +1,7 @@
 <?php
+declare(strict_types=1);
+namespace ILIAS\UI\examples\Modal\Interruptive;
+
 function show_modal_on_button_click()
 {
     global $DIC;
@@ -21,7 +24,7 @@ function show_modal_on_button_click()
     $out = [$button, $modal];
 
     // Display POST data of affected items in a panel
-    if (isset($_POST['interruptive_items']) && @$_GET['modal_nr'] === '1') {
+    if (isset($_POST['interruptive_items']) && $_GET['modal_nr'] === '1') {
         $panel = $factory->panel()->standard(
             'Affected Items',
             $factory->legacy(print_r($_POST['interruptive_items'], true))

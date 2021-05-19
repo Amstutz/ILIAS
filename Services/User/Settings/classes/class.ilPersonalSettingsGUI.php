@@ -74,16 +74,6 @@ class ilPersonalSettingsGUI
                 $this->ctrl->forwardCommand(new ilMailOptionsGUI());
                 break;
 
-            case 'ilpersonalchatsettingsformgui':
-                $this->__initSubTabs($this->ctrl->getCmd());
-                $this->setHeader();
-
-                $DIC->tabs()->activateTab('chat_settings');
-
-                $chatSettingsGui = new ilPersonalChatSettingsFormGUI();
-                $this->ctrl->forwardCommand($chatSettingsGui);
-                break;
-
             default:
                 $cmd = $this->ctrl->getCmd("showGeneralSettings");
                 $this->$cmd();
@@ -145,16 +135,6 @@ class ilPersonalSettingsGUI
                 $this->ctrl->getLinkTargetByClass('ilMailOptionsGUI'),
                 "",
                 array('ilMailOptionsGUI')
-            );
-        }
-
-        $chatSettingsGui = new ilPersonalChatSettingsFormGUI();
-        if ($chatSettingsGui->isAccessible()) {
-            $ilTabs->addTarget(
-                'chat_settings',
-                $this->ctrl->getLinkTarget($chatSettingsGui, 'showChatOptions'),
-                '',
-                ['ilPersonalChatSettingsFormGUI']
             );
         }
 
@@ -242,11 +222,14 @@ class ilPersonalSettingsGUI
             //if (
             //	($ilUser->getAuthMode(true) != AUTH_SHIBBOLETH || !$ilSetting->get("shib_auth_allow_local"))
             //)
+            $pw_info_set = false;
             if ($ilUser->getAuthMode(true) == AUTH_LOCAL) {
                 // current password
                 $cpass = new ilPasswordInputGUI($lng->txt("current_password"), "current_password");
+                $cpass->setInfo(ilUtil::getPasswordRequirementsInfo());
                 $cpass->setRetype(false);
                 $cpass->setSkipSyntaxCheck(true);
+                $pw_info_set = true;
                 // only if a password exists.
                 if ($ilUser->getPasswd()) {
                     $cpass->setRequired(true);
@@ -256,8 +239,10 @@ class ilPersonalSettingsGUI
             
             // new password
             $ipass = new ilPasswordInputGUI($lng->txt("desired_password"), "new_password");
+            if($pw_info_set === false) {
+                $ipass->setInfo(ilUtil::getPasswordRequirementsInfo());
+            }
             $ipass->setRequired(true);
-            $ipass->setInfo(ilUtil::getPasswordRequirementsInfo());
 
             $this->form->addItem($ipass);
             $this->form->addCommandButton("savePassword", $lng->txt("save"));
@@ -861,7 +846,6 @@ class ilPersonalSettingsGUI
         $this->__initSubTabs("deleteOwnAccount");
         $ilTabs->activateTab("delacc");
         
-        include_once "Services/Utilities/classes/class.ilConfirmationGUI.php";
         $cgui = new ilConfirmationGUI();
         $cgui->setHeaderText($this->lng->txt('user_delete_own_account_logout_confirmation'));
         $cgui->setFormAction($this->ctrl->getFormAction($this));
@@ -922,7 +906,6 @@ class ilPersonalSettingsGUI
         $this->__initSubTabs("deleteOwnAccount");
         $ilTabs->activateTab("delacc");
 
-        include_once "Services/Utilities/classes/class.ilConfirmationGUI.php";
         $cgui = new ilConfirmationGUI();
         $cgui->setHeaderText($this->lng->txt('user_delete_own_account_final_confirmation'));
         $cgui->setFormAction($this->ctrl->getFormAction($this));

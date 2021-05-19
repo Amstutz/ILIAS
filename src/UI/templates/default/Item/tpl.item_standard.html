@@ -5,8 +5,13 @@
 			<!-- BEGIN lead_text -->{LEAD_TEXT}<!-- END lead_text -->
 			<!-- BEGIN lead_image -->{LEAD_IMAGE}<!-- END lead_image -->
 		</div>
-		<div class="col-sm-9">
+		<!-- BEGIN item_with_lead_and_progress --><div class="col-sm-6"><!-- END item_with_lead_and_progress -->
+		<!-- BEGIN item_with_lead --><div class="col-sm-9"><!-- END item_with_lead -->
 			<!-- END lead_start -->
+	<!-- BEGIN item_with_progress -->
+	<div class="row">
+		<div class="col-sm-9">
+			<!-- END item_with_progress -->
 	<!-- BEGIN lead_start_icon -->
 	<div class="media">
 		<div class="media-left">
@@ -14,7 +19,7 @@
 		</div>
 		<div class="media-body">
 			<!-- END lead_start_icon -->
-			<!-- BEGIN title_link_start --><a href="{TITLE_HREF}"><!-- END title_link_start -->{TITLE}<!-- BEGIN title_link_end --></a><!-- END title_link_end -->
+			<div class="il-item-title">{TITLE}</div>
 			{ACTIONS}
 			<!-- BEGIN desc -->
 			<div class="il-item-description">{DESC}</div><!-- END desc -->
@@ -37,6 +42,16 @@
 			</div>
 			<!-- END property_row -->
 			<!-- END properties -->
+			<!-- BEGIN progress_end_with_lead_icon -->
+		</div>
+		<div class="media-right">{PROGRESS}</div>
+	</div>
+			<!-- END progress_end_with_lead_icon -->
+			<!-- BEGIN progress_end -->
+		</div>
+		<div class="col-sm-3">{PROGRESS}</div>
+	</div>
+			<!-- END progress_end -->
 			<!-- BEGIN lead_end -->
 		</div>
 	</div><!-- END lead_end -->

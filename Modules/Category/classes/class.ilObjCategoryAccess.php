@@ -1,18 +1,13 @@
 <?php
 
-/* Copyright (c) 1998-2012 ILIAS open source, Extended GPL, see docs/LICENSE */
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
-include_once("./Services/Object/classes/class.ilObjectAccess.php");
 
 /**
-* Class ilObjCategoryAccess
-*
-*
-* @author Alex Killing <alex.killing@gmx.de>
-* @version $Id$
-*
-* @ingroup ModulesCategory
-*/
+ * Class ilObjCategoryAccess
+ *
+ * @author Alexander Killing <killing@leifos.de>
+ */
 class ilObjCategoryAccess extends ilObjectAccess
 {
 
@@ -32,24 +27,10 @@ class ilObjCategoryAccess extends ilObjectAccess
     {
         $commands = array();
         $commands[] = array("permission" => "read", "cmd" => "render", "lang_var" => "show", "default" => true);
-        
 
-        // begin-patch fm
-        include_once './Services/WebServices/FileManager/classes/class.ilFMSettings.php';
-        if (ilFMSettings::getInstance()->isEnabled()) {
-            $commands[] = array(
-                'permission' => 'read',
-                'cmd' => 'fileManagerLaunch',
-                'lang_var' => 'fm_start',
-                'enable_anonymous' => false
-            );
-        }
-        // end-patch fm
 
         // BEGIN WebDAV
-        require_once('Services/WebDAV/classes/class.ilDAVActivationChecker.php');
         if (ilDAVActivationChecker::_isActive()) {
-            include_once './Services/WebDAV/classes/class.ilWebDAVUtil.php';
             if (ilWebDAVUtil::getInstance()->isLocalPasswordInstructionRequired()) {
                 $commands[] = array('permission' => 'read', 'cmd' => 'showPasswordInstruction', 'lang_var' => 'mount_webfolder', 'enable_anonymous' => 'false');
             } else {

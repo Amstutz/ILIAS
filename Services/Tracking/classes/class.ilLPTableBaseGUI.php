@@ -15,6 +15,8 @@ require_once('./Services/Repository/classes/class.ilObjectPlugin.php');
 */
 class ilLPTableBaseGUI extends ilTable2GUI
 {
+    const HIT_LIMIT = 5000;
+
     protected $filter; // array
     protected $anonymized; // [bool]
 
@@ -197,13 +199,13 @@ class ilLPTableBaseGUI extends ilTable2GUI
         if ($preset_obj_ids) {
             $object_search->setIdFilter($preset_obj_ids);
         }
-        $res = &$object_search->performSearch();
+        $res = $object_search->performSearch();
 
         if ($permission) {
             $res->setRequiredPermission($permission);
         }
 
-        $res->setMaxHits(1000);
+        $res->setMaxHits(self::HIT_LIMIT);
         
         if ($a_check_lp_activation) {
             $res->addObserver($this, "searchFilterListener");
@@ -219,13 +221,6 @@ class ilLPTableBaseGUI extends ilTable2GUI
         foreach ($res->getResults() as $obj_data) {
             $objects[$obj_data['obj_id']][] = $obj_data['ref_id'];
         }
-
-        // Check if search max hits is reached
-        if ($res->isLimitReached()) {
-            $this->lng->loadLanguageModule("search");
-            ilUtil::sendFailure(sprintf($this->lng->txt("search_limit_reached"), 1000));
-        }
-
         return $objects ? $objects : array();
     }
 
@@ -708,8 +703,8 @@ class ilLPTableBaseGUI extends ilTable2GUI
 
     protected function showTimingsWarning($a_ref_id, $a_user_id)
     {
-        include_once 'Modules/Course/classes/Timings/class.ilTimingCache.php';
-        if (ilTimingCache::_showWarning($a_ref_id, $a_user_id)) {
+        $timing_cache = ilTimingCache::getInstanceByRefId($a_ref_id);
+        if ($timing_cache->isWarningRequired($a_user_id)) {
             $timings = ilTimingCache::_getTimings($a_ref_id);
             if ($timings['item']['changeable'] && $timings['user'][$a_user_id]['end']) {
                 $end = $timings['user'][$a_user_id]['end'];

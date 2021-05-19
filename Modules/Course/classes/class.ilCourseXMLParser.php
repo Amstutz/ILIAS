@@ -48,6 +48,11 @@ class ilCourseXMLParser extends ilMDSaxParser implements ilSaxSubsetParser
     private $current_container_setting;
 
     /**
+     * @var ilObjCourse
+     */
+    private $course_obj;
+
+    /**
      * @var |null | \ilLogger
      */
     private $log = null;
@@ -300,6 +305,18 @@ class ilCourseXMLParser extends ilMDSaxParser implements ilSaxSubsetParser
                     $this->course_obj->setAutoNotification((bool) $a_attribs['status']);
                 }
                 break;
+
+            case 'SessionLimit':
+                if (isset($a_attribs['active'])) {
+                    $this->course_obj->enableSessionLimit((bool) $a_attribs['active']);
+                }
+                if (isset($a_attribs['previous'])) {
+                    $this->course_obj->setNumberOfPreviousSessions((int) $a_attribs['previous']);
+                }
+                if (isset($a_attribs['next'])) {
+                    $this->course_obj->setNumberOfNextSessions((int) $a_attribs['next']);
+                }
+                break;
         }
     }
 
@@ -365,6 +382,10 @@ class ilCourseXMLParser extends ilMDSaxParser implements ilSaxSubsetParser
                 if ($a_attribs['passed'] == 'Yes') {
                     $this->course_members->updatePassed($id_data['usr_id'], true);
                 }
+                if (isset($a_attribs['contact']) && $a_attribs['contact'] == 'Yes') {
+                    // default for new course admin/tutors is "no contact"
+                    $this->course_members->updateContact($id_data['usr_id'], true);
+                }
                 $this->course_members_array[$id_data['usr_id']] = "added";
             } else {
                 // update
@@ -373,6 +394,11 @@ class ilCourseXMLParser extends ilMDSaxParser implements ilSaxSubsetParser
                 }
                 if ($a_attribs['passed'] == 'Yes') {
                     $this->course_members->updatePassed($id_data['usr_id'], true);
+                }
+                if (isset($a_attribs['contact']) && $a_attribs['contact'] == 'Yes') {
+                    $this->course_members->updateContact($id_data['usr_id'], true);
+                } elseif (isset($a_attribs['contact']) && $a_attribs['contact'] == 'No') {
+                    $this->course_members->updateContact($id_data['usr_id'], false);
                 }
                 $this->course_members->updateBlocked($id_data['usr_id'], false);
             }
@@ -403,6 +429,10 @@ class ilCourseXMLParser extends ilMDSaxParser implements ilSaxSubsetParser
                 if ($a_attribs['passed'] == 'Yes') {
                     $this->course_members->updatePassed($id_data['usr_id'], true);
                 }
+                if (isset($a_attribs['contact']) && $a_attribs['contact'] == 'Yes') {
+                    // default for new course admin/tutors is "no contact"
+                    $this->course_members->updateContact($id_data['usr_id'], true);
+                }
                 $this->course_members_array[$id_data['usr_id']] = "added";
             } else {
                 if ($a_attribs['notification'] == 'Yes') {
@@ -410,6 +440,11 @@ class ilCourseXMLParser extends ilMDSaxParser implements ilSaxSubsetParser
                 }
                 if ($a_attribs['passed'] == 'Yes') {
                     $this->course_members->updatePassed($id_data['usr_id'], true);
+                }
+                if (isset($a_attribs['contact']) && $a_attribs['contact'] == 'Yes') {
+                    $this->course_members->updateContact($id_data['usr_id'], true);
+                } elseif (isset($a_attribs['contact']) && $a_attribs['contact'] == 'No') {
+                    $this->course_members->updateContact($id_data['usr_id'], false);
                 }
                 $this->course_members->updateBlocked($id_data['usr_id'], false);
             }

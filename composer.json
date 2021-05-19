@@ -12,28 +12,28 @@
 			"php setup/cli.php build-artifacts --yes"
 		],
 		"post-install-cmd": [
-		  "rm -rf libs/composer/vendor/geshi/geshi/contrib"
+			"php libs/composer/rmdirs.php"
 		],
 		"post-update-cmd": [
-		  "rm -rf libs/composer/vendor/geshi/geshi/contrib"
+			"php libs/composer/rmdirs.php"
 		],
 		"test-php-all": [
-		  "./libs/composer/vendor/bin/phpunit -c ./Services/PHPUnit/config/PhpUnitConfig.xml --colors=always --disallow-todo-tests"
+			"./libs/composer/vendor/bin/phpunit -c ./Services/PHPUnit/config/PhpUnitConfig.xml --colors=always --disallow-todo-tests"
 		],
 		"test-php": [
-		  "./CI/PHPUnit/run_tests.sh"
+			"./CI/PHPUnit/run_tests.sh"
 		]
 	},
 	"require": {
-		"php": "^7.3",
-		"cweagans/composer-patches": "~1.0",
+		"php": ">=7.4",
+		"cweagans/composer-patches": "^1.7",
 		"filp/whoops": "^2.1.13",
 		"monolog/monolog": "^1.23.0",
 		"technosophos/libris": "^2.0.2",
-		"ezyang/htmlpurifier": "4.12.0",
-		"phpmailer/phpmailer": "^6.1.4",
+		"ezyang/htmlpurifier": "4.13.0",
+		"phpmailer/phpmailer": "^6.1",
 		"geshi/geshi": "^1.0.9",
-		"tecnickcom/tcpdf": "^6.2.26",
+		"tecnickcom/tcpdf": "^6.3",
 		"pimple/pimple" : "^3.0",
 		"symfony/yaml": "^3.4",
 		"imsglobal/lti": "^3.0.2",
@@ -44,29 +44,21 @@
 		"league/flysystem": "^1.0",
 		"james-heinrich/getid3": "^1.9",
 		"phpoffice/phpspreadsheet": "^1.9.0",
-		"jumbojett/openid-connect-php": "^0.7.0",
-		"sabre/dav": "~3.2.2",
+		"jumbojett/openid-connect-php": "^0.9.2",
+		"sabre/dav": "^4.1",
 		"symfony/console" : "^4.2",
 		"slim/slim": "^3.11",
 		"ramsey/uuid": "^3.8",
 		"enshrined/svg-sanitize": "^0.13.0",
 		"guzzlehttp/guzzle": "^6.3",
-		"zendframework/zend-httphandlerrunner": "^1.1.0",
 		"simplesamlphp/simplesamlphp": "^1.18"
 	},
 	"require-dev": {
 		"mikey179/vfsstream": "^1.6",
-		"phpunit/phpunit": "^9",
-		"phpunit/php-code-coverage": "^8.0",
-		"mockery/mockery": "^1.2",
-		"phpunit/php-token-stream": "^4.0",
-		"phpdocumentor/reflection-docblock": "^3.3",
+		"phpunit/phpunit": "^9.5",
+		"mockery/mockery": "^1.4",
 		"friendsofphp/php-cs-fixer": "^2.15",
 		"sebastian/environment": "^5.0",
-		"phpunit/php-timer": "^3.0",
-		"phpspec/prophecy": "^1.8",
-		"theseer/tokenizer": "^1.1",
-		"myclabs/deep-copy": "^1.9",
 		"captainhook/captainhook": "^5.3"
 	},
 	"autoload": {
@@ -77,21 +69,23 @@
 		"classmap": [
 			"./Services/",
 			"./Modules",
-			"./libs/ilias"
+			"./libs/ilias",
+			"./setup/classes"
 		],
 		"exclude-from-classmap": [
 			"./Services/Migration",
 			"./*/*/lib", "./*/*/test",
-			"./Services/CAS/phpcas"
+			"./Services/CAS/phpcas",
+			"./Customizing/**/vendor"
 		]
 	},
 	"extra": {
 		"cweagans/composer-patches" : {
 			"source" : "https://github.com/cweagans/composer-patches",
-			"used_version" : "v1.0",
+			"used_version" : "v1.7",
 			"wrapped_by" : "",
 			"added_by" : "Michael Jansen <mjansen@databay.de>",
-			"last_update" : "2016-06-02",
+			"last_update" : "2020-10-15",
 			"last_update_by" : "Michael Jansen <mjansen@databay.de>",
 			"approved-by": "Jour Fixe",
 			"approved-date": "YYYY-MM-DD"
@@ -108,10 +102,10 @@
 		},
 		"filp/whoops" : {
 			"source" : "github.com/filp/whoops",
-			"used_version" : "v2.1.14",
+			"used_version" : "v2.9.1",
 			"wrapped_by" : null,
 			"added_by" : "Denis Klöpfer <denis.kloepfer@concepts-and-training.de>",
-			"last_update" : "2018-01-18",
+			"last_update" : "2020-11-05",
 			"last_update_by" : "Richard Klees <richard.klees@concepts-and-training.de>",
 			"approved-by": "Jour Fixe",
 			"approved-date": "YYYY-MM-DD"
@@ -129,20 +123,20 @@
 		},
 		"ezyang/htmlpurifier" : {
 			"source" : "http://repo.or.cz/htmlpurifier.git",
-			"used_version" : "v4.12.0",
+			"used_version" : "v4.13.0",
 			"wrapped_by" : "Services/Html",
 			"added_by" : "Michael Jansen <mjansen@databay.de>",
-			"last_update" : "2019-10-31",
+			"last_update" : "2020-10-15",
 			"last_update_by" : "Michael Jansen <mjansen@databay.de>",
 			"approved-by": "Jour Fixe",
 			"approved-date": "YYYY-MM-DD"
 		},
 		"phpmailer/phpmailer" : {
 			"source" : "https://github.com/PHPMailer/PHPMailer",
-			"used_version" : "v6.1.4",
+			"used_version" : "v6.1.8",
 			"wrapped_by" : "Services/Mail",
 			"added_by" : "Maximilian Becker <mbecker@databay.de>",
-			"last_update" : "2020-02-28",
+			"last_update" : "2020-10-15",
 			"last_update_by" : "Michael Jansen <mjansen@databay.de>",
 			"approved-by": "Jour Fixe",
 			"approved-date": "YYYY-MM-DD"
@@ -171,20 +165,20 @@
 		},
 		"tecnickcom/tcpdf" : {
 			"source" : "https://github.com/tecnickcom/TCPDF",
-			"used_version" : "v6.2.26",
+			"used_version" : "v6.3.5",
 			"wrapped_by" : "Services/PDFGeneration",
 			"added_by" : "Maximilian Becker <mbecker@databay.de>",
-			"last_update" : "2016-06-02",
+			"last_update" : "2020-10-15",
 			"last_update_by" : "Michael Jansen <mjansen@databay.de>",
 			"approved-by": "Jour Fixe",
 			"approved-date": "YYYY-MM-DD"
 		},
 		"pimple/pimple" : {
 			"source" : "https://github.com/silexphp/Pimple.git",
-			"used_version" : "v3.0.2",
+			"used_version" : "v3.3.0",
 			"wrapped_by" : "ILIAS\\DIC\\Container",
 			"added_by" : "Richard Klees <richard.klees@concepts-and-training.de>",
-			"last_update" : "2016-02-29",
+			"last_update" : "2020-11-05",
 			"last_update_by" : "Richard Klees <richard.klees@concepts-and-training.de>",
 			"approved-by": "Jour Fixe",
 			"approved-date": "YYYY-MM-DD"
@@ -281,10 +275,10 @@
 		},
 		"simplesamlphp/simplesamlphp" : {
 			"source": "https://github.com/simplesamlphp/simplesamlphp",
-			"used_version": "v1.18.6",
+			"used_version": "v1.18.8",
 			"added_by": "Michael Jansen <mjansen@databay.de>",
 			"wrapped_by": "\\ilSimpleSAMLphpWrapper and \\ilSimpleSAMLphplIdpDiscovery",
-			"last_update": "2020-04-23",
+			"last_update": "2020-10-12",
 			"last_update_by": "Michael Jansen <mjansen@databay.de>",
 			"approved-by": "Jour Fixe",
 			"approved-date": "YYYY-MM-DD"
@@ -341,10 +335,10 @@
 		},
 		"jumbojett/openid-connect-php" : {
 			"source": "https://github.com/jumbojett/OpenID-Connect-PHP",
-			"used_version": "v0.7.0",
+			"used_version": "v0.9.2",
 			"added_by": "Stefan Meyer <smeyer.ilias@gmx.de>",
 			"wrapped_by": null,
-			"last_update": "2018-10-20",
+			"last_update": "2021-05-10",
 			"last_update_by": "Stefan Meyer <smeyer.ilias@gmx.de",
 			"approved_by": "Jour Fixe",
 			"approved-date": "2018-02-26"
@@ -359,16 +353,6 @@
 			"approved-by": "Jour Fixe",
 			"approved-date": "2018-12-03"
 		},
-		"zendframework/zend-httphandlerrunner" : {
-			"source": "https://github.com/zendframework/zend-httphandlerrunner",
-			"used_version": "v1.1",
-			"added_by": "Stefan Schneider <schneider@hrz.uni-marburg.de>",
-			"wrapped_by": "",
-			"last_update": "2019-07-23",
-			"last_update_by": "Stefan Schneider <schneider@hrz.uni-marburg.de>",
-			"approved-by": "Jour Fixe",
-			"approved-date": "YYYY-MM-DD"
-		},
 		"friendsofphp/php-cs-fixer": {
 			"source": "https://github.com/FriendsOfPHP/PHP-CS-Fixer",
 			"used_version": "2.15",
@@ -381,9 +365,9 @@
 		},
 		"symfony/console": {
 			"source": "https://github.com/symfony/console",
-			"used_version": "v4.2",
+			"used_version": "v4.4.16",
 			"added_by": "Richard Klees <richard.klees@concepts-and-training.de>",
-			"last_update": "2019-04-29",
+			"last_update": "2020-11-05",
 			"last_update_by": "Richard Klees <richard.klees@concepts-and-training.de>",
 			"approved-by": "Jour Fixe",
 			"approved-date": "2019-07-01"
@@ -417,9 +401,6 @@
 			},
 			"simplesamlphp/simplesamlphp": {
 				"ILIAS SimpleSAMLphp Patches": "./libs/composer/patches/simplesamlphp.patch"
-			},
-			"zendframework/zend-httphandlerrunner": {
-				"ILIAS HttpHandlerRunner Patches": "./libs/composer/patches/zend-httphandlerrunner.patch"
 			},
 			"imsglobal/lti": {
 				"ILIAS LTI Patches": "./libs/composer/patches/lti.patch"

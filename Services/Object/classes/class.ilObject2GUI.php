@@ -1,29 +1,25 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-include_once("./Services/Object/classes/class.ilObjectGUI.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* New implementation of ilObjectGUI. (beta)
-*
-* Differences to the ilObject implementation:
-* - no $this->tree anymore
-* - no $this->formaction anymore
-* - no $this->return_location anymore
-* - no $this->target_frame anymore
-* - no $this->actions anymore
-* - no $this->sub_objects anymore
-* - no $this->data anymore
-* - no $this->prepare_output anymore
-*
-*
-* All new modules should derive from this class.
-*
-* @author Alex Killing <alex.killing@gmx.de>
-* @version $Id$
-*
-* @ingroup ServicesObject
-*/
+ * New implementation of ilObjectGUI. (beta)
+ *
+ * Differences to the ilObject implementation:
+ * - no $this->tree anymore
+ * - no $this->formaction anymore
+ * - no $this->return_location anymore
+ * - no $this->target_frame anymore
+ * - no $this->actions anymore
+ * - no $this->sub_objects anymore
+ * - no $this->data anymore
+ * - no $this->prepare_output anymore
+ *
+ *
+ * All new modules should derive from this class.
+ *
+ * @author Alex Killing <alex.killing@gmx.de>
+ */
 abstract class ilObject2GUI extends ilObjectGUI
 {
     protected $object_id;
@@ -89,6 +85,7 @@ abstract class ilObject2GUI extends ilObjectGUI
         //$this->settings = $DIC->settings();
         //$this->rbacreview = $DIC->rbac()->review();
         $this->toolbar = $DIC->toolbar();
+        $this->request = $DIC->http()->request();
 
 
         $params = array();
@@ -112,10 +109,8 @@ abstract class ilObject2GUI extends ilObjectGUI
             case self::WORKSPACE_NODE_ID:
                 $ilUser = $DIC["ilUser"];
                 $this->node_id = $a_id;
-                include_once "Services/PersonalWorkspace/classes/class.ilWorkspaceTree.php";
                 $this->tree = new ilWorkspaceTree($ilUser->getId());
                 $this->object_id = $this->tree->lookupObjectId($this->node_id);
-                include_once "Services/PersonalWorkspace/classes/class.ilWorkspaceAccessHandler.php";
                 $this->access_handler = new ilWorkspaceAccessHandler($this->tree);
                 $params[] = "wsp_id";
                 break;
@@ -123,23 +118,19 @@ abstract class ilObject2GUI extends ilObjectGUI
             case self::WORKSPACE_OBJECT_ID:
                 $ilUser = $DIC["ilUser"];
                 $this->object_id = $a_id;
-                include_once "Services/PersonalWorkspace/classes/class.ilWorkspaceTree.php";
                 $this->tree = new ilWorkspaceTree($ilUser->getId());
-                include_once "Services/PersonalWorkspace/classes/class.ilWorkspaceAccessHandler.php";
                 $this->access_handler = new ilWorkspaceAccessHandler($this->tree);
                 $params[] = "obj_id"; // ???
                 break;
             
             case self::PORTFOLIO_OBJECT_ID:
                 $this->object_id = $a_id;
-                include_once('./Modules/Portfolio/classes/class.ilPortfolioAccessHandler.php');
                 $this->access_handler = new ilPortfolioAccessHandler();
                 $params[] = "prt_id";
                 break;
 
             case self::OBJECT_ID:
                 $this->object_id = $a_id;
-                include_once "Services/Object/classes/class.ilDummyAccessHandler.php";
                 $this->access_handler = new ilDummyAccessHandler();
                 $params[] = "obj_id";
                 break;
@@ -194,14 +185,16 @@ abstract class ilObject2GUI extends ilObjectGUI
             case "ilworkspaceaccessgui":
                 if ($this->node_id) {
                     $this->tabs_gui->activateTab("id_permissions");
-
-                    include_once('./Services/PersonalWorkspace/classes/class.ilWorkspaceAccessGUI.php');
                     $wspacc = new ilWorkspaceAccessGUI($this->node_id, $this->getAccessHandler());
                     $this->ctrl->forwardCommand($wspacc);
-                    break;
+                } else {
+                    if (!$cmd) {
+                        $cmd = "render";
+                    }
+                    return $this->$cmd();
                 }
-            
-                // no break
+                break;
+
             default:
                 if (!$cmd) {
                     $cmd = "render";
@@ -270,7 +263,7 @@ abstract class ilObject2GUI extends ilObjectGUI
                 $ilLocator->addRepositoryItems($ref_id);
                 
                 // not so nice workaround: todo: handle $ilLocator as tabs in ilTemplate
-                if ($_GET["admin_mode"] == "" &&
+                if ($this->admin_mode == self::ADMIN_MODE_NONE &&
                     strtolower($this->ctrl->getCmdClass()) == "ilobjrolegui") {
                     $this->ctrl->setParameterByClass(
                         "ilobjrolegui",
@@ -506,11 +499,11 @@ abstract class ilObject2GUI extends ilObjectGUI
     }
 
     // -> ilAdministration
-    final private function displayList()
+    private function displayList()
     {
         return parent::displayList();
     }
-    //	final private function setAdminTabs() { return parent::setAdminTabs(); }
+    //	private function setAdminTabs() { return parent::setAdminTabs(); }
     //	final public function getAdminTabs() { return parent::getAdminTabs(); }
     final protected function addAdminLocatorItems($a_do_not_add_object = false)
     {
@@ -580,7 +573,7 @@ abstract class ilObject2GUI extends ilObjectGUI
     /**
      * Deprecated functions
      */
-    //	final private function setSubObjects($a_sub_objects = "") { die("ilObject2GUI::setSubObjects() is deprecated."); }
+    //	private function setSubObjects($a_sub_objects = "") { die("ilObject2GUI::setSubObjects() is deprecated."); }
     //	final public function getFormAction($a_cmd, $a_formaction = "") { die("ilObject2GUI::getFormAction() is deprecated."); }
     //	final protected  function setFormAction($a_cmd, $a_formaction) { die("ilObject2GUI::setFormAction() is deprecated."); }
     final protected function getReturnLocation($a_cmd, $a_location = "")
@@ -631,15 +624,15 @@ abstract class ilObject2GUI extends ilObjectGUI
     /**
      * Deleted in ilObject
      */
-    //	final private function permObject() { parent::permObject(); }
-    //	final private function permSaveObject() { parent::permSaveObject(); }
-    //	final private function infoObject() { parent::infoObject(); }
-    //	final private function __buildRoleFilterSelect() { parent::__buildRoleFilterSelect(); }
-    //	final private function __filterRoles() { parent::__filterRoles(); }
-    //	final private function ownerObject() { parent::ownerObject(); }
-    //	final private function changeOwnerObject() { parent::changeOwnerObject(); }
-    //	final private function addRoleObject() { parent::addRoleObject(); }
-    //	final private function setActions($a_actions = "") { die("ilObject2GUI::setActions() is deprecated."); }
+    //	private function permObject() { parent::permObject(); }
+    //	private function permSaveObject() { parent::permSaveObject(); }
+    //	private function infoObject() { parent::infoObject(); }
+    //	private function __buildRoleFilterSelect() { parent::__buildRoleFilterSelect(); }
+    //	private function __filterRoles() { parent::__filterRoles(); }
+    //	private function ownerObject() { parent::ownerObject(); }
+    //	private function changeOwnerObject() { parent::changeOwnerObject(); }
+    //	private function addRoleObject() { parent::addRoleObject(); }
+    //	private function setActions($a_actions = "") { die("ilObject2GUI::setActions() is deprecated."); }
     //	final protected function getActions() { die("ilObject2GUI::getActions() is deprecated."); }
 
     /**
@@ -717,7 +710,7 @@ abstract class ilObject2GUI extends ilObjectGUI
         }
         
         // add new object to custom parent container
-        if ((int) $_REQUEST["crtptrefid"]) {
+        if (isset($_REQUEST["crtptrefid"])) {
             $a_parent_node_id = (int) $_REQUEST["crtptrefid"];
         }
 
@@ -732,7 +725,6 @@ abstract class ilObject2GUI extends ilObjectGUI
                 $a_obj->setPermissions($a_parent_node_id);
 
                 // rbac log
-                include_once "Services/AccessControl/classes/class.ilRbacLog.php";
                 $rbac_log_roles = $rbacreview->getParentRoleIds($this->node_id, false);
                 $rbac_log = ilRbacLog::gatherFaPa($this->node_id, array_keys($rbac_log_roles), true);
                 ilRbacLog::add(ilRbacLog::CREATE_OBJECT, $this->node_id, $rbac_log);
@@ -757,12 +749,11 @@ abstract class ilObject2GUI extends ilObjectGUI
         }
         
         // BEGIN ChangeEvent: Record save object.
-        require_once('Services/Tracking/classes/class.ilChangeEvent.php');
         ilChangeEvent::_recordWriteEvent($this->object_id, $ilUser->getId(), 'create');
         // END ChangeEvent: Record save object.
-            
+        
         // use forced callback after object creation
-        self::handleAfterSaveCallback($a_obj, $_REQUEST["crtcb"]);
+        self::handleAfterSaveCallback($a_obj, $_REQUEST["crtcb"] ?? null);
     }
     
     /**
@@ -843,7 +834,6 @@ abstract class ilObject2GUI extends ilObjectGUI
     {
         if ($this->id_type == self::WORKSPACE_NODE_ID) {
             if (!$this->creation_mode && $this->object_id) {
-                include_once "Services/Object/classes/class.ilCommonActionDispatcherGUI.php";
                 $dispatcher = new ilCommonActionDispatcherGUI(
                     ilCommonActionDispatcherGUI::TYPE_WORKSPACE,
                     $this->getAccessHandler(),
@@ -854,8 +844,7 @@ abstract class ilObject2GUI extends ilObjectGUI
                 
                 $dispatcher->setSubObject($a_sub_type, $a_sub_id);
                 
-                include_once "Services/Object/classes/class.ilObjectListGUI.php";
-                ilObjectListGUI::prepareJSLinks(
+                ilObjectListGUI::prepareJsLinks(
                     $this->ctrl->getLinkTarget($this, "redrawHeaderAction", "", true),
                     $this->ctrl->getLinkTargetByClass(array("ilcommonactiondispatchergui", "ilnotegui"), "", "", true, false),
                     $this->ctrl->getLinkTargetByClass(array("ilcommonactiondispatchergui", "iltagginggui"), "", "", true, false)
@@ -896,7 +885,6 @@ abstract class ilObject2GUI extends ilObjectGUI
             $a_append .= "_wsp";
         }
         
-        include_once('Services/PermanentLink/classes/class.ilPermanentLinkGUI.php');
         $plink = new ilPermanentLinkGUI($this->getType(), $this->node_id, $a_append);
         $plink->setIncludePermanentLinkText(false);
         $plink->setAlignCenter($a_center);

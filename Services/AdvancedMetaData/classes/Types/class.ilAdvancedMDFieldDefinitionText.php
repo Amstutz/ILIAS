@@ -11,10 +11,19 @@ require_once "Services/AdvancedMetaData/classes/class.ilAdvancedMDFieldDefinitio
  *
  * @ingroup ServicesAdvancedMetaData
  */
-class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinition
+class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinitionGroupBased
 {
-    protected $max_length; // [int]
-    protected $multi; // [bool]
+    const XML_SEPARATOR_TRANSLATIONS = "~|~";
+    const XML_SEPARATOR_TRANSLATION = '~+~';
+
+    /**
+     * @var int
+     */
+    protected $max_length;
+    /**
+     * @var bool
+     */
+    protected $multi;
     
     
     //
@@ -25,26 +34,38 @@ class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinition
     {
         return self::TYPE_TEXT;
     }
-    
-    
-    //
-    // ADT
-    //
-    
+
+
+    public function getADTGroup()
+    {
+        return $this->getADTDefinition();
+    }
+
+    public function getTitles()
+    {
+        return [];
+    }
+
+    public function hasComplexOptions()
+    {
+        return false;
+    }
+
+    /**
+     * @return ilADTDefinition
+     * @throws Exception
+     */
     protected function initADTDefinition()
     {
-        $def = ilADTFactory::getInstance()->getDefinitionInstanceByType("Text");
-                
-        $max = $this->getMaxLength();
-        if (is_numeric($max)) {
-            $def->setMaxLength($max);
-        }
-        
-        // multi-line is presentation property
-        
-        return $def;
+        $field_translations = ilAdvancedMDFieldTranslations::getInstanceByRecordId($this->getRecordId());
+
+        $definition = ilADTFactory::getInstance()->getDefinitionInstanceByType(ilADTFactory::TYPE_LOCALIZED_TEXT);
+        $definition->setMaxLength((int) $this->getMaxLength());
+        $definition->setActiveLanguages($field_translations->getActivatedLanguages($this->getFieldId(), true));
+        $definition->setDefaultLanguage($field_translations->getDefaultLanguage());
+        return $definition;
     }
-    
+
     
     //
     // properties
@@ -112,7 +133,7 @@ class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinition
         );
     }
     
-    public function getFieldDefinitionForTableGUI()
+    public function getFieldDefinitionForTableGUI(string $content_language)
     {
         global $DIC;
 
@@ -129,14 +150,14 @@ class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinition
         
         return $res;
     }
-    
+
     /**
      * Add input elements to definition form
-     *
      * @param ilPropertyFormGUI $a_form
-     * @param bool $a_disabled
+     * @param bool              $a_disabled
+     * @param string            $language
      */
-    public function addCustomFieldToDefinitionForm(ilPropertyFormGUI $a_form, $a_disabled = false)
+    public function addCustomFieldToDefinitionForm(ilPropertyFormGUI $a_form, $a_disabled = false, string $language = '')
     {
         global $DIC;
 
@@ -159,13 +180,13 @@ class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinition
             $multi->setDisabled(true);
         }
     }
-    
+
     /**
      * Import custom post values from definition form
-     *
      * @param ilPropertyFormGUI $a_form
+     * @param string            $language
      */
-    public function importCustomDefinitionFormPostValues(ilPropertyFormGUI $a_form)
+    public function importCustomDefinitionFormPostValues(ilPropertyFormGUI $a_form, string $language = '')
     {
         $max = $a_form->getInput("max");
         $this->setMaxLength(($max !== "") ? $max : null);
@@ -195,12 +216,36 @@ class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinition
     
     public function getValueForXML(ilADT $element)
     {
-        return $element->getText();
+        /**
+         * @var $translations ilADTLocalizedText
+         */
+        $translations = $element->getTranslations();
+        $serialized_values = [];
+        foreach ($translations as $lang_key => $translation) {
+            $serialized_values[] = $lang_key . self::XML_SEPARATOR_TRANSLATION . $translation;
+        }
+        return implode(self::XML_SEPARATOR_TRANSLATIONS, $serialized_values);
     }
-    
+
+    /**
+     * @param string $a_cdata
+     */
     public function importValueFromXML($a_cdata)
     {
-        $this->getADT()->setText($a_cdata);
+        // an import from release < 7
+        if (strpos($a_cdata, self::XML_SEPARATOR_TRANSLATION) === false) {
+            $this->getADT()->setText($a_cdata);
+            return;
+        }
+
+        $translations = explode(self::XML_SEPARATOR_TRANSLATIONS, $a_cdata);
+        foreach ($translations as $translation) {
+            $parts = explode(self::XML_SEPARATOR_TRANSLATION, $translation);
+            if ($parts === false) {
+                continue;
+            }
+            $this->getADT()->setTranslation((string) $parts[0], (string) $parts[1]);
+        }
     }
     
     public function importFromECS($a_ecs_type, $a_value, $a_sub_id)
@@ -231,23 +276,16 @@ class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinition
         }
         return false;
     }
-    
-    //
-    // presentation
-    //
-    
-    public function prepareElementForEditor(ilADTFormBridge $a_text)
+
+    public function prepareElementForEditor(ilADTFormBridge $form)
     {
-        assert($a_text instanceof ilADTTextFormBridge);
-        
-        // seems to be default in course info editor
-        $a_text->setMulti($this->isMulti(), 80, 6);
+        if (!$form instanceof ilADTLocalizedTextFormBridge) {
+            $this->logger->warning('Passed ' . get_class($form));
+            return;
+        }
+        $form->setMulti($this->isMulti());
     }
     
-    
-    //
-    // search
-    //
     
     public function getSearchQueryParserValue(ilADTSearchBridge $a_adt_search)
     {
@@ -301,7 +339,7 @@ class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinition
     public function searchObjects(ilADTSearchBridge $a_adt_search, ilQueryParser $a_parser, array $a_object_types, $a_locate, $a_search_type)
     {
         // :TODO: search type (like, fulltext)
-        
+
         include_once('Services/ADT/classes/ActiveRecord/class.ilADTActiveRecordByType.php');
         $condition = $a_adt_search->getSQLCondition(
             ilADTActiveRecordByType::SINGLE_COLUMN_NAME,
@@ -309,11 +347,16 @@ class ilAdvancedMDFieldDefinitionText extends ilAdvancedMDFieldDefinition
             $a_parser->getQuotedWords()
         );
         if ($condition) {
-            $objects = ilADTActiveRecordByType::find("adv_md_values", $this->getADT()->getType(), $this->getFieldId(), $condition, $a_locate);
-            if (sizeof($objects)) {
+            $objects = ilADTActiveRecordByType::find(
+                'adv_md_values',
+                $this->getADT()->getType(),
+                $this->getFieldId(),
+                $condition,
+                $a_locate);
+            if (isset($objects) && count($objects)) {
                 return $this->parseSearchObjects($objects, $a_object_types);
             }
-            return array();
+            return [];
         }
     }
 }

@@ -59,6 +59,11 @@ class ilBlogPostingGUI extends ilPageObjectGUI
     protected $term;
 
     /**
+     * @var bool
+     */
+    public $add_date;
+
+    /**
      * Constructor
      *
      * @param int $a_node
@@ -126,12 +131,10 @@ class ilBlogPostingGUI extends ilPageObjectGUI
     public function executeCommand()
     {
         $ilCtrl = $this->ctrl;
-        $ilTabs = $this->tabs;
         $ilLocator = $this->locator;
         $tpl = $this->tpl;
         
         $next_class = $ilCtrl->getNextClass($this);
-        $cmd = $ilCtrl->getCmd();
 
         $posting = $this->getBlogPosting();
         $ilCtrl->setParameter($this, "blpg", $posting->getId());
@@ -207,12 +210,12 @@ class ilBlogPostingGUI extends ilPageObjectGUI
     public function preview($a_mode = null)
     {
         global $DIC;
-
         $ilCtrl = $this->ctrl;
         $tpl = $this->tpl;
         $ilSetting = $this->settings;
 
         $toolbar = $DIC->toolbar();
+        $append = "";
 
         $this->getBlogPosting()->increaseViewCnt();
         
@@ -228,23 +231,6 @@ class ilBlogPostingGUI extends ilPageObjectGUI
             if (!$this->getEnableEditing()) {
                 $this->ctrl->redirect($this, "previewFullscreen");
             }
-            /*
-            // delete
-            $page_commands = false;
-            if ($this->checkAccess("write"))
-            {
-                $wtpl->setCurrentBlock("page_command");
-                $wtpl->setVariable("HREF_PAGE_CMD",
-                    $ilCtrl->getLinkTarget($this, "deleteBlogPostingConfirmationScreen"));
-                $wtpl->setVariable("TXT_PAGE_CMD", $lng->txt("delete"));
-                $wtpl->parseCurrentBlock();
-            }
-            if ($page_commands)
-            {
-                $wtpl->setCurrentBlock("page_commands");
-                $wtpl->parseCurrentBlock();
-            }
-            */
         } else {
             $callback = array($this, "observeNoteAction");
                                     
@@ -605,9 +591,6 @@ class ilBlogPostingGUI extends ilPageObjectGUI
 
     /**
      * Cancel editing
-     *
-     * @param
-     * @return
      */
     protected function cancelEdit()
     {
@@ -615,7 +598,7 @@ class ilBlogPostingGUI extends ilPageObjectGUI
     }
 
     
-    public function observeNoteAction($a_blog_id, $a_posting_id, $a_type, $a_news_id, $a_action, $a_note_id)
+    public function observeNoteAction($a_blog_id, $a_posting_id, $a_type, $a_action, $a_note_id)
     {
         // #10040 - get note text
         $note = new ilNote($a_note_id);
@@ -623,7 +606,7 @@ class ilBlogPostingGUI extends ilPageObjectGUI
         ilObjBlog::sendNotification("comment", $this->isInWorkspace(), $this->node_id, $a_posting_id, $note);
     }
     
-    protected function getActivationCaptions()
+    public function getActivationCaptions()
     {
         $lng = $this->lng;
         
@@ -662,7 +645,7 @@ class ilBlogPostingGUI extends ilPageObjectGUI
 
         if ($this->checkAccess("write") || $this->checkAccess("contribute")) {
             $this->getBlogPosting()->setActive(true);
-            $this->getBlogPosting()->update(true, false, false);
+            $this->getBlogPosting()->update(true, false);
         }
         if (!$a_to_list) {
             $this->ctrl->redirect($this, "edit");
@@ -714,19 +697,10 @@ class ilBlogPostingGUI extends ilPageObjectGUI
         foreach ($ids = $md_section->getKeywordIds() as $id) {
             $md_key = $md_section->getKeyword($id);
             if (trim($md_key->getKeyword()) != "") {
-                //$keywords[$md_key->getKeywordLanguageCode()][]
-                //	= $md_key->getKeyword();
                 $keywords[] = $md_key->getKeyword();
             }
         }
                                         
-        // language is not "used" anywhere
-        /*$ulang = $ilUser->getLanguage();
-        if($keywords[$ulang])
-        {
-            asort($keywords[$ulang]);
-        }*/
-        
         // other keywords in blog
         $other = array();
         foreach (array_keys(ilBlogPosting::getAllPostings($this->getBlogPosting()->getBlogId())) as $posting_id) {
@@ -737,9 +711,6 @@ class ilBlogPostingGUI extends ilPageObjectGUI
         // #17414
         $other = array_unique($other);
         sort($other, SORT_LOCALE_STRING);
-        if (is_array($keywords[$ulang])) {
-            $other = array_diff($other, $keywords[$ulang]);
-        }
 
         $input_tag = $ui_factory->input()->field()->tag($this->lng->txt("blog_keywords"), $other, $this->lng->txt("blog_keyword_enter"));
         if (count($keywords) > 0) {
@@ -755,12 +726,10 @@ class ilBlogPostingGUI extends ilPageObjectGUI
         $section = $ui_factory->input()->field()->section([$input_tag], $this->lng->txt("blog_edit_keywords"), "");
 
         $form_action = $DIC->ctrl()->getFormAction($this, "saveKeywordsForm");
-        $form = $ui_factory->input()->container()->form()->standard($form_action, ["tags" => $section]);
-
-        return $form;
+        return $ui_factory->input()->container()->form()->standard($form_action, ["tags" => $section]);
     }
     
-    protected function getParentObjId()
+    protected function getParentObjId() : int
     {
         if ($this->node_id) {
             if ($this->isInWorkspace()) {
@@ -769,6 +738,7 @@ class ilBlogPostingGUI extends ilPageObjectGUI
                 return ilObject::_lookupObjId($this->node_id);
             }
         }
+        return 0;
     }
     
     public function saveKeywordsForm()
@@ -814,6 +784,7 @@ class ilBlogPostingGUI extends ilPageObjectGUI
         $bpgui = new self(0, null, $a_id);
         
         // scan the full page for media objects
+        $img = "";
         if ($a_include_picture) {
             $img = $bpgui->getFirstMediaObjectAsTag($a_picture_width, $a_picture_height, $a_export_directory);
         }
@@ -840,7 +811,7 @@ class ilBlogPostingGUI extends ilPageObjectGUI
         return $page;
     }
     
-    protected function getFirstMediaObjectAsTag($a_width = 144, $a_height = 144, $a_export_directory = null)
+    protected function getFirstMediaObjectAsTag($a_width = 144, $a_height = 144, $a_export_directory = null) : string
     {
         $this->obj->buildDom();
         $mob_ids = $this->obj->collectMediaObjects();
@@ -880,6 +851,7 @@ class ilBlogPostingGUI extends ilPageObjectGUI
                 }
             }
         }
+        return "";
     }
     
     protected static function parseImage($src_width, $src_height, $tgt_width, $tgt_height)
@@ -908,5 +880,20 @@ class ilBlogPostingGUI extends ilPageObjectGUI
     public function getDisabledText()
     {
         return $this->lng->txt("blog_draft_text");
+    }
+
+    /**
+     * @return string
+     */
+    public function getCommentsHTMLExport()
+    {
+        return $this->getNotesHTML(
+            $this->getBlogPosting(),
+            false,
+            $this->enable_public_notes,
+            false,
+            null,
+            true
+        );
     }
 }

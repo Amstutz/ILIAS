@@ -9,7 +9,8 @@ use ILIAS\BackgroundTasks\Implementation\Bucket\BasicBucket;
  */
 class ilMail
 {
-    const ILIAS_HOST = 'ilias';
+    public const ILIAS_HOST = 'ilias';
+    public const PROP_CONTEXT_SUBJECT_PREFIX = 'subject_prefix';
 
     /** @var ilLanguage */
     protected $lng;
@@ -81,7 +82,7 @@ class ilMail
     protected $senderFactory;
 
     /**
-     * @param integer $a_user_id
+     * @param int $a_user_id
      * @param ilMailAddressTypeFactory|null $mailAddressTypeFactory
      * @param ilMailRfc822AddressParserFactory|null $mailAddressParserFactory
      * @param ilAppEventHandler|null $eventHandler
@@ -143,8 +144,8 @@ class ilMail
             $senderFactory = $GLOBALS["DIC"]["mail.mime.sender.factory"];
         }
         if ($usrIdByLoginCallable === null) {
-            $usrIdByLoginCallable = function (string $login) {
-                return ilObjUser::_lookupId($login);
+            $usrIdByLoginCallable = static function (string $login) : int {
+                return (int) ilObjUser::_lookupId($login);
             };
         }
 
@@ -228,7 +229,7 @@ class ilMail
      */
     public function setSaveInSentbox(bool $saveInSentbox) : void
     {
-        $this->save_in_sentbox = (bool) $saveInSentbox;
+        $this->save_in_sentbox = $saveInSentbox;
     }
 
     /**
@@ -236,7 +237,7 @@ class ilMail
      */
     public function getSaveInSentbox() : bool
     {
-        return (bool) $this->save_in_sentbox;
+        return $this->save_in_sentbox;
     }
 
     /**
@@ -244,7 +245,7 @@ class ilMail
      */
     protected function readMailObjectReferenceId() : void
     {
-        $this->mail_obj_ref_id = (int) ilMailGlobalServices::getMailObjectRefId();
+        $this->mail_obj_ref_id = ilMailGlobalServices::getMailObjectRefId();
     }
 
     /**
@@ -514,8 +515,18 @@ class ilMail
             return null;
         }
 
-        $row['attachments'] = unserialize(stripslashes($row['attachments']));
-        $row['tpl_ctx_params'] = (array) (@json_decode($row['tpl_ctx_params'], true));
+        if (isset($row['attachments'])) {
+            $row['attachments'] = unserialize(stripslashes($row['attachments']));
+        } else {
+            $row['attachments'] = [];
+        }
+
+        if (isset($row['tpl_ctx_params']) && is_string($row['tpl_ctx_params'])) {
+            $decoded = json_decode($row['tpl_ctx_params'], true);
+            $row['tpl_ctx_params'] = (array) ($decoded ?? []);
+        } else {
+            $row['tpl_ctx_params'] = [];
+        }
 
         return $row;
     }
@@ -567,7 +578,7 @@ class ilMail
                 'm_message' => ['clob', $a_m_message],
                 'use_placeholders' => ['integer', $a_use_placeholders],
                 'tpl_ctx_id' => ['text', $a_tpl_context_id],
-                'tpl_ctx_params' => ['blob', @json_encode((array) $a_tpl_context_params)]
+                'tpl_ctx_params' => ['blob', json_encode((array) $a_tpl_context_params)]
             ],
             [
                 'mail_id' => ['integer', $a_draft_id]
@@ -578,18 +589,18 @@ class ilMail
     }
 
     /**
-     * @param integer $folderId
-     * @param integer $senderUsrId
+     * @param int $folderId
+     * @param int $senderUsrId
      * @param array $attachments
      * @param string $to
      * @param string $cc
      * @param string $bcc
      * @param string $status
-     * @param integer $email
+     * @param int $email
      * @param string $subject
      * @param string $message
-     * @param integer $usrId
-     * @param integer $usePlaceholders
+     * @param int $usrId
+     * @param int $usePlaceholders
      * @param string|null $templateContextId
      * @param array|null $templateContextParameters
      * @return int
@@ -667,7 +678,7 @@ class ilMail
             'm_subject' => array('text', $subject),
             'm_message' => array('clob', $message),
             'tpl_ctx_id' => array('text', $templateContextId),
-            'tpl_ctx_params' => array('blob', @json_encode((array) $templateContextParameters))
+            'tpl_ctx_params' => array('blob', json_encode((array) $templateContextParameters))
         ));
 
         $raiseEvent = (int) $usrId !== $this->mailbox->getUsrId();
@@ -694,7 +705,7 @@ class ilMail
     /**
      * @param string $message
      * @param int $usrId
-     * @param boolean $replaceEmptyPlaceholders
+     * @param bool $replaceEmptyPlaceholders
      * @return string
      */
     protected function replacePlaceholders(
@@ -774,8 +785,7 @@ class ilMail
                 $subject,
                 $this->replacePlaceholders($message, 0, false),
                 $attachments,
-                $sentMailId,
-                false
+                $sentMailId
             );
         } else {
             $usrIds = $this->getUserIds([$to, $cc, $bcc]);
@@ -792,8 +802,7 @@ class ilMail
                 $subject,
                 $message,
                 $attachments,
-                $sentMailId,
-                false
+                $sentMailId
             );
         }
 
@@ -834,7 +843,6 @@ class ilMail
             $individualMessage = $message;
             if ($usePlaceholders) {
                 $individualMessage = $this->replacePlaceholders($message, $user->getId());
-                ;
                 $usrIdToMessageMap[$user->getId()] = $individualMessage;
             }
 
@@ -857,12 +865,24 @@ class ilMail
                         continue;
                     } else {
                         $this->logger->debug(sprintf(
-                            "Recipient with id %s will additionally receive external emails sent to: %s",
+                            "Recipient with id %s will additionally receive external emails " .
+                            "(because the user wants to receive it externally, or the user cannot access " .
+                            "the internal mail system) sent to: %s",
                             $user->getId(),
                             implode(', ', $emailAddresses)
                         ));
                     }
+                } else {
+                    $this->logger->debug(sprintf(
+                        "Recipient with id %s is does not want to receive external emails",
+                        $user->getId()
+                    ));
                 }
+            } else {
+                $this->logger->debug(sprintf(
+                    "Recipient with id %s is inactive and will not receive external emails",
+                    $user->getId()
+                ));
             }
 
             $mbox = clone $this->mailbox;
@@ -880,8 +900,7 @@ class ilMail
                 0,
                 $subject,
                 $individualMessage,
-                $user->getId(),
-                0
+                $user->getId()
             );
 
             if (count($attachments) > 0) {
@@ -929,7 +948,7 @@ class ilMail
                 '',
                 $subject,
                 $this->formatLinebreakMessage($message),
-                (array) $attachments
+                $attachments
             );
         } elseif (count($usrIdToExternalEmailAddressesMap) > 1) {
             if ($usePlaceholders) {
@@ -944,7 +963,7 @@ class ilMail
                         '',
                         $subject,
                         $this->formatLinebreakMessage($usrIdToMessageMap[$usrId]),
-                        (array) $attachments
+                        $attachments
                     );
                 }
             } else {
@@ -970,7 +989,7 @@ class ilMail
                             $remainingAddresses,
                             $subject,
                             $this->formatLinebreakMessage($message),
-                            (array) $attachments
+                            $attachments
                         );
 
                         $remainingAddresses = '';
@@ -987,7 +1006,7 @@ class ilMail
                         $remainingAddresses,
                         $subject,
                         $this->formatLinebreakMessage($message),
-                        (array) $attachments
+                        $attachments
                     );
                 }
             }
@@ -1213,7 +1232,7 @@ class ilMail
             $rcp_bcc = '';
         }
 
-        $numberOfExternalAddresses = $this->getCountRecipients($rcp_to, $rcp_cc, $rcp_bcc, true);
+        $numberOfExternalAddresses = $this->getCountRecipients($rcp_to, $rcp_cc, $rcp_bcc);
         if (
             $numberOfExternalAddresses > 0 &&
             !$this->isSystemMail() &&
@@ -1251,11 +1270,11 @@ class ilMail
             (string) $rcp_bcc,
             (string) $a_m_subject,
             (string) $a_m_message,
-            (string) serialize($a_attachment),
+            serialize($a_attachment),
             (bool) $a_use_placeholders,
-            (bool) $this->getSaveInSentbox(),
+            $this->getSaveInSentbox(),
             (string) $this->contextId,
-            (string) serialize($this->contextParameters)
+            serialize($this->contextParameters)
         ]);
         $interaction = $taskFactory->createTask(ilMailDeliveryJobUserInteraction::class, [
             $task,
@@ -1309,7 +1328,7 @@ class ilMail
             $this->mfile->saveFiles($internalMessageId, $attachments);
         }
 
-        $numberOfExternalAddresses = $this->getCountRecipients($to, $cc, $bcc, true);
+        $numberOfExternalAddresses = $this->getCountRecipients($to, $cc, $bcc);
 
         if ($numberOfExternalAddresses > 0) {
             $externalMailRecipientsTo = $this->getEmailRecipients($to);
@@ -1413,8 +1432,7 @@ class ilMail
             0,
             $subject,
             $message,
-            $this->user_id,
-            0
+            $this->user_id
         );
     }
 
@@ -1431,7 +1449,7 @@ class ilMail
         $mailer = new ilMimeMail();
         $mailer->From($this->senderFactory->getSenderByUsrId((int) $this->user_id));
         $mailer->To($to);
-        $mailer->Subject($subject, true);
+        $mailer->Subject($subject, true, (string) ($this->contextParameters[self::PROP_CONTEXT_SUBJECT_PREFIX] ?? ''));
         $mailer->Body($message);
 
         if ($cc) {
@@ -1491,7 +1509,7 @@ class ilMail
         if (strlen($addresses) > 0) {
             $this->logger->debug(sprintf(
                 "Parsed addresses: %s",
-                implode(',', array_map(function (ilMailAddress $address) {
+                implode(',', array_map(static function (ilMailAddress $address) : string {
                     return (string) $address;
                 }, $parsedAddresses))
             ));
@@ -1551,7 +1569,7 @@ class ilMail
             $this->usrIdByLoginCallable
         );
 
-        $emailRecipients = array_map(function (ilMailAddress $address) {
+        $emailRecipients = array_map(static function (ilMailAddress $address) : string {
             return (string) $address;
         }, $addresses->value());
 
@@ -1577,7 +1595,7 @@ class ilMail
             $lang->txt('mail_auto_generated_info'),
             $DIC->settings()->get('inst_name', 'ILIAS ' . ((int) ILIAS_VERSION_NUMERIC)),
             ilUtil::_getHttpPath()
-            ) . "\n\n";
+        ) . "\n\n";
     }
 
     /**

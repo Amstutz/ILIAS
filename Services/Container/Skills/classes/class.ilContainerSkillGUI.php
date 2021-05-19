@@ -43,6 +43,11 @@ class ilContainerSkillGUI
     protected $access;
 
     /**
+     * @var ilSkillManagementSettings
+     */
+    protected $skmg_settings;
+
+    /**
      * Constructor
      *
      * @param
@@ -59,6 +64,7 @@ class ilContainerSkillGUI
         $this->container_gui = $a_container_gui;
         $this->container = $a_container_gui->object;
         $this->ref_id = $this->container->getRefId();
+        $this->skmg_settings = new ilSkillManagementSettings();
     }
 
     /**
@@ -76,7 +82,6 @@ class ilContainerSkillGUI
         switch ($next_class) {
             case "ilcontskillpresentationgui":
                 if ($this->access->checkAccess("read", "", $this->ref_id)) {
-                    include_once("./Services/Container/Skills/classes/class.ilContSkillPresentationGUI.php");
                     $gui = new ilContSkillPresentationGUI($this->container_gui);
                     $ctrl->forwardCommand($gui);
                 }
@@ -84,7 +89,6 @@ class ilContainerSkillGUI
 
             case "ilcontskilladmingui":
                 if ($this->access->checkAccess("write", "", $this->ref_id) || $this->access->checkAccess("grade", "", $this->ref_id)) {
-                    include_once("./Services/Container/Skills/classes/class.ilContSkillAdminGUI.php");
                     $gui = new ilContSkillAdminGUI($this->container_gui);
                     $ctrl->forwardCommand($gui);
                 }
@@ -131,6 +135,15 @@ class ilContainerSkillGUI
                 $lng->txt("cont_skill_assigned_comp"),
                 $ctrl->getLinkTargetByClass("ilContSkillAdminGUI", "listCompetences")
             );
+
+            if ($this->skmg_settings->getLocalAssignmentOfProfiles()
+                || $this->skmg_settings->getAllowLocalProfiles()) {
+                $tabs->addSubTab(
+                    "profiles",
+                    $lng->txt("cont_skill_assigned_profiles"),
+                    $ctrl->getLinkTargetByClass("ilContSkillAdminGUI", "listProfiles")
+                );
+            }
 
             $tabs->addSubTab(
                 "settings",

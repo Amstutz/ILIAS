@@ -1,16 +1,12 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-require_once("./Services/COPage/classes/class.ilPageContent.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* User Interface for Editing of Page Content Objects (Paragraphs, Tables, ...)
-*
-* @author Alex Killing <alex.killing@gmx.de>
-* @version $Id$
-*
-* @ingroup ServicesCOPage
-*/
+ * User Interface for Editing of Page Content Objects (Paragraphs, Tables, ...)
+ *
+ * @author Alexander Killing <killing@leifos.de>
+ */
 class ilPageContentGUI
 {
     /**
@@ -175,7 +171,6 @@ class ilPageContentGUI
     {
         if ((!is_object($this->style) || $this->getStyleId() != $this->style->getId()) && $this->getStyleId() > 0) {
             if (ilObject::_lookupType($this->getStyleId()) == "sty") {
-                include_once("./Services/Style/Content/classes/class.ilObjStyleSheet.php");
                 $this->style = new ilObjStyleSheet($this->getStyleId());
             }
         }
@@ -186,11 +181,10 @@ class ilPageContentGUI
     /**
     * Get characteristics of current style
     */
-    protected function getCharacteristicsOfCurrentStyle($a_type)
+    public function getCharacteristicsOfCurrentStyle($a_type)
     {
         if ($this->getStyleId() > 0 &&
             ilObject::_lookupType($this->getStyleId()) == "sty") {
-            include_once("./Services/Style/Content/classes/class.ilObjStyleSheet.php");
             $style = new ilObjStyleSheet($this->getStyleId());
             $chars = array();
             if (!is_array($a_type)) {
@@ -256,8 +250,6 @@ class ilPageContentGUI
         $lng = $this->lng;
         $ilCtrl = $this->ctrl;
         
-        include_once("./Services/COPage/classes/class.ilPageEditorSettings.php");
-        
         $btpl = new ilTemplate("tpl.bb_menu.html", true, true, "Services/COPage");
 
         // not nice, should be set by context per method
@@ -270,7 +262,6 @@ class ilPageContentGUI
             $btpl->parseCurrentBlock();
             
             // add int link parts
-            include_once("./Services/Link/classes/class.ilInternalLinkGUI.php");
             $btpl->setCurrentBlock("int_link_prep");
             $btpl->setVariable("INT_LINK_PREP", ilInternalLinkGUI::getInitHTML(
                 $ilCtrl->getLinkTargetByClass(
@@ -320,14 +311,13 @@ class ilPageContentGUI
             $lng->toJS("cont_anchor");
         }
 
-        include_once("./Services/COPage/classes/class.ilPCParagraphGUI.php");
         $btpl->setVariable("CHAR_STYLE_SELECT", ilPCParagraphGUI::getCharStyleSelector($this->pg_obj->getParentType(), "il.COPageBB.setCharacterClass", $this->getStyleId()));
         
         // footnote
         //		$btpl->setVariable("TXT_FN", $this->lng->txt("cont_text_fn"));
         
         //		$btpl->setVariable("TXT_CODE", $this->lng->txt("cont_text_code"));
-        $btpl->setVariable("TXT_ILN", $this->lng->txt("cont_text_iln"));
+        $btpl->setVariable("TXT_ILN", $this->lng->txt("cont_text_iln_link"));
         $lng->toJS("cont_text_iln");
         //		$btpl->setVariable("TXT_XLN", $this->lng->txt("cont_text_xln"));
         //		$btpl->setVariable("TXT_TEX", $this->lng->txt("cont_text_tex"));
@@ -635,5 +625,29 @@ class ilPageContentGUI
             return $options;
         }
         return array();
+    }
+
+    /**
+     * Redirect to parent
+     * @param string $hier_id
+     */
+    protected function redirectToParent($hier_id = "")
+    {
+        $ilCtrl = $this->ctrl;
+        if ($hier_id == "") {
+            $hier_id = $this->hier_id;
+        }
+        $pcid = $this->pg_obj->getPCIdForHierId($hier_id);
+        $ilCtrl->returnToParent($this, "add" . $pcid);
+    }
+
+    protected function getParentReturn($hier_id = "")
+    {
+        if ($hier_id == "") {
+            $hier_id = $this->hier_id;
+        }
+        $ilCtrl = $this->ctrl;
+        $pcid = $this->pg_obj->getPCIdForHierId($hier_id);
+        return $ilCtrl->getParentReturn($this) . "#add" . $pcid;
     }
 }

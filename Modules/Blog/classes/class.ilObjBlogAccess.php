@@ -45,15 +45,13 @@ class ilObjBlogAccess extends ilObjectAccess implements ilWACCheckingClass
      */
     public static function _getCommands()
     {
-        $commands = array(
+        return array(
             array("permission" => "read", "cmd" => "preview", "lang_var" => "show", "default" => true),
             array("permission" => "write", "cmd" => "render", "lang_var" => "edit"),
             array("permission" => "contribute", "cmd" => "render", "lang_var" => "edit"),
             array("permission" => "write", "cmd" => "edit", "lang_var" => "settings"),
             array("permission" => "write", "cmd" => "export", "lang_var" => "export_html")
         );
-        
-        return $commands;
     }
     
     /**
@@ -116,5 +114,29 @@ class ilObjBlogAccess extends ilObjectAccess implements ilWACCheckingClass
         }
 
         return false;
+    }
+
+    /**
+     * Is comments export possible?
+     *
+     * @param int $blog_id
+     * @return bool
+     */
+    public static function isCommentsExportPossible($blog_id)
+    {
+        global $DIC;
+
+        $setting = $DIC->settings();
+        $privacy = ilPrivacySettings::_getInstance();
+        if ($setting->get("disable_comments")) {
+            return false;
+        }
+        if (!$privacy->enabledCommentsExport()) {
+            return false;
+        }
+        if (!ilNote::commentsActivated($blog_id, 0, "blog")) {
+            return false;
+        }
+        return true;
     }
 }

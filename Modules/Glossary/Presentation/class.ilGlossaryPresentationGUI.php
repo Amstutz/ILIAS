@@ -523,6 +523,8 @@ class ilGlossaryPresentationGUI
         $ilAccess = $this->access;
         $lng = $this->lng;
         $ilErr = $this->error;
+        $tpl = $this->tpl;
+
         if ($a_ref_id == 0) {
             $ref_id = (int) $this->requested_ref_id;
         } else {
@@ -539,15 +541,14 @@ class ilGlossaryPresentationGUI
         }
 
         // tabs
-        if ($this->glossary->getPresentationMode() != "full_def") {
+        if ($this->glossary->getPresentationMode() != "full_def" &&
+            $a_page_mode != ilPageObjectGUI::PRINTING) {
             $this->showDefinitionTabs("term_content");
         }
 
         $term = new ilGlossaryTerm($term_id);
         
         if (!$a_get_html) {
-            $tpl = $this->tpl;
-
             $tpl->loadStandardTemplate();
 
             $this->setContentStyles();
@@ -898,9 +899,6 @@ class ilGlossaryPresentationGUI
                 $this->tpl->setCurrentBlock("tbl_content");
                 $this->tpl->setVariable("TXT_FILENAME", $exp_file["file"]);
 
-                $css_row = ilUtil::switchColor($i++, "tblrow1", "tblrow2");
-                $this->tpl->setVariable("CSS_ROW", $css_row);
-
                 $this->tpl->setVariable("TXT_SIZE", $exp_file["size"]);
                 $this->tpl->setVariable("TXT_FORMAT", strtoupper($exp_file["type"]));
                 $this->tpl->setVariable("CHECKBOX_ID", $exp_file["type"] . ":" . $exp_file["file"]);
@@ -1149,7 +1147,7 @@ class ilGlossaryPresentationGUI
                 $lng->txt("cont_topic"),
                 "topic",
                 false
-                );
+            );
             if ($this->tax_node > 0) {
                 $si->setValue((int) $this->tax_node);
             }
@@ -1282,7 +1280,7 @@ class ilGlossaryPresentationGUI
                             "download",
                             $lng->txt("download"),
                             $ilCtrl->getLinkTarget($this, "showDownloadList")
-                            );
+                        );
                     }
                     //}
                 }

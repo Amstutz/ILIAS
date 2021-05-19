@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 /* Copyright (c) 2017 Nils Haagen <nils.haagen@concepts-and-training.de> Extended GPL, see docs/LICENSE */
 
 namespace ILIAS\UI\Implementation\Component\Symbol\Icon;
@@ -13,7 +13,6 @@ class Standard extends Icon implements C\Symbol\Icon\Standard
      * @var bool
      */
     protected $is_outlined = false;
-
 
     private static $standard_icons = array(
          self::GRP
@@ -100,6 +99,7 @@ class Standard extends Icon implements C\Symbol\Icon\Standard
         ,self::REPS
         ,self::CRSS
         ,self::GRPS
+        ,self::WBDV
         ,self::WBRS
         ,self::PRTT
         ,self::ORGU
@@ -117,6 +117,7 @@ class Standard extends Icon implements C\Symbol\Icon\Standard
         ,self::WFE
         ,self::IASS
         ,self::COPA
+        ,self::CPAD
         ,self::BGTK
         ,self::MME
         ,self::PDFG
@@ -129,21 +130,47 @@ class Standard extends Icon implements C\Symbol\Icon\Standard
         ,self::CMIS
         ,self::TASK
         ,self::REP
+        ,self::PEAC
+        ,self::PEADL
+        ,self::PEADT
+        ,self::PECD
+        ,self::PECH
+        ,self::PECL
+        ,self::PECLP
+        ,self::PECOM
+        ,self::PECRS
+        ,self::PECRT
+        ,self::PECS
+        ,self::PEDT
+        ,self::PEFL
+        ,self::PEIM
+        ,self::PELH
+        ,self::PEMED
+        ,self::PEMP
+        ,self::PEPD
+        ,self::PEPE
+        ,self::PEPL
+        ,self::PEPLH
+        ,self::PEQU
+        ,self::PERL
+        ,self::PESC
+        ,self::PETMP
+        ,self::PEUSR
+        ,self::LSO
+        ,self::ADN
     );
 
-    public function __construct($name, $aria_label, $size, $is_disabled)
+    public function __construct(string $name, string $label, string $size, bool $is_disabled)
     {
-        $this->checkStringArg("name", $name);
-        $this->checkStringArg("string", $aria_label);
         $this->checkArgIsElement(
             "size",
             $size,
             self::$possible_sizes,
             implode('/', self::$possible_sizes)
         );
-        $this->checkBoolArg("is_disabled", $is_disabled);
+
         $this->name = $name;
-        $this->aria_label = $aria_label;
+        $this->label = $label;
         $this->size = $size;
         $this->is_disabled = $is_disabled;
     }
@@ -169,7 +196,7 @@ class Standard extends Icon implements C\Symbol\Icon\Standard
      * @param bool $is_outlined
      * @return Icon
      */
-    public function withIsOutlined(bool $is_outlined) : Icon
+    public function withIsOutlined(bool $is_outlined) : C\Symbol\Icon\Standard
     {
         $clone = clone $this;
         $clone->is_outlined = $is_outlined;

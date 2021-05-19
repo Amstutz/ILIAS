@@ -104,7 +104,7 @@ class ilCOPagePCDef
         $pc_def = self::getPCDefinitionByName($a_name);
         $pc_class = "ilPC" . $pc_def["name"];
         $pc_path = "./" . $pc_def["component"] . "/" . $pc_def["directory"] . "/class." . $pc_class . ".php";
-        include_once($pc_path);
+        //include_once($pc_path);
     }
     
     /**
@@ -118,7 +118,7 @@ class ilCOPagePCDef
         $pc_def = self::getPCDefinitionByName($a_name);
         $pc_class = "ilPC" . $pc_def["name"] . "GUI";
         $pc_path = "./" . $pc_def["component"] . "/" . $pc_def["directory"] . "/class." . $pc_class . ".php";
-        include_once($pc_path);
+        //include_once($pc_path);
     }
     
     /**
@@ -134,5 +134,21 @@ class ilCOPagePCDef
         } else {
             return in_array($a_class_name, self::$pc_gui_classes);
         }
+    }
+
+    /**
+     * Get instance
+     *
+     * @param string $a_name
+     * @return mixed|null
+     */
+    public static function getPCEditorInstanceByName($a_name)
+    {
+        $pc_def = self::getPCDefinitionByName($a_name);
+        $pc_class = "ilPC" . $pc_def["name"] . "EditorGUI";
+        if (class_exists($pc_class)) {
+            return new $pc_class();
+        }
+        return null;
     }
 }

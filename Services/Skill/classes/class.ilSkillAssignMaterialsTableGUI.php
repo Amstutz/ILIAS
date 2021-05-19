@@ -19,6 +19,36 @@ class ilSkillAssignMaterialsTableGUI extends ilTable2GUI
      */
     protected $ctrl;
 
+    /**
+     * @var ilWorkspaceTree
+     */
+    protected $ws_tree;
+
+    /**
+     * @var ilWorkspaceAccessHandler
+     */
+    protected $ws_access;
+
+    /**
+     * @var int
+     */
+    protected $top_skill_id;
+
+    /**
+     * @var int
+     */
+    protected $tref_id;
+
+    /**
+     * @var int
+     */
+    protected $basic_skill_id;
+
+    /**
+     * @var object
+     */
+    protected $skill;
+
     
     /**
      * Constructor
@@ -38,14 +68,14 @@ class ilSkillAssignMaterialsTableGUI extends ilTable2GUI
         $ilUser = $DIC->user();
 
         $this->ws_tree = new ilWorkspaceTree($ilUser->getId());
+        if (!$this->ws_tree->getRootId()) {
+            $this->ws_tree->createTreeForUser($ilUser->getId());
+        }
         $this->ws_access = new ilWorkspaceAccessHandler();
 
         $this->top_skill_id = $a_top_skill_id;
         $this->tref_id = (int) $a_tref_id;
         $this->basic_skill_id = $a_basic_skill_id;
-        
-        // workspace tree
-        $this->ws_tree = new ilWorkspaceTree($ilUser->getId());
 
 
         // build title
@@ -88,6 +118,7 @@ class ilSkillAssignMaterialsTableGUI extends ilTable2GUI
     public function getLevels()
     {
         $this->skill = ilSkillTreeNodeFactory::getInstance($this->basic_skill_id);
+        $levels = [];
         foreach ($this->skill->getLevelData() as $k => $v) {
             $levels[] = $v;
         }

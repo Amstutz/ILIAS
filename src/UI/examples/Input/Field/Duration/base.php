@@ -1,4 +1,7 @@
 <?php
+declare(strict_types=1);
+namespace ILIAS\UI\examples\Input\Field\Duration;
+
 /**
  * Base example showing how to plug date-inputs into a form
  */
@@ -33,6 +36,8 @@ function base()
         ]
     );
 
+    $result = "";
+    
     //Step 3: implement some form data processing.
     if ($request->getMethod() == "POST") {
         $form = $form->withRequest($request);
@@ -44,7 +49,7 @@ function base()
                 //The result is sumarized through the transformation
                 $result = $form->getData();
             }
-        };
+        }
     } else {
         $result = "No result yet.";
     }

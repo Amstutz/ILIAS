@@ -21,17 +21,19 @@ class ilDidacticTemplateImport
      */
     private $logger = null;
 
-
     /**
-     * Constructor
-     * @param <type> $a_type
+     * @var ilObjectDefinition
      */
+    protected $objDefinition;
+
+
     public function __construct($a_type)
     {
         global $DIC;
 
         $this->logger = $DIC->logger()->otpl();
         $this->type = $a_type;
+        $this->objDefinition = $DIC['objDefinition'];
     }
 
     /**
@@ -43,10 +45,6 @@ class ilDidacticTemplateImport
         $this->xmlfile = $a_file;
     }
 
-    /**
-     * Get inputfile
-     * @return <type>
-     */
     public function getInputFile()
     {
         return $this->xmlfile;
@@ -66,23 +64,20 @@ class ilDidacticTemplateImport
      */
     public function import($a_dtpl_id = 0)
     {
+        $root = null;
         libxml_use_internal_errors(true);
-
         switch ($this->getInputType()) {
             case self::IMPORT_FILE:
-
                 $root = simplexml_load_file($this->getInputFile());
-                if ($root == false) {
-                    throw new ilDidacticTemplateImportException(
-                        $this->parseXmlErrors()
-                    );
-                }
                 break;
         }
-
+        if (!$root instanceof SimpleXMLElement) {
+            throw new ilDidacticTemplateImportException(
+                $this->parseXmlErrors()
+            );
+        }
         $settings = $this->parseSettings($root);
         $this->parseActions($settings, $root->didacticTemplate->actions);
-
         return $settings;
     }
 
@@ -94,6 +89,8 @@ class ilDidacticTemplateImport
     protected function parseSettings(SimpleXMLElement $root)
     {
         global $DIC;
+
+        $icon = '';
 
         $ilSetting = $DIC['ilSetting'];
         include_once './Services/DidacticTemplate/classes/class.ilDidacticTemplateSetting.php';
@@ -108,6 +105,8 @@ class ilDidacticTemplateImport
             }
             $setting->setTitle(trim((string) $tpl->title));
             $setting->setDescription(trim((string) $tpl->description));
+
+            $icon = (string) $tpl->icon;
 
             $info = '';
             foreach ((array) $tpl->info->p as $paragraph) {
@@ -137,6 +136,10 @@ class ilDidacticTemplateImport
         }
         $setting->save();
 
+        if (strlen($icon) && $this->canUseIcons($setting)) {
+            $setting->getIconHandler()->writeSvg($icon);
+        }
+
         include_once("./Services/Multilingualism/classes/class.ilMultilingualism.php");
         $trans = ilMultilingualism::getInstance($setting->getId(), "dtpl");
 
@@ -146,6 +149,16 @@ class ilDidacticTemplateImport
         $trans->save();
         
         return $setting;
+    }
+
+    protected function canUseIcons(ilDidacticTemplateSetting $setting) : bool
+    {
+        foreach ($setting->getAssignments() as $assignment) {
+            if (!$this->objDefinition->isContainer($assignment)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

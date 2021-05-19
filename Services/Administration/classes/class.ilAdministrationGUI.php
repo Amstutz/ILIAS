@@ -38,7 +38,7 @@
 * @ilCtrl_Calls ilAdministrationGUI: ilObjBadgeAdministrationGUI, ilMemberExportSettingsGUI
 * @ilCtrl_Calls ilAdministrationGUI: ilObjFileAccessSettingsGUI, ilPermissionGUI, ilObjRemoteTestGUI, ilPropertyFormGUI
 * @ilCtrl_Calls ilAdministrationGUI: ilObjCmiXapiAdministrationGUI, ilObjCmiXapiGUI, ilObjLTIConsumerGUI
-* @ilCtrl_Calls ilAdministrationGUI: ilObjLearningSequenceAdminGUI
+* @ilCtrl_Calls ilAdministrationGUI: ilObjLearningSequenceAdminGUI, ilObjContentPageAdministrationGUI
 */
 class ilAdministrationGUI
 {
@@ -82,6 +82,18 @@ class ilAdministrationGUI
     private $logger = null;
 
     /**
+     * @var string
+     */
+    protected $admin_mode = "";
+
+    /**
+     * @var bool
+     */
+    protected $creation_mode = false;
+
+    protected int $requested_obj_id = 0;
+
+    /**
     * Constructor
     * @access	public
     */
@@ -117,9 +129,10 @@ class ilAdministrationGUI
         $ilMainMenu->setActive("administration");
         
         $this->ctrl->saveParameter($this, array("ref_id", "admin_mode"));
-        
-        if ($_GET["admin_mode"] != "repository") {
-            $_GET["admin_mode"] = "settings";
+
+        $this->admin_mode = $_GET["admin_mode"] ?? "";
+        if ($this->admin_mode != ilObjectGUI::ADMIN_MODE_REPOSITORY) {
+            $this->admin_mode = ilObjectGUI::ADMIN_MODE_SETTINGS;
         }
         
         if (!ilUtil::isAPICall()) {
@@ -136,6 +149,8 @@ class ilAdministrationGUI
                 $_GET["cmd"] = "";
             }
         }
+
+        $this->requested_obj_id = (int) ($_GET["obj_id"] ?? 0);
     }
 
     
@@ -180,7 +195,7 @@ class ilAdministrationGUI
 
         if ((
             $next_class == "iladministrationgui" || $next_class == ""
-            ) && ($this->ctrl->getCmd() == "return")) {
+        ) && ($this->ctrl->getCmd() == "return")) {
             // get GUI of current object
             $obj_type = ilObject::_lookupType($this->cur_ref_id, true);
             $class_name = $this->objDefinition->getClassName($obj_type);
@@ -206,12 +221,13 @@ class ilAdministrationGUI
                     }
                     
                     $class_path = $this->ctrl->lookupClassPath($next_class);
+                    require_once $class_path;
                     // get gui class instance
                     $class_name = $this->ctrl->getClassForClasspath($class_path);
                     if (($next_class == "ilobjrolegui" || $next_class == "ilobjusergui"
                         || $next_class == "ilobjroletemplategui")) {
-                        if ($_GET["obj_id"] != "") {
-                            $this->gui_obj = new $class_name("", $_GET["obj_id"], false, false);
+                        if ($this->requested_obj_id > 0) {
+                            $this->gui_obj = new $class_name("", $this->requested_obj_id, false, false);
                             $this->gui_obj->setCreationMode(false);
                         } else {
                             $this->gui_obj = new $class_name("", $this->cur_ref_id, true, false);
@@ -221,14 +237,23 @@ class ilAdministrationGUI
                         if ($objDefinition->isPlugin(ilObject::_lookupType($this->cur_ref_id, true))) {
                             $this->gui_obj = new $class_name($this->cur_ref_id);
                         } else {
-                            if (is_subclass_of($class_name, "ilObject2GUI")) {
-                                $this->gui_obj = new $class_name($this->cur_ref_id, ilObject2GUI::REPOSITORY_NODE_ID);
+                            if (!$this->creation_mode) {
+                                if (is_subclass_of($class_name, "ilObject2GUI")) {
+                                    $this->gui_obj = new $class_name($this->cur_ref_id, ilObject2GUI::REPOSITORY_NODE_ID);
+                                } else {
+                                    $this->gui_obj = new $class_name("", $this->cur_ref_id, true, false);
+                                }
                             } else {
-                                $this->gui_obj = new $class_name("", $this->cur_ref_id, true, false);
+                                if (is_subclass_of($class_name, "ilObject2GUI")) {
+                                    $this->gui_obj = new $class_name(null, ilObject2GUI::REPOSITORY_NODE_ID, $this->cur_ref_id);
+                                } else {
+                                    $this->gui_obj = new $class_name("", 0, true, false);
+                                }
                             }
                         }
-                        $this->gui_obj->setCreationMode(false);
+                        $this->gui_obj->setCreationMode($this->creation_mode);
                     }
+                    $this->gui_obj->setAdminMode($this->admin_mode);
                     $tabs_out = true;
                     $ilHelp->setScreenIdComponent(ilObject::_lookupType($this->cur_ref_id, true));
                     $this->showTree();
@@ -256,7 +281,7 @@ class ilAdministrationGUI
     {
         $ilErr = $this->error;
         
-        if ($_GET["admin_mode"] != "repository") {	// settings
+        if ($this->admin_mode != "repository") {	// settings
             if ($_GET["ref_id"] == USER_FOLDER_ID) {
                 $this->ctrl->setParameter($this, "ref_id", USER_FOLDER_ID);
                 $this->ctrl->setParameterByClass("iladministrationgui", "admin_mode", "settings");
@@ -306,7 +331,7 @@ class ilAdministrationGUI
     {
         global $DIC;
 
-        if ($_GET["admin_mode"] != "repository") {
+        if ($this->admin_mode != "repository") {
             return;
         }
 

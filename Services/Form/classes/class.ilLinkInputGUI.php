@@ -1,30 +1,29 @@
 <?php
-/* Copyright (c) 1998-2012 ILIAS open source, Extended GPL, see docs/LICENSE */
+
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* This class represents a external and/or internal link in a property form.
-*
-* @author Jörg Lützenkirchen <luetzenkirchen@leifos.com>
-* @version $Id$
-*
-* @ilCtrl_IsCalledBy ilLinkInputGUI: ilFormPropertyDispatchGUI
-* @ilCtrl_Calls ilLinkInputGUI: ilInternalLinkGUI
-*
-* @ingroup	ServicesForm
-*/
+ * This class represents a external and/or internal link in a property form.
+ *
+ * @author Jörg Lützenkirchen <luetzenkirchen@leifos.com>
+ *
+ * @ilCtrl_IsCalledBy ilLinkInputGUI: ilFormPropertyDispatchGUI
+ * @ilCtrl_Calls ilLinkInputGUI: ilInternalLinkGUI
+ */
 class ilLinkInputGUI extends ilFormPropertyGUI
 {
     const EXTERNAL_LINK_MAX_LENGTH = 200;
 
+    const LIST = "list";
     const BOTH = "both";
     const INT = "int";
     const EXT = "ext";
-    protected $allowed_link_types = self::BOTH;
-    protected $int_link_default_type = "RepositoryItem";
-    protected $int_link_default_obj = 0;
-    protected $int_link_filter_types = array("RepositoryItem");
-    protected $filter_white_list = true;
 
+    protected string $allowed_link_types = self::BOTH;
+    protected string $int_link_default_type = "RepositoryItem";
+    protected int $int_link_default_obj = 0;
+    protected array $int_link_filter_types = array("RepositoryItem");
+    protected bool $filter_white_list = true;
     protected $external_link_max_length = self::EXTERNAL_LINK_MAX_LENGTH;
 
     protected static $iltypemap = array(
@@ -34,10 +33,10 @@ class ilLinkInputGUI extends ilFormPropertyGUI
         "wpage" => "WikiPage"
     );
 
-    /**
-     * @var ilObjectDefinition
-     */
-    protected $obj_definition;
+    protected ilObjectDefinition $obj_definition;
+    protected string $requested_postvar;
+
+    protected string $value = "";
 
     /**
     * Constructor
@@ -56,12 +55,14 @@ class ilLinkInputGUI extends ilFormPropertyGUI
         $this->setType("link");
 
         $this->obj_definition = $DIC["objDefinition"];
+
+        $this->requested_postvar = $_REQUEST["postvar"] ?? "";
     }
     
     /**
-     * Set allowed link types (BOTH, INT, EXT)
+     * Set allowed link types (LIST, BOTH, INT, EXT)
      *
-     * @param string $a_val self::BOTH|self::INT|self::EXT
+     * @param string $a_val self::LIST|self::BOTH|self::INT|self::EXT
      */
     public function setAllowedLinkTypes($a_val)
     {
@@ -69,9 +70,9 @@ class ilLinkInputGUI extends ilFormPropertyGUI
     }
     
     /**
-     * Get allowed link types (BOTH, INT, EXT)
+     * Get allowed link types (LIST, BOTH, INT, EXT)
      *
-     * @return string self::BOTH|self::INT|self::EXT
+     * @return string self::LIST|self::BOTH|self::INT|self::EXT
      */
     public function getAllowedLinkTypes()
     {
@@ -170,7 +171,6 @@ class ilLinkInputGUI extends ilFormPropertyGUI
         switch ($next_class) {
             case "ilinternallinkgui":
                 $lng->loadLanguageModule("content");
-                require_once("./Services/Link/classes/class.ilInternalLinkGUI.php");
                 $link_gui = new ilInternalLinkGUI(
                     $this->int_link_default_type,
                     $this->int_link_default_obj
@@ -194,20 +194,18 @@ class ilLinkInputGUI extends ilFormPropertyGUI
     
     /**
      * Set Value.
-     *
-     * @param	string	$a_value	Value
+     * @param string $a_value
      */
-    public function setValue($a_value)
+    public function setValue(string $a_value) : void
     {
         $this->value = $a_value;
     }
 
     /**
      * Get Value.
-     *
-     * @return	string	Value
+     * @return string
      */
-    public function getValue()
+    public function getValue() : string
     {
         return $this->value;
     }
@@ -256,6 +254,10 @@ class ilLinkInputGUI extends ilFormPropertyGUI
         // return false;
         
         if ($this->getRequired()) {
+            if ($_POST[$this->getPostVar() . "_mode_type"] == "list") {
+                return true;
+            }
+
             switch ($_POST[$this->getPostVar() . "_mode"]) {
                 case "ext":
                     if (!$_POST[$this->getPostVar()]) {
@@ -310,7 +312,7 @@ class ilLinkInputGUI extends ilFormPropertyGUI
         $ilCtrl = $this->ctrl;
         
         // parse settings
-        $has_int = $has_ext = $has_radio = false;
+        $has_int = $has_ext = $has_radio = $has_list = false;
         switch ($this->getAllowedLinkTypes()) {
             case self::EXT:
                 $has_ext = true;
@@ -324,6 +326,13 @@ class ilLinkInputGUI extends ilFormPropertyGUI
                 $has_int = true;
                 $has_ext = true;
                 $has_radio = true;
+                break;
+
+            case self::LIST:
+                $has_int = true;
+                $has_ext = true;
+                $has_radio = true;
+                $has_list = true;
                 break;
         }
         if (!$this->getRequired()) {
@@ -345,7 +354,7 @@ class ilLinkInputGUI extends ilFormPropertyGUI
             $ilCtrl->setParameterByClass("ilformpropertydispatchgui", "postvar", $this->getPostVar());
             $link = array(get_class($this->getParent()), "ilformpropertydispatchgui", get_class($this), "ilinternallinkgui");
             $link = $ilCtrl->getLinkTargetByClass($link, "", false, true, false);
-            $ilCtrl->setParameterByClass("ilformpropertydispatchgui", "postvar", $_REQUEST["postvar"]);
+            $ilCtrl->setParameterByClass("ilformpropertydispatchgui", "postvar", $this->requested_postvar);
                                 
             $no_disp_class = (strpos($this->getValue(), "|"))
                 ? ""
@@ -388,6 +397,27 @@ class ilLinkInputGUI extends ilFormPropertyGUI
             } else {
                 $mode->setValue("ext");
             }
+        }
+
+        // list mode
+        if ($has_list) {
+            $mode_type = new ilRadioGroupInputGUI("", $this->getPostVar() . "_mode_type");
+            $mode_single = new ilRadioOption($lng->txt("webr_link_type_single"), "single");
+            $mode_type->addOption($mode_single);
+            $mode_list = new ilRadioOption($lng->txt("webr_link_type_list"), "list");
+            $mode_type->addOption($mode_list);
+            $mode = new ilRadioGroupInputGUI($lng->txt("webr_link_target"), $this->getPostVar() . "_mode");
+            if (!$this->getRequired()) {
+                $no = new ilRadioOption($lng->txt("form_no_link"), "no");
+                $mode->addOption($no);
+            }
+            $ext = new ilRadioOption($lng->txt("form_link_external"), "ext");
+            $ext->addSubItem($ti);
+            $int = new ilRadioOption($lng->txt("form_link_internal"), "int");
+            $int->addSubItem($ne);
+            $mode->addOption($ext);
+            $mode->addOption($int);
+            $mode_single->addSubItem($mode);
         }
 
         // value
@@ -438,10 +468,12 @@ class ilLinkInputGUI extends ilFormPropertyGUI
                     '<div class="help-block">' . $ne->getInfo() . '</div>';
             }
         }
+        if ($has_list) {
+            $html = $mode_type->render();
+        }
 
         // js for internal link
         if ($has_int) {
-            include_once("./Services/Link/classes/class.ilInternalLinkGUI.php");
             $html .= $hidden_type->getToolbarHTML() .
                 $hidden_id->getToolbarHTML() .
                 $hidden_target->getToolbarHTML();
@@ -453,7 +485,8 @@ class ilLinkInputGUI extends ilFormPropertyGUI
     public function getContentOutsideFormTag()
     {
         if ($this->getAllowedLinkTypes() == self::INT ||
-            $this->getAllowedLinkTypes() == self::BOTH) {
+            $this->getAllowedLinkTypes() == self::BOTH ||
+            $this->getAllowedLinkTypes() == self::LIST) {
             // as the ajax-panel uses a form it has to be outside of the parent form!
             return ilInternalLinkGUI::getInitHTML("");
         }
@@ -491,13 +524,11 @@ class ilLinkInputGUI extends ilFormPropertyGUI
                 break;
 
             case "page":
-                include_once("./Modules/LearningModule/classes/class.ilLMPageObject.php");
                 $type = $lng->txt("obj_pg");
                 $name = ilLMPageObject::_lookupTitle($value[1]);
                 break;
 
             case "chap":
-                include_once("./Modules/LearningModule/classes/class.ilStructureObject.php");
                 $type = $lng->txt("obj_st");
                 $name = ilStructureObject::_lookupTitle($value[1]);
                 break;

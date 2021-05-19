@@ -6,6 +6,8 @@ use ILIAS\GlobalScreen\Identification\NullPluginIdentification;
 use ILIAS\GlobalScreen\Scope\MainMenu\Collector\Handler\TypeHandler;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\isItem;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\isParent;
+use ILIAS\GlobalScreen\Scope\MainMenu\Factory\Item\Lost;
+use ILIAS\GlobalScreen\Scope\MainMenu\Factory\TopItem\TopLinkItem;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\TopItem\TopParentItem;
 use ILIAS\MainMenu\Provider\CustomMainBarProvider;
 
@@ -70,6 +72,16 @@ class ilMMItemRepository
         return $this->main_collector->getSingleItemFromRaw($identification);
     }
 
+    public function getSingleItemFromFilter(IdentificationInterface $identification) : isItem
+    {
+        return $this->main_collector->getSingleItemFromFilter($identification);
+    }
+
+    public function resolveIdentificationFromString(string $identification_string) : IdentificationInterface
+    {
+        return $this->services->identification()->fromSerializedIdentification($identification_string);
+    }
+
     /**
      * @return ilMMItemRepository
      */
@@ -104,6 +116,41 @@ WHERE sub_items.parent_identification != '' ORDER BY top_items.position, parent_
         }
 
         return $return;
+    }
+
+    public function flushLostItems()
+    {
+        foreach ($this->getTopItems() as $item) {
+            $item_facade = $this->getItemFacade($this->services->identification()->fromSerializedIdentification($item['identification']));
+            if (Lost::class === $item_facade->getType()) {
+                $item_facade->delete();
+            }
+        }
+
+        foreach ($this->getSubItemsForTable() as $item) {
+            $item_facade = $this->getItemFacade($this->services->identification()->fromSerializedIdentification($item['identification']));
+            if (Lost::class === $item_facade->getType()) {
+                $item_facade->delete();
+            }
+        }
+    }
+
+    public function hasLostItems() : bool
+    {
+        foreach ($this->getTopItems() as $item) {
+            $item_facade = $this->getItemFacade($this->services->identification()->fromSerializedIdentification($item['identification']));
+            if (Lost::class === $item_facade->getType()) {
+                return true;
+            }
+        }
+
+        foreach ($this->getSubItemsForTable() as $item) {
+            $item_facade = $this->getItemFacade($this->services->identification()->fromSerializedIdentification($item['identification']));
+            if (Lost::class === $item_facade->getType()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -164,6 +211,9 @@ WHERE sub_items.parent_identification != '' ORDER BY top_items.position, parent_
                 continue;
             }
             if ($information->isChild()) {
+                if ($information->getType() === TopLinkItem::class) { // since these two types are identical (more or less), we truncate one
+                    continue;
+                }
                 $types[$information->getType()] = $information;
             }
         }

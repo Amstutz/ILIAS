@@ -1,5 +1,6 @@
 <?php
 
+use ILIAS\Filesystem\Exception\FileNotFoundException;
 use ILIAS\GlobalScreen\Collector\StorageFacade;
 use ILIAS\GlobalScreen\Identification\IdentificationInterface;
 use ILIAS\GlobalScreen\Scope\MainMenu\Collector\Information\ItemInformation;
@@ -7,9 +8,10 @@ use ILIAS\GlobalScreen\Scope\MainMenu\Factory\hasSymbol;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\hasTitle;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\isChild;
 use ILIAS\GlobalScreen\Scope\MainMenu\Factory\isItem;
-use ILIAS\MainMenu\Storage\Services;
+use ILIAS\ResourceStorage\Services;
 use ILIAS\UI\Component\Symbol\Glyph\Glyph;
 use ILIAS\UI\Component\Symbol\Icon\Icon;
+use ILIAS\GlobalScreen\Scope\MainMenu\Factory\Item\RepositoryLink;
 
 /**
  * Class ilMMItemInformation
@@ -40,9 +42,10 @@ class ilMMItemInformation implements ItemInformation
      */
     public function __construct()
     {
+        global $DIC;
         $this->items        = ilMMItemStorage::getArray('identification');
         $this->translations = ilMMItemTranslationStorage::getArray('id', 'translation');
-        $this->storage      = new Services();
+        $this->storage      = $DIC['resource_storage'];
     }
 
     /**
@@ -63,14 +66,17 @@ class ilMMItemInformation implements ItemInformation
         if (!$default_language) {
             $default_language = ilMMItemTranslationStorage::getDefaultLanguage();
         }
-
+        if ($item instanceof RepositoryLink && empty($item->getTitle())) {
+            $item = $item->withTitle(($item->getRefId() > 0) ?
+                \ilObject2::_lookupTitle(\ilObject2::_lookupObjectId($item->getRefId())) :
+                ""
+            );
+        }
         if ($item instanceof hasTitle && isset($this->translations["{$item->getProviderIdentification()->serialize()}|$usr_language_key"])
             && $this->translations["{$item->getProviderIdentification()->serialize()}|$usr_language_key"] !== ''
         ) {
             $item = $item->withTitle((string) $this->translations["{$item->getProviderIdentification()->serialize()}|$usr_language_key"]);
         }
-
-        // $item = $item->withTitle($item->getTitle() . "({$item->getProviderIdentification()->serialize()})"); // Activate for debugging in UI
 
         return $item;
     }
@@ -127,22 +133,29 @@ class ilMMItemInformation implements ItemInformation
         if (isset($this->items[$id][self::ICON_ID]) && strlen($this->items[$id][self::ICON_ID]) > 1) {
             global $DIC;
 
-            $ri = $this->storage->find($this->items[$id][self::ICON_ID]);
+            $ri = $this->storage->manage()->find($this->items[$id][self::ICON_ID]);
             if (!$ri) {
                 return $item;
             }
-            $stream     = $this->storage->stream($ri)->getStream();
-            $data       = 'data:' . $this->storage->getRevision($ri)->getInformation()->getMimeType() . ';base64,' . base64_encode($stream->getContents());
+
+            try {
+                $src = $this->storage->consume()->src($ri);
+            } catch (FileNotFoundException $f) {
+                return $item;
+            }
+
             $old_symbol = $item->hasSymbol() ? $item->getSymbol() : null;
-            if ($old_symbol instanceof Glyph || $old_symbol instanceof Icon) {
+            if ($old_symbol instanceof Glyph) {
                 $aria_label = $old_symbol->getAriaLabel();
+            } elseif ($old_symbol instanceof Icon) {
+                $aria_label = $old_symbol->getLabel();
             } elseif ($item instanceof hasTitle) {
                 $aria_label = $item->getTitle();
             } else {
                 $aria_label = 'Custom icon';
             }
 
-            $symbol = $DIC->ui()->factory()->symbol()->icon()->custom($data, $aria_label);
+            $symbol = $DIC->ui()->factory()->symbol()->icon()->custom($src->getSrc(), $aria_label);
 
             return $item->withSymbol($symbol);
         }

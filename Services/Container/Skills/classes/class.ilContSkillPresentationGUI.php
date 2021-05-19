@@ -1,12 +1,11 @@
 <?php
 
-/* Copyright (c) 1998-2017 ILIAS open source, Extended GPL, see docs/LICENSE */
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
  * Skill presentatio for container (course/group)
  *
  * @author Alex Killing <killing@leifos.de>
- * @ingroup ServicesContainer
  * @ilCtrl_Calls ilContSkillPresentationGUI: ilPersonalSkillsGUI
  */
 class ilContSkillPresentationGUI
@@ -47,6 +46,26 @@ class ilContSkillPresentationGUI
     protected $user;
 
     /**
+     * @var ilContainerSkills
+     */
+    protected $container_skills;
+
+    /**
+     * @var ilContainerGlobalProfiles
+     */
+    protected $container_global_profiles;
+
+    /**
+     * @var ilContainerLocalProfiles
+     */
+    protected $container_local_profiles;
+
+    /**
+     * @var ilContSkillCollector
+     */
+    protected $container_skill_collector;
+
+    /**
      * Constructor
      *
      * @param
@@ -64,8 +83,15 @@ class ilContSkillPresentationGUI
         $this->container_gui = $a_container_gui;
         $this->container = $a_container_gui->object;
 
-        include_once("./Services/Container/Skills/classes/class.ilContainerSkills.php");
         $this->container_skills = new ilContainerSkills($this->container->getId());
+        $this->container_global_profiles = new ilContainerGlobalProfiles($this->container->getId());
+        $this->container_local_profiles = new ilContainerLocalProfiles($this->container->getId());
+
+        $this->container_skill_collector = new ilContSkillCollector(
+            $this->container_skills,
+            $this->container_global_profiles,
+            $this->container_local_profiles
+        );
     }
 
     /**
@@ -80,6 +106,7 @@ class ilContSkillPresentationGUI
 
         $next_class = $this->ctrl->getNextClass($this);
         $cmd = $this->ctrl->getCmd("show");
+        $this->setPermanentLink();
 
         switch ($next_class) {
             case "ilpersonalskillsgui":
@@ -91,6 +118,18 @@ class ilContSkillPresentationGUI
                     $this->$cmd();
                 }
         }
+    }
+
+    /**
+     * Set permanent link
+     * @param
+     * @return
+     */
+    protected function setPermanentLink()
+    {
+        $type = $this->container->getType();
+        $ref_id = $this->container->getRefId();
+        $this->tpl->setPermanentLink($type, "", $ref_id . "_comp", "", "");
     }
 
     /**
@@ -106,13 +145,9 @@ class ilContSkillPresentationGUI
         $gui->setGapAnalysisActualStatusModePerObject($this->container->getId());
         $gui->setTriggerObjectsFilter($this->getSubtreeObjectIds());
         $gui->setHistoryView(true); // NOT IMPLEMENTED YET
-        $skills = array_map(function ($v) {
-            return array(
-                "base_skill_id" => $v["skill_id"],
-                "tref_id" => $v["tref_id"]
-            );
-        }, $this->container_skills->getSkills());
+        $skills = $this->container_skill_collector->getSkillsForPresentationGUI();
         $gui->setObjectSkills($this->container_skills->getId(), $skills);
+        $gui->setObjectSkillProfiles($this->container_global_profiles, $this->container_local_profiles);
         return $gui;
     }
 
@@ -143,5 +178,30 @@ class ilContSkillPresentationGUI
 
 
         return $objects;
+    }
+
+    /**
+     * Is container skill presentation accessible
+     * @param $ref_id
+     * @return bool
+     */
+    public static function isAccessible($ref_id)
+    {
+        global $DIC;
+
+        $access = $DIC->access();
+
+        $obj_id = ilObject::_lookupObjId($ref_id);
+        if ($access->checkAccess('read', '', $ref_id) && ilContainer::_lookupContainerSetting(
+            $obj_id,
+            ilObjectServiceSettingsGUI::SKILLS,
+            false
+        )) {
+            $skmg_set = new ilSetting("skmg");
+            if ($skmg_set->get("enable_skmg")) {
+                return true;
+            }
+        }
+        return false;
     }
 }

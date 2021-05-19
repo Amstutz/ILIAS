@@ -41,22 +41,38 @@ if (false === file_exists(__DIR__ . '/../libs/composer/vendor/autoload.php')) {
 if (php_sapi_name() === "cli") {
     require_once(__DIR__ . "/cli.php");
 } else {
+    header("Content-Type: text/html");
+    echo <<<MSG
+<p>Dear user,</p>
+<p>the GUI for the setup is abandoned as of ILIAS 7:</p>
 
-// ATTENTION: This is a hack to get around the usage of the echo/exit pattern in
-    // the setup for the command line version of the setup.
-    function setup_exit($message)
-    {
-        echo "<pre>$message</pre>";
-        die();
-    }
+<p>
+<a href="https://docu.ilias.de/goto_docu_wiki_wpage_6314_1357.html" target="_blank">Setup - Abandon web based GUI</a><br />
+<a href="https://docu.ilias.de/goto_docu_wiki_wpage_6391_1357.html" target="_blank">Setup - Abandon Maintenance Mode</a><br />
+<a href="https://docu.ilias.de/goto_docu_wiki_wpage_6338_1357.html" target="_blank">Setup - Abandon Multi Client</a><br />
+</p>
 
-    if (ini_get('session.save_handler') != 'files') {
-        throw new Exception("session.save_handler in php.ini must be configured to 'files'.");
-    }
+<p>It is replaced by a command line implementation of the setup:</p>
 
-    chdir("..");
-    define('IL_INITIAL_WD', getcwd());
-    require_once "./setup/include/inc.setup_header.php";
+<p>
+<a href="https://docu.ilias.de/goto_docu_wiki_wpage_5890_1357.html" target="_blank">Setup - Introduce CLI-Setup</a><br />
+<a href="https://docu.ilias.de/goto_docu_wiki_wpage_6567_1357.html" target="_blank">Setup - Let update-Command change configs</a><br />
+</p>
 
-    $setup = new ilSetupGUI();
+<p>
+while the functionality for the maintenance mode and the multi-<br />
+clients are removed completely as dicussed in the context of<br />
+the Setup Revision:<br />
+</p>
+
+<p><a href="https://docu.ilias.de/goto_docu_wiki_wpage_4900_1357.html" target="_blank">Setup Revision 2018</a></p>
+
+<p>
+Have a look into a detailed documentation of the setup in the<br />
+file setup/README.md or take a look into the ILIAS installation<br />
+instructions at <a href="../docs/configuration/install.md">docs/configuration/install.md</a>.<br />
+</p>
+
+<p>Best regards!</p>
+MSG;
 }

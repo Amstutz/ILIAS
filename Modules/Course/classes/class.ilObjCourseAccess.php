@@ -199,16 +199,6 @@ class ilObjCourseAccess extends ilObjectAccess implements ilConditionHandling
         $commands = array();
         $commands[] = array("permission" => "crs_linked", "cmd" => "", "lang_var" => "view", "default" => true);
 
-        include_once './Services/WebServices/FileManager/classes/class.ilFMSettings.php';
-        if (ilFMSettings::getInstance()->isEnabled()) {
-            $commands[] = array(
-                'permission' => 'read',
-                'cmd' => 'fileManagerLaunch',
-                'lang_var' => 'fm_start',
-                'enable_anonymous' => false
-            );
-        }
-
         $commands[] = array("permission" => "join", "cmd" => "join", "lang_var" => "join");
 
         // on waiting list
@@ -245,7 +235,7 @@ class ilObjCourseAccess extends ilObjectAccess implements ilConditionHandling
         $t_arr = explode("_", $a_target);
         
         // registration codes
-        if (substr($t_arr[2], 0, 5) == 'rcode' and $ilUser->getId() != ANONYMOUS_USER_ID) {
+        if (isset($t_arr[2]) && substr($t_arr[2], 0, 5) == 'rcode' and $ilUser->getId() != ANONYMOUS_USER_ID) {
             self::$using_code = true;
             return true;
         }

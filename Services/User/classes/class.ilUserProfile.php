@@ -46,8 +46,8 @@ class ilUserProfile
     private static $user_field = array(
         "username" => array(
                         "input" => "login",
-                        "maxlength" => 64,
-                        "size" => 40,
+                        "maxlength" => 190,
+                        "size" => 190,
                         "method" => "getLogin",
                         "course_export_fix_value" => 1,
                         "group_export_fix_value" => 1,
@@ -524,7 +524,7 @@ class ilUserProfile
                             $val->setValue($a_user->getLogin());
                         }
                         $val->setMaxLength($p['maxlength']);
-                        $val->setSize(40);
+                        $val->setSize(255);
                         $val->setRequired(true);
                     } else {
                         // user account name
@@ -554,7 +554,6 @@ class ilUserProfile
 
                 case "sel_country":
                     if (ilUserProfile::userSettingVisible($f)) {
-                        include_once("./Services/Form/classes/class.ilCountrySelectInputGUI.php");
                         $ci = new ilCountrySelectInputGUI($lng->txt($lv), "usr_" . $f);
                         if ($a_user) {
                             $ci->setValue($a_user->$m());

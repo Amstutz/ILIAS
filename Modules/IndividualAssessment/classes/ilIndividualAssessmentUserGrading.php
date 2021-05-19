@@ -5,6 +5,8 @@ declare(strict_types=1);
 
 use \ILIAS\UI\Component\Input\Field;
 use \ILIAS\Refinery\Factory as Refinery;
+use ILIAS\Data\Factory as DataFactory;
+use ILIAS\FileUpload\Handler\AbstractCtrlAwareUploadHandler;
 
 class ilIndividualAssessmentUserGrading
 {
@@ -117,7 +119,7 @@ class ilIndividualAssessmentUserGrading
         return $this->place;
     }
 
-    public function getEventTime() : DateTimeImmutable
+    public function getEventTime() : ?DateTimeImmutable
     {
         return $this->event_time;
     }
@@ -148,13 +150,14 @@ class ilIndividualAssessmentUserGrading
 
     public function toFormInput(
         Field\Factory $input,
+        DataFactory $data_factory,
         \ilLanguage $lng,
         Refinery $refinery,
+        AbstractCtrlAwareUploadHandler $file_handler,
         array $grading_options,
         bool $may_be_edited = true,
         bool $place_required = false,
-        bool $amend = false,
-        ilIndividualAssessmentMemberGUI $file_handler
+        bool $amend = false
     ) : Field\Input {
         $name = $input
             ->text($lng->txt('name'), '')
@@ -201,13 +204,13 @@ class ilIndividualAssessmentUserGrading
 
         $event_time = $input
             ->dateTime($lng->txt('iass_event_time'))
-            ->withValue($this->getEventTime()->format('d-m-Y'))
             ->withRequired($place_required)
             ->withDisabled(!$may_be_edited)
         ;
 
         if (!is_null($this->getEventTime())) {
-            $event_time = $event_time->withValue($this->getEventTime()->format('d-m-Y'));
+            $format = $data_factory->dateFormat()->standard()->toString();
+            $event_time = $event_time->withValue($this->getEventTime()->format($format));
         }
 
         $notify = $input

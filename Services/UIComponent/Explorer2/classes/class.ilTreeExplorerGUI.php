@@ -1,15 +1,11 @@
 <?php
-/* Copyright (c) 1998-2013 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-include_once("./Services/UIComponent/Explorer2/classes/class.ilExplorerBaseGUI.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
  * Explorer class that works on tree objects (Services/Tree)
  *
  * @author	Alex Killing <alex.killing@gmx.de>
- * @version	$Id$
- *
- * @ingroup ServicesUIComponent
  */
 abstract class ilTreeExplorerGUI extends ilExplorerBaseGUI implements \ILIAS\UI\Component\Tree\TreeRecursion
 {
@@ -20,6 +16,7 @@ abstract class ilTreeExplorerGUI extends ilExplorerBaseGUI implements \ILIAS\UI\
     protected $httpRequest;
 
     protected $tree = null;
+    protected $tree_label = "";
     protected $order_field = "";
     protected $order_field_numeric = false;
     protected $type_white_list = array();
@@ -29,6 +26,7 @@ abstract class ilTreeExplorerGUI extends ilExplorerBaseGUI implements \ILIAS\UI\
     protected $preload_childs = false;
     protected $root_node_data = null;
     protected $all_childs = array();
+    protected $root_id = 0;
 
     /**
      * @var \ILIAS\DI\UIServices
@@ -221,7 +219,7 @@ abstract class ilTreeExplorerGUI extends ilExplorerBaseGUI implements \ILIAS\UI\
     public function getChildsOfNode($a_parent_node_id)
     {
         if ($this->preloaded && $this->getSearchTerm() == "") {
-            if (is_array($this->childs[$a_parent_node_id])) {
+            if (isset($this->childs[$a_parent_node_id]) && is_array($this->childs[$a_parent_node_id])) {
                 return $this->childs[$a_parent_node_id];
             }
             return array();
@@ -252,7 +250,6 @@ abstract class ilTreeExplorerGUI extends ilExplorerBaseGUI implements \ILIAS\UI\
                 $final_childs[$k] = $c;
             }
         }
-        
         return $final_childs;
     }
 
@@ -293,7 +290,7 @@ abstract class ilTreeExplorerGUI extends ilExplorerBaseGUI implements \ILIAS\UI\
     {
         $lng = $this->lng;
         
-        return $lng->txt("icon") . " " . $lng->txt("obj_" . $a_node["type"]);
+        return $lng->txt("icon") . " " . $lng->txt("obj_" . ($a_node["type"] ?? ''));
     }
 
     /**
@@ -422,21 +419,21 @@ abstract class ilTreeExplorerGUI extends ilExplorerBaseGUI implements \ILIAS\UI\
                 $url = $this->ctrl->getLinkTargetByClass($nodeStateToggleCmdClasses, 'toggleExplorerNodeState', '', true, false);
                 $this->ctrl->setParameterByClass($cmdClass, 'node_id', null);
 
-                $javascript = "$('#$id').on('click', function(event) {
-					let node = $(this);
-	
-					if (node.hasClass('expandable')) {
-						il.UI.tree.toggleNodeState(event, '$url', 'prior_state', node.hasClass('expanded'));
-						event.preventDefault();
-						event.stopPropagation();
-					}
-				});";
+                $javascript = "il.UI.tree.registerToggleNodeAsyncAction('$id', '$url', 'prior_state');";
 
                 return $javascript;
             });
         }
 
         return $node;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTreeLabel()
+    {
+        return $this->tree_label;
     }
 
     /**
@@ -453,7 +450,12 @@ abstract class ilTreeExplorerGUI extends ilExplorerBaseGUI implements \ILIAS\UI\
             $tree->getNodeData($tree->readRootId())
         );
 
-        $tree = $f->tree()->expandable($this)
+        $label = $this->getTreeLabel();
+        if ($this->getTreeLabel() == "" && $this->getNodeContent($this->getRootNode())) {
+            $label = $this->getNodeContent($this->getRootNode());
+        }
+
+        $tree = $f->tree()->expandable($label, $this)
             ->withData($data)
             ->withHighlightOnNodeClick(true);
 

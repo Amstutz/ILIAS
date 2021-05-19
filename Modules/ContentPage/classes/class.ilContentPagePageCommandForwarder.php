@@ -2,6 +2,7 @@
 /* Copyright (c) 1998-2018 ILIAS open source, Extended GPL, see docs/LICENSE */
 
 use Psr\Http\Message\ServerRequestInterface;
+use ILIAS\ContentPage\PageMetrics\Event\PageUpdatedEvent;
 
 /**
  * Class ilContentPagePageCommandForwarder
@@ -11,17 +12,17 @@ class ilContentPagePageCommandForwarder implements ilContentPageObjectConstants
     /**
      * presentation mode for authoring
      */
-    const PRESENTATION_MODE_EDITING = 'PRESENTATION_MODE_EDITING';
+    public const PRESENTATION_MODE_EDITING = 'PRESENTATION_MODE_EDITING';
 
     /**
      * presentation mode for requesting
      */
-    const PRESENTATION_MODE_PRESENTATION = 'PRESENTATION_MODE_PRESENTATION';
+    public const PRESENTATION_MODE_PRESENTATION = 'PRESENTATION_MODE_PRESENTATION';
 
     /**
      * presentation mode for embedded presentation, e.g. in a kiosk mode
      */
-    const PRESENTATION_MODE_EMBEDDED_PRESENTATION = 'PRESENTATION_MODE_EMBEDDED_PRESENTATION';
+    public const PRESENTATION_MODE_EMBEDDED_PRESENTATION = 'PRESENTATION_MODE_EMBEDDED_PRESENTATION';
 
     /** @var string */
     protected $presentationMode = self::PRESENTATION_MODE_EDITING;
@@ -37,6 +38,8 @@ class ilContentPagePageCommandForwarder implements ilContentPageObjectConstants
     protected $backUrl = '';
     /** @var ilObjUser */
     protected $actor;
+    /** @var callable[] */
+    protected $updateListeners = [];
 
     /**
      * ilContentPagePageCommandForwarder constructor.
@@ -68,6 +71,29 @@ class ilContentPagePageCommandForwarder implements ilContentPageObjectConstants
         if (strlen($this->backUrl) > 0) {
             $this->ctrl->setParameterByClass('ilcontentpagepagegui', 'backurl', rawurlencode($this->backUrl));
         }
+    }
+
+    /**
+     * @param array<string, mixed> $parameters
+     */
+    public function onPageUpdate(array $parameters) : void
+    {
+        foreach ($this->updateListeners as $listener) {
+            call_user_func_array(
+                $listener,
+                [
+                    new PageUpdatedEvent($parameters['page'])
+                ]
+            );
+        }
+    }
+
+    /**
+     * @param callable $updateListener
+     */
+    public function addUpdateListener(callable $updateListener) : void
+    {
+        $this->updateListeners[] = $updateListener;
     }
 
     /**
@@ -146,6 +172,9 @@ class ilContentPagePageCommandForwarder implements ilContentPageObjectConstants
 
         $pageObjectGUI = $this->getPageObjectGUI($language);
         $pageObjectGUI->setEnabledTabs(true);
+
+        $page = $pageObjectGUI->getPageObject();
+        $page->addUpdateListener($this, 'onPageUpdate', ['page' => $page]);
 
         return $pageObjectGUI;
     }
@@ -244,7 +273,6 @@ class ilContentPagePageCommandForwarder implements ilContentPageObjectConstants
 
             default:
                 throw new ilException('Unknown presentation mode given');
-                break;
         }
     }
 }

@@ -1,16 +1,12 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-require_once "./Services/Object/classes/class.ilObject.php";
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* Class ilObjAccessibilitySettings
-*
-* @author Alex Killing <alex.killing@gmx.de>
-* @version $Id$
-*
-* @ingroup ServicesAccessibility
-*/
+ * Class ilObjAccessibilitySettings
+ *
+ * @author Alex Killing <alex.killing@gmx.de>
+ */
 class ilObjAccessibilitySettings extends ilObject
 {
     /**
@@ -81,5 +77,29 @@ class ilObjAccessibilitySettings extends ilObject
         //put here your module specific stuff
         
         return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function getControlConceptStatus() : bool
+    {
+        global $DIC;
+
+        $settings = $DIC->settings();
+
+        return (bool) $settings->get('acc_ctrl_cpt_status', true);
+    }
+
+    /**
+     * @param bool $status
+     */
+    public static function saveControlConceptStatus(bool $status)
+    {
+        global $DIC;
+
+        $settings = $DIC->settings();
+
+        $settings->set('acc_ctrl_cpt_status', (int) $status);
     }
 }

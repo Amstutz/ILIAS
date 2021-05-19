@@ -82,14 +82,16 @@ class ilStudyProgrammeDashboardViewGUI
         foreach ($this->getUsersAssignments() as $assignments) {
             $properties = [];
             krsort($assignments);
-            /** @var ilStudyProgrammeUserAssignment $current */
+            /** @var ilStudyProgrammeAssignment $current */
             $current = current($assignments);
             if (!$this->isReadable($current)) {
                 continue;
             }
 
+            $current_prg = ilObjStudyProgramme::getInstanceByObjId($current->getRootId());
+
             /** @var ilStudyProgrammeSettings $current_prg_settings */
-            $current_prg_settings = $current->getStudyProgramme()->getRawSettings();
+            $current_prg_settings = $current_prg->getRawSettings();
 
             /** @var ilStudyProgrammeUserProgress $current_progress */
             $current_progress = $current->getRootProgress();
@@ -97,9 +99,8 @@ class ilStudyProgrammeDashboardViewGUI
             list($valid, $validation_date) = $this->findValidationValues($assignments);
 
             list($minimum_percents, $current_percents) = $this->calculatePercent(
-                $current_prg_settings->getAssessmentSettings()->getPoints(),
-                $current_progress->getCurrentAmountOfPoints(),
-                (int) $current->getStudyProgramme()->getRefId()
+                $current_prg,
+                $current_progress->getCurrentAmountOfPoints()
             );
 
             $current_status = $current_progress->getStatus();
@@ -127,8 +128,7 @@ class ilStudyProgrammeDashboardViewGUI
                 $properties[] = $this->fillNotValid();
             }
 
-            $items[] = $this->buildItem($current->getStudyProgramme(), $properties);
-            ;
+            $items[] = $this->buildItem($current_prg, $properties);
         }
 
         if (count($items) == 0) {
@@ -254,17 +254,17 @@ class ilStudyProgrammeDashboardViewGUI
      * @throws ilException
      */
     protected function hasPermission(
-        ilStudyProgrammeUserAssignment $assignment,
+        ilStudyProgrammeAssignment $assignment,
         string $permission
     ) : bool {
-        $prg = $assignment->getStudyProgramme();
+        $prg = ilObjStudyProgramme::getInstanceByObjId($assignment->getRootId());
         return $this->access->checkAccess($permission, "", $prg->getRefId(), "prg", $prg->getId());
     }
 
     /**
      * @throws ilException
      */
-    protected function isReadable(ilStudyProgrammeUserAssignment $assignment) : bool
+    protected function isReadable(ilStudyProgrammeAssignment $assignment) : bool
     {
         if ($this->getVisibleOnPDMode() == ilObjStudyProgrammeAdmin::SETTING_VISIBLE_ON_PD_ALLWAYS) {
             return true;
@@ -274,7 +274,7 @@ class ilStudyProgrammeDashboardViewGUI
     }
 
     /**
-     * @return ilStudyProgrammeUserAssignment[]
+     * @return ilStudyProgrammeAssignment[]
      */
     protected function getUsersAssignments() : array
     {
@@ -288,25 +288,32 @@ class ilStudyProgrammeDashboardViewGUI
         return $this->lng->txt($code);
     }
 
-    protected function calculatePercent(int $points, int $current_points, int $prg_ref_id) : array
+    protected function calculatePercent(ilObjStudyProgramme $prg, int $current_points) : array
     {
-        $children = ilObjStudyProgramme::getAllChildren($prg_ref_id);
-        $max_points = 0;
-        /** @var ilObjStudyProgramme $child */
-        foreach ($children as $child) {
-            $max_points += $child->getRawSettings()->getAssessmentSettings()->getPoints();
-        }
-
         $minimum_percents = 0;
         $current_percents = 0;
-        if ($max_points > 0) {
-            $minimum_percents = round((100 * $points / $max_points), 2);
-            $current_percents = round((100 * $current_points / $max_points), 2);
+
+        if ($prg->hasLPChildren()) {
+            $minimum_percents = 100;
+            if ($current_points > 0) {
+                $current_percents = 100;
+            }
         }
 
-        if ($max_points == 0 && $points == 0) {
-            $minimum_percents = 100;
-            $current_percents = 100;
+        $children = $prg->getAllPrgChildren();
+        if (count($children) > 0) {
+            $max_points = 0;
+            foreach ($children as $child) {
+                $max_points += $child->getPoints();
+            }
+
+            if ($max_points > 0) {
+                $prg_points = $prg->getPoints();
+                $minimum_percents = round((100 * $prg_points / $max_points), 2);
+            }
+            if ($current_points > 0) {
+                $current_percents = round((100 * $current_points / $max_points), 2);
+            }
         }
 
         return [
@@ -314,6 +321,7 @@ class ilStudyProgrammeDashboardViewGUI
             $current_percents
         ];
     }
+
 
     /**
      * @throws ilException
@@ -339,7 +347,7 @@ class ilStudyProgrammeDashboardViewGUI
             ilStudyProgrammeProgress::STATUS_COMPLETED,
             ilStudyProgrammeProgress::STATUS_ACCREDITED
         ];
-        /** @var ilStudyProgrammeUserAssignment $assignment */
+        /** @var ilStudyProgrammeAssignment $assignment */
         foreach ($assignments as $key => $assignment) {
             $progress = $assignment->getRootProgress();
             if (in_array($progress->getStatus(), $status)) {
@@ -354,7 +362,7 @@ class ilStudyProgrammeDashboardViewGUI
         array $properties
     ) : ILIAS\UI\Component\Item\Item {
         $title = $prg->getTitle();
-        $link = $this->getInfoLink((int) $prg->getRefId());
+        $link = $this->getDefaultTargetUrl((int) $prg->getRefId());
         $title_btn = $this->factory->button()->shy($title, $link);
 
         $icon = $this->factory->symbol()->icon()->standard('prg', $title, 'medium');
@@ -365,23 +373,21 @@ class ilStudyProgrammeDashboardViewGUI
         ;
     }
 
-    protected function getInfoLink(int $prg_ref_id) : string
+    protected function getDefaultTargetUrl(int $prg_ref_id) : string
     {
         $this->ctrl->setParameterByClass(
-            'ilinfoscreengui',
+            ilObjStudyProgrammeGUI::class,
             'ref_id',
             $prg_ref_id
         );
         $link = $this->ctrl->getLinkTargetByClass(
             [
-                'ilrepositorygui',
-                'ilobjstudyprogrammegui',
-                'ilinfoscreengui'
-            ],
-            'showSummary'
+                ilRepositoryGUI::class,
+                ilObjStudyProgrammeGUI::class,
+            ]
         );
         $this->ctrl->setParameterByClass(
-            'ilinfoscreengui',
+            ilObjStudyProgrammeGUI::class,
             'ref_id',
             null
         );

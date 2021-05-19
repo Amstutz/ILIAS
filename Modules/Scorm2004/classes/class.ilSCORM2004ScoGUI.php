@@ -1,22 +1,12 @@
 <?php
 
-/* Copyright (c) 1998-2010 ILIAS open source, Extended GPL, see docs/LICENSE */
-
-require_once("./Modules/Scorm2004/classes/class.ilSCORM2004NodeGUI.php");
-require_once("./Modules/Scorm2004/classes/class.ilSCORM2004Sco.php");
-require_once("./Modules/Scorm2004/classes/seq_editor/class.ilSCORM2004Objective.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
- * Class ilSCORM2004ScoGUI
- *
  * User Interface for Scorm 2004 SCO Nodes
  *
  * @author Alex Killing <alex.killing@gmx.de>
- * @version $Id$
- *
  * @ilCtrl_Calls ilSCORM2004ScoGUI: ilObjectMetaDataGUI, ilNoteGUI, ilPCQuestionGUI, ilSCORM2004PageGUI, ilAssGenFeedbackPageGUI
- *
- * @ingroup ModulesScorm2004
  */
 class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
 {
@@ -91,7 +81,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
             case 'ilobjectmetadatagui':
                 $this->setTabs();
                 $this->setLocator();
-                                include_once 'Services/Object/classes/class.ilObjectMetaDataGUI.php';
                 $md_gui = new ilObjectMetaDataGUI(
                     $this->slm_object,
                     $this->node_object->getType(),
@@ -102,7 +91,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
                 break;
                 
             case 'ilscorm2004pagegui':
-                include_once("./Modules/Scorm2004/classes/class.ilSCORM2004PageGUI.php");
                 $page_obj = new ilSCORM2004PageGUI("sahs", $_GET["pg_id"]);
                 //$page_obj->setPresentationTitle($page["title"]);
                 $page_obj->setOutputMode(ilPageObjectGUI::PREVIEW);
@@ -134,7 +122,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         $this->setLocator();
         $ilTabs->setTabActive("sahs_desc_objectives");
 
-        include_once("./Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
 
         // hide objectives page
@@ -150,7 +137,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         $ta->setInfo($lng->txt("sahs_list_info"));
         $form->setTitle($lng->txt("properties"));
         $form->addItem($ta);
-        include_once "./Services/MetaData/classes/class.ilMD.php";
         $meta = new ilMD($this->node_object->getSLMId(), $this->node_object->getId(), $this->node_object->getType());
         $desc_ids = $meta->getGeneral()->getDescriptionIds();
         $ta->setValue($meta->getGeneral()->getDescription($desc_ids[0])->getDescription());
@@ -220,7 +206,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         $this->node_object->setHideObjectivePage(ilUtil::stripSlashes($_POST["hide_objectives_page"]));
         $this->node_object->update();
 
-        include_once "./Services/MetaData/classes/class.ilMD.php";
         $meta = new ilMD($this->node_object->getSLMId(), $this->node_object->getId(), $this->node_object->getType());
         $gen = $meta->getGeneral();
         $desc_ids = $gen->getDescriptionIds();
@@ -239,60 +224,30 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
 
     public function sahs_questions()
     {
-        $tpl = $this->tpl;
-        $lng = $this->lng;
-        $ilCtrl = $this->ctrl;
-
         $this->setTabs();
         $this->setLocator();
-
-        include_once "./Services/Table/classes/class.ilTableGUI.php";
-        include_once "./Modules/Scorm2004/classes/class.ilSCORM2004Page.php";
-        include_once("./Modules/TestQuestionPool/classes/class.assQuestion.php");
-        include_once("./Services/COPage/classes/class.ilPCQuestionGUI.php");
-
-        // load template for table
-        $tpl->addBlockfile("ADM_CONTENT", "adm_content", "tpl.table.html");
-        $tpl->addBlockfile("TBL_CONTENT", "tbl_content", "tpl.scormeditor_sco_question.html", "Modules/Scorm2004");
-
-        $tbl = new ilTableGUI();
-        $tbl->setTitle("Questions for " . $this->node_object->getTitle());
-        $tbl->setHeaderNames(array("Question","Page"));
-        $cols = array("question","page");
-        //		$tbl->setHeaderVars($cols, $header_params);
-        $tbl->setHeaderVars($cols, 0);
-        $tbl->setColumnWidth(array("50%", "50%"));
-        $tbl->disable("sort");
-        $tbl->disable("footer");
 
         $tree = new ilTree($this->slm_object->getId());
         $tree->setTableNames('sahs_sc13_tree', 'sahs_sc13_tree_node');
         $tree->setTreeTablePK("slm_id");
-        $i = 0;
-
+        $questions = [];
         foreach ($tree->getSubTree($tree->getNodeData($this->node_object->getId()), true, 'page') as $page) {
             // get question ids
-            include_once("./Services/COPage/classes/class.ilPCQuestion.php");
             $qids = ilPCQuestion::_getQuestionIdsForPage("sahs", $page["obj_id"]);
             if (count($qids) > 0) {
                 // output questions
                 foreach ($qids as $qid) {
-                    $tpl->setCurrentBlock("tbl_content");
-                    $tpl->setVariable("TXT_PAGE_TITLE", $page["title"]);
-                    $ilCtrl->setParameterByClass("ilscorm2004pagenodegui", "obj_id", $page["obj_id"]);
-                    $tpl->setVariable("HREF_EDIT_PAGE", $ilCtrl->getLinkTargetByClass("ilscorm2004pagenodegui", "edit"));
-                    
-                    $qtitle = assQuestion::_getTitle($qid);
-                    $tpl->setVariable("TXT_QUESTION", $qtitle);
-                    $ilCtrl->setParameterByClass("ilscorm2004pagenodegui", "obj_id", $page["obj_id"]);
-                    //$tpl->setVariable("HREF_EDIT_QUESTION", $ilCtrl->getLinkTargetByClass("ilscorm2004pagenodegui", "edit"));
-                    
-                    $tpl->setVariable("CSS_ROW", ilUtil::switchColor($i++, "tblrow1", "tblrow2"));
-                    $tpl->parseCurrentBlock();
+                    $questions[] = [
+                        "page" => $page,
+                        "qid" => $qid
+                    ];
                 }
             }
         }
-        $tbl->render();
+
+        $tab = new ILIAS\Scorm2004\Editor\ilSCORMQuestionOverviewTableGUI($this, "sahs_questions");
+        $tab->setData($questions);
+        $this->tpl->setContent($tab->getHTML());
     }
 
     public function getEditTree()
@@ -351,7 +306,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         );
         
         // metadata
-        include_once "Services/Object/classes/class.ilObjectMetaDataGUI.php";
         $mdgui = new ilObjectMetaDataGUI(
             $this->slm_object,
             $this->node_object->getType(),
@@ -426,7 +380,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         
         // init main template
         $tpl = new ilGlobalTemplate("tpl.legacy_main.html", true, true, "Modules/Scorm2004");
-        include_once("./Services/Style/Content/classes/class.ilObjStyleSheet.php");
         $tpl->setVariable("LOCATION_STYLESHEET", ilUtil::getStyleSheetLocation());
         $tpl->setBodyClass("");
         $tpl->setCurrentBlock("ContentStyle");
@@ -437,7 +390,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         $tpl->parseCurrentBlock();
         
         // get javascript
-        include_once("./Services/jQuery/classes/class.iljQueryUtil.php");
         iljQueryUtil::initjQuery($tpl);
         iljQueryUtil::initjQueryUI($tpl);
         $tpl->addJavaScript("./Modules/Scorm2004/scripts/questions/pure.js");
@@ -451,9 +403,7 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         $tree = new ilTree($this->slm_object->getId());
         $tree->setTableNames('sahs_sc13_tree', 'sahs_sc13_tree_node');
         $tree->setTreeTablePK("slm_id");
-        include_once "./Modules/Scorm2004/classes/class.ilSCORM2004PageGUI.php";
-        include_once "./Services/MetaData/classes/class.ilMD.php";
-        
+
         $meta = new ilMD($this->node_object->getSLMId(), $this->node_object->getId(), $this->node_object->getType());
         $desc_ids = $meta->getGeneral()->getDescriptionIds();
         $sco_description = $meta->getGeneral()->getDescription($desc_ids[0])->getDescription();
@@ -506,7 +456,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         $output .= ilSCORM2004PageGUI::getGlossaryHTML($this->node_object);
         
         //insert questions
-        require_once './Modules/Scorm2004/classes/class.ilQuestionExporter.php';
         $output = preg_replace_callback("/{{{{{(Question;)(il__qst_[0-9]+)}}}}}/", array(get_class($this), 'insertQuestion'), $output);
         $output = "<script>var ScormApi=null;" . ilQuestionExporter::questionsJS() . "</script>" . $output;
         
@@ -515,7 +464,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         $tpl->addJavaScript("./Modules/Scorm2004/scripts/questions/question_handling.js");
         $tpl->addCss("./Modules/Scorm2004/templates/default/question_handling.css");
         
-        include_once("./Services/UIComponent/Overlay/classes/class.ilOverlayGUI.php");
         ilOverlayGUI::initJavascript();
         
         //inline JS
@@ -583,15 +531,11 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
 
         $export_files = $this->node_object->getExportFiles();
 
-        include_once "./Modules/Scorm2004/classes/class.ilSCORM2004ExportTableGUI.php";
         $table_gui = new ilSCORM2004ExportTableGUI($this, 'showExportList');
         $data = array();
         foreach ($export_files as $exp_file) {
             $filetype = $exp_file['type'];
             $public_str = "";
-            //	$public_str = ($exp_file["file"] == $this->object->getPublicExportFile($filetype))
-            //		? " <b>(".$this->lng->txt("public").")<b>"
-            //		: "";
             $file_arr = explode("__", $exp_file["file"]);
             array_push($data, array('file' => $exp_file['file'], 'filetype' => $filetype, 'date' => ilDatePresentation::formatDate(new ilDateTime($file_arr[0], IL_CAL_UNIX)), 'size' => $exp_file['size'], 'type' => $exp_file['type'] . $public_str));
         }
@@ -628,13 +572,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         $this->ctrl->redirect($this, "showExportList");
     }
 
-    public function exportISO()
-    {
-        $export = new ilScorm2004Export($this->node_object, 'ISO');
-        $export->buildExportFile();
-        $this->ctrl->redirect($this, "showExportList");
-    }
-    
     public function exportPDF()
     {
         $export = new ilScorm2004Export($this->node_object, 'PDF');
@@ -645,7 +582,7 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
     public function downloadExportFile()
     {
         $file = str_replace("..", "", $_GET['file']);
-        $export = new ilSCORM2004Export($this->node_object);
+        $export = new ilScorm2004Export($this->node_object);
         $export_dir = $export->getExportDirectoryForType($_GET['type']);
         ilUtil::deliverFile($export_dir . "/" . $file, $file);
     }
@@ -666,7 +603,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         ilUtil::sendQuestion($lng->txt("info_delete_sure"));
         $export_files = $this->node_object->getExportFiles();
 
-        include_once "./Modules/Scorm2004/classes/class.ilSCORM2004ExportTableGUI.php";
         $table_gui = new ilSCORM2004ExportTableGUI($this, 'showExportList', true);
         $data = array();
         foreach ($export_files as $exp_file) {
@@ -701,8 +637,7 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
     public function deleteExportFile()
     {
         $lng = $this->lng;
-        include_once "./Services/Utilities/classes/class.ilUtil.php";
-        $export = new ilSCORM2004Export($this->node_object);
+        $export = new ilScorm2004Export($this->node_object);
         foreach ($_POST['file'] as $idx => $file) {
             $export_dir = $export->getExportDirectoryForType($_POST['type'][$idx]);
             $exp_file = $export_dir . "/" . $file;
@@ -718,9 +653,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
     {
         $export_files = array();
         
-        require_once "./Modules/Scorm2004/classes/class.ilSCORM2004Page.php";
-        include_once "./Services/MediaObjects/classes/class.ilObjMediaObject.php";
-        include_once "./Modules/File/classes/class.ilObjFile.php";
         $tree = new ilTree($this->slm_object->getId());
         $tree->setTableNames('sahs_sc13_tree', 'sahs_sc13_tree_node');
         $tree->setTreeTablePK("slm_id");
@@ -743,12 +675,12 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
                         $this,
                         "resource",
                         rawurlencode(ilObjMediaObject::_lookupStandardItemPath($mob_id, false, false))
-                        );
+                    );
                     $export_files[$i]["link"] = $this->ctrl->getLinkTarget($this, "downloadResource");
                     $i++;
                 }
             }
-            include_once("./Services/COPage/classes/class.ilPCFileList.php");
+
             $file_ids = ilPCFileList::collectFileItems($page_obj, $page_obj->getDomDoc());
             foreach ($file_ids as $file_id) {
                 $file_obj = new ilObjFile($file_id, false);
@@ -769,110 +701,14 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
     
     public function sco_resources()
     {
-        $tpl = $this->tpl;
-        $lng = $this->lng;
-        $ilCtrl = $this->ctrl;
-        
         $this->setTabs();
         $this->setLocator();
-        $i = 0;
-                
         $export_files = $this->getExportResources();
 
-        // create table
-        require_once("./Services/Table/classes/class.ilTableGUI.php");
-        $tbl = new ilTableGUI();
+        $tab = new \ILIAS\Scorm2004\Editor\ilSCORMMediaOverviewTableGUI($this, "sco_resources");
+        $tab->setData($export_files);
 
-        // load files templates
-        $tpl->addBlockfile("ADM_CONTENT", "adm_content", "tpl.table.html");
-
-        // load template for table content data
-        $tpl->addBlockfile("TBL_CONTENT", "tbl_content", "tpl.download_file_row.html", "Modules/LearningModule");
-
-        $num = 0;
-
-        $tpl->setVariable("FORMACTION", $this->ctrl->getFormAction($this));
-
-        $tbl->setTitle($lng->txt("cont_files"));
-
-        $tbl->setHeaderNames(array($lng->txt("cont_format"),
-            $lng->txt("cont_file"),
-            $lng->txt("size"), $lng->txt("date"),
-            ""));
-        
-        $cols = array("format", "file", "size", "date", "download");
-        $header_params = array("ref_id" => $_GET["ref_id"], "obj_id" => $_GET["obj_id"],
-            "cmd" => "sco_resources", "cmdClass" => strtolower(get_class($this)),
-            "cmdNode" => $_GET["cmdNode"], "baseClass" => $_GET["baseClass"]);
-        $tbl->setHeaderVars($cols, $header_params);
-        $tbl->setColumnWidth(array("10%", "30%", "20%", "20%","20%"));
-        $tbl->disable("sort");
-
-        $tbl->setOrderColumn($_GET["sort_by"]);
-        $tbl->setOrderDirection($_GET["sort_order"]);
-        $tbl->setLimit($_GET["limit"]);
-        $tbl->setOffset($_GET["offset"]);
-        $tbl->setMaxCount($this->maxcount);		// ???
-        
-
-        $tbl->setMaxCount(count($export_files));
-
-        // footer
-        $tbl->setFooter("tblfooter", $lng->txt("previous"), $lng->txt("next"));
-        //$tbl->disable("footer");
-
-        $tbl->setMaxCount(count($export_files));
-        $export_files = array_slice($export_files, $_GET["offset"], $_GET["limit"]);
-        
-        $tbl->render();
-        if (count($export_files) > 0) {
-            $i = 0;
-            foreach ($export_files as $exp_file) {
-                /* remote files (youtube videos) have no size, so we allow them now
-                if (!$exp_file["size"] > 0)
-                {
-                    continue;
-                }
-                */
-                
-                $tpl->setCurrentBlock("tbl_content");
-                $tpl->setVariable("TXT_FILENAME", $exp_file["file"]);
-
-                $css_row = ilUtil::switchColor($i++, "tblrow1", "tblrow2");
-                $tpl->setVariable("CSS_ROW", $css_row);
-
-                $tpl->setVariable("TXT_SIZE", $exp_file["size"]);
-                $tpl->setVariable("TXT_FORMAT", $exp_file["type"]);
-                
-                $tpl->setVariable("TXT_DATE", $exp_file["date"]);
-                                                
-                if ($exp_file["size"] > 0) {
-                    $tpl->setVariable("TXT_DOWNLOAD", $lng->txt("download"));
-                    $ilCtrl->setParameter($this, "resource", rawurlencode($exp_file["path"]));
-                    $ilCtrl->setParameter($this, "file_id", rawurlencode($exp_file["file_id"]));
-                    $tpl->setVariable(
-                        "LINK_DOWNLOAD",
-                        $ilCtrl->getLinkTarget($this, "downloadResource")
-                    );
-                } else {
-                    $tpl->setVariable("TXT_DOWNLOAD", $lng->txt("show"));
-                    $tpl->setVariable("LINK_TARGET", " target=\"_blank\"");
-                    $tpl->setVariable("LINK_DOWNLOAD", $exp_file["path"]);
-                }
-
-                $tpl->parseCurrentBlock();
-            }
-        } //if is_array
-        /* not found in template?
-        else
-        {
-            $tpl->setCurrentBlock("notfound");
-            $tpl->setVariable("TXT_OBJECT_NOT_FOUND", $lng->txt("obj_not_found"));
-            $tpl->setVariable("NUM_COLS", 4);
-            $tpl->parseCurrentBlock();
-        }
-         */
-        // $tpl->parseCurrentBlock();
+        $this->tpl->setContent($tab->getHTML());
     }
     
     public function downloadResource()
@@ -903,7 +739,6 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
     public function downloadFile()
     {
         $file = explode("_", $_GET["file_id"]);
-        require_once("./Modules/File/classes/class.ilObjFile.php");
         $fileObj = new ilObjFile($file[count($file) - 1], false);
         $fileObj->sendFile();
         exit;
@@ -1003,8 +838,7 @@ class ilSCORM2004ScoGUI extends ilSCORM2004NodeGUI
         ilUtil::moveUploadedFile($_FILES["scormfile"]["tmp_name"], $_FILES["scormfile"]["name"], $file_path);
         ilUtil::unzip($file_path);
         ilUtil::renameExecutables($this->slm_object->getDataDirectory() . "/" . $this->node_object->getId());
-        
-        include_once("./Modules/Scorm2004/classes/ilSCORM13Package.php");
+
         $newPack = new ilSCORM13Package();
         $newPack->il_importSco($this->slm_object->getId(), $this->node_object->getId(), $this->slm_object->getDataDirectory() . "/" . $this->node_object->getId());
             

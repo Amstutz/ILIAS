@@ -128,7 +128,7 @@ class ilSurveyParticipantsGUI
                         'inviteUsers',
                         array(
                             )
-                        );
+                    );
                     $rep_search->setTitle($lng->txt("svy_invite_participants"));
                     // Set tabs
                     $this->ctrl->setReturn($this, 'maintenance');
@@ -149,7 +149,7 @@ class ilSurveyParticipantsGUI
                         'addRater',
                         array(
                             )
-                        );
+                    );
 
                     // Set tabs
                     $this->ctrl->setReturn($this, 'editRaters');
@@ -163,7 +163,7 @@ class ilSurveyParticipantsGUI
                         'addAppraisee',
                         array(
                             )
-                        );
+                    );
 
                     // Set tabs
                     $this->ctrl->setReturn($this, 'listAppraisees');
@@ -1235,7 +1235,6 @@ class ilSurveyParticipantsGUI
         );
         
         // #13320
-        require_once "Services/Link/classes/class.ilLink.php";
         $url = ilLink::_getStaticLink($this->object->getRefId());
         
         $tbl = new ilSurveyAppraiseesTableGUI($this, "editRaters", true, !$this->object->isAppraiseeClosed($appr_id), $url); // #11285
@@ -1470,7 +1469,7 @@ class ilSurveyParticipantsGUI
         $mailmessage_a->setRequired(true);
         $mailmessage_a->setCols(80);
         $mailmessage_a->setRows(10);
-        $mailmessage_a->setInfo(sprintf($this->lng->txt('message_content_info'), join($existingcolumns, ', ')));
+        $mailmessage_a->setInfo(sprintf($this->lng->txt('message_content_info'), join(', ', $existingcolumns)));
         $form->addItem($mailmessage_a);
         
         $recf = new ilHiddenInputGUI("rtr_id");

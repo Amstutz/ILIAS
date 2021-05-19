@@ -202,8 +202,11 @@ class ilSystemStyleSettingsGUI
         $new_skin->setName($_POST["skin_name"]);
         $new_skin->getVersionStep($_POST['skin_version']);
 
+        $new_style_id = $_POST["style_id"];
+        $new_skin->updateParentStyleOfSubstyles($old_style->getId(), $new_style_id);
+
         $new_style = $new_skin->getStyle($_GET["style_id"]);
-        $new_style->setId($_POST["style_id"]);
+        $new_style->setId($new_style_id);
         $new_style->setName($_POST["style_name"]);
         $new_style->setCssFile($_POST["style_id"]);
         $new_style->setImageDirectory($_POST["image_dir"]);
@@ -213,6 +216,12 @@ class ilSystemStyleSettingsGUI
         $container->updateSkin($old_skin);
         $container->updateStyle($new_style->getId(), $old_style);
 
+        ilSystemStyleSettings::updateSkinIdAndStyleIDOfSubStyleCategoryAssignments(
+            $old_skin->getId(),
+            $old_style->getId(),
+            $new_skin->getId(),
+            $new_style->getId()
+        );
 
         if ($_POST["active"] == 1) {
             ilSystemStyleSettings::_activateStyle($new_skin->getId(), $new_style->getId());
@@ -248,7 +257,7 @@ class ilSystemStyleSettingsGUI
                 new ilSystemStyleMessage(
                     $this->lng->txt("personal_style_set_to") . " " . ilSystemStyleSettings::getCurrentUserPrefSkin() . ":" . ilSystemStyleSettings::getCurrentUserPrefStyle(),
                     ilSystemStyleMessage::TYPE_SUCCESS
-            )
+                )
             );
         }
         if (!$_POST["default"] && ilSystemStyleSettings::getCurrentDefaultSkin() == $new_skin->getId()) {
@@ -260,7 +269,7 @@ class ilSystemStyleSettingsGUI
                 new ilSystemStyleMessage(
                     $this->lng->txt("default_style_set_to") . " " . $system_style_conf->getDefaultSkinId() . ": " . $system_style_conf->getDefaultStyleId(),
                     ilSystemStyleMessage::TYPE_SUCCESS
-            )
+                )
             );
         }
         $this->ctrl->setParameterByClass('ilSystemStyleSettingsGUI', 'skin_id', $new_skin->getId());
@@ -288,6 +297,8 @@ class ilSystemStyleSettingsGUI
 
         $container->updateSkin($skin);
         $container->updateStyle($new_substyle->getId(), $old_substyle);
+
+        ilSystemStyleSettings::updateSubStyleIdfSubStyleCategoryAssignments($old_substyle->getId(), $new_substyle->getId());
 
         $this->ctrl->setParameterByClass('ilSystemStyleSettingsGUI', 'skin_id', $skin->getId());
         $this->ctrl->setParameterByClass('ilSystemStyleSettingsGUI', 'style_id', $new_substyle->getId());

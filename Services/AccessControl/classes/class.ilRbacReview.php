@@ -687,8 +687,7 @@ class ilRbacReview
 
         $ilBench = $DIC['ilBench'];
         $ilDB = $DIC['ilDB'];
-        $ilLog = $DIC['ilLog'];
-        
+
         $ilBench->start("RBAC", "review_getRolesOfRoleFolder");
 
         if (!isset($a_ref_id)) {
@@ -696,7 +695,7 @@ class ilRbacReview
             ilLoggerFactory::getLogger('ac')->logStack();
             $this->ilErr->raiseError($message, $this->ilErr->WARNING);
         }
-        
+        $and = '';
         if ($a_nonassignable === false) {
             $and = " AND assign='y'";
         }
@@ -706,13 +705,14 @@ class ilRbacReview
              $and;
 
         $res = $ilDB->query($query);
+        $rol_id = [];
         while ($row = $ilDB->fetchObject($res)) {
             $rol_id[] = $row->rol_id;
         }
 
         $ilBench->stop("RBAC", "review_getRolesOfRoleFolder");
 
-        return $rol_id ? $rol_id : array();
+        return $rol_id;
     }
     
     /**
@@ -978,11 +978,12 @@ class ilRbacReview
             "AND ref_id = " . $ilDB->quote($a_ref_id, 'integer') . " ";
 
         $res = $ilDB->query($query);
+        $ops = [];
         while ($row = $ilDB->fetchObject($res)) {
             $ops = unserialize($row->ops_id);
         }
-
-        return $ops ? $ops : array();
+    
+        return $ops;
     }
 
     /**
@@ -1153,8 +1154,8 @@ class ilRbacReview
     
     /**
      * Check if role is a global role
-     * @param type $a_role_id
-     * @return type
+     * @param int $a_role_id
+     * @return bool
      * @todo refactor rolf => DONE
      */
     public function isGlobalRole($a_role_id)

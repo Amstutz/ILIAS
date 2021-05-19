@@ -101,9 +101,9 @@ class MultiSelectInputTest extends ILIAS_UI_TestBase
         $byline = $ms->getByline();
         $expected = ""
             . "<div class=\"form-group row\">"
-                . "<label for=\"$name\" class=\"control-label col-sm-3\">$label</label>"
+                . "<label class=\"control-label col-sm-3\">$label</label>"
                 . "<div class=\"col-sm-9\">"
-                    . "<ul class=\"il-input-multiselect\">";
+                    . "<ul class=\"il-input-multiselect\" id=\"id_1\">";
 
         foreach ($options as $opt_value => $opt_label) {
             $expected .= ""
@@ -140,9 +140,9 @@ class MultiSelectInputTest extends ILIAS_UI_TestBase
         $byline = $ms->getByline();
         $expected = ""
             . "<div class=\"form-group row\">"
-                . "<label for=\"$name\" class=\"control-label col-sm-3\">$label</label>"
+                . "<label class=\"control-label col-sm-3\">$label</label>"
                 . "<div class=\"col-sm-9\">"
-                    . "<ul class=\"il-input-multiselect\">";
+                    . "<ul class=\"il-input-multiselect\" id=\"id_1\">";
 
         foreach ($options as $opt_value => $opt_label) {
             if ($opt_value === $value) {
@@ -184,9 +184,9 @@ class MultiSelectInputTest extends ILIAS_UI_TestBase
         $byline = $ms->getByline();
         $expected = ""
             . "<div class=\"form-group row\">"
-            . "<label for=\"$name\" class=\"control-label col-sm-3\">$label</label>"
+            . "<label class=\"control-label col-sm-3\">$label</label>"
             . "<div class=\"col-sm-9\">"
-            . "<ul class=\"il-input-multiselect\">";
+            . "<ul class=\"il-input-multiselect\" id=\"id_1\">";
 
         foreach ($options as $opt_value => $opt_label) {
             $expected .= ""

@@ -1,17 +1,12 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-include_once "./Services/Xml/classes/class.ilXmlWriter.php";
-include_once './Services/Export/classes/class.ilExportOptions.php';
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* XML writer for container structure
-*
-* @author Stefan Meyer <smeyer.ilias@gmx.de>
-* @version $Id$
-*
-* @ingroup ServicesContainer
-*/
+ * XML writer for container structure
+ *
+ * @author Stefan Meyer <smeyer.ilias@gmx.de>
+ */
 class ilContainerXmlWriter extends ilXmlWriter
 {
     /**
@@ -21,6 +16,11 @@ class ilContainerXmlWriter extends ilXmlWriter
 
     protected $exp_options = null;
     private $source = 0;
+
+    /**
+     * @var ilObjectDefinition
+     */
+    protected $objDefinition;
 
     /**
      * Constructor
@@ -33,6 +33,7 @@ class ilContainerXmlWriter extends ilXmlWriter
         parent::__construct();
         $this->source = $a_ref_id;
         $this->exp_options = ilExportOptions::getInstance();
+        $this->objDefinition = $DIC['objDefinition'];
     }
     
     /**
@@ -66,24 +67,22 @@ class ilContainerXmlWriter extends ilXmlWriter
         }
 
         $obj_id = ilObject::_lookupObjId($a_ref_id);
-        
-        include_once('./Services/Container/classes/class.ilContainerPage.php');
-        include_once('./Services/Container/classes/class.ilContainerStartObjectsPage.php');
-        include_once('./Services/Style/Content/classes/class.ilObjStyleSheet.php');
-                
+
+        $atts = [];
+        $atts['RefId'] = $a_ref_id;
+        $atts['Id'] = $obj_id;
+        $atts['Title'] = ilObject::_lookupTitle($obj_id);
+        $atts['Type'] = ilObject::_lookupType($obj_id);
+        $atts['Page'] = ilContainerPage::_exists('cont', $obj_id);
+        $atts['StartPage'] = ilContainerStartObjectsPage::_exists('cstr', $obj_id);
+        $atts['Style'] = ilObjStyleSheet::lookupObjectStyle($obj_id);
+        if ($this->objDefinition->supportsOfflineHandling($atts['Type'])) {
+            $atts['Offline'] = ilObject::lookupOfflineStatus($obj_id) ? '1' : '0';
+        }
         $this->xmlStartTag(
             'Item',
-            array(
-                'RefId' => $a_ref_id,
-                'Id' => $obj_id,
-                'Title' => ilObject::_lookupTitle($obj_id),
-                'Type' => ilObject::_lookupType($obj_id),
-                'Page' => ilContainerPage::_exists('cont', $obj_id),
-                'StartPage' => ilContainerStartObjectsPage::_exists('cstr', $obj_id),
-                'Style' => ilObjStyleSheet::lookupObjectStyle($obj_id)
-            )
+            $atts
         );
-        
         $this->writeCourseItemInformation($a_ref_id);
         
         foreach ($tree->getChilds($a_ref_id) as $node) {
@@ -103,7 +102,6 @@ class ilContainerXmlWriter extends ilXmlWriter
      */
     protected function writeCourseItemInformation($a_ref_id)
     {
-        include_once './Services/Object/classes/class.ilObjectActivation.php';
         $item = ilObjectActivation::getItem($a_ref_id);
         
         $this->xmlStartTag(

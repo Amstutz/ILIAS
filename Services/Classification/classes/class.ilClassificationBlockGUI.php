@@ -37,7 +37,8 @@ class ilClassificationBlockGUI extends ilBlockGUI
      * @var ilClassificationSessionRepository
      */
     protected $repo;
-    
+    protected $parent_obj_typ;
+
     public function __construct()
     {
         global $DIC;
@@ -210,9 +211,8 @@ class ilClassificationBlockGUI extends ilBlockGUI
         if ($this->repo->isEmpty()) {
             exit();
         }
-        
+
         $all_matching_provider_object_ids = null;
-    
         foreach ($this->providers as $provider) {
             $id = get_class($provider);
             $current = $this->repo->getValueForProvider($id);
@@ -226,9 +226,9 @@ class ilClassificationBlockGUI extends ilBlockGUI
                 }
             }
         }
-        
         $has_content = false;
-            
+
+
         $ltpl = new ilTemplate("tpl.classification_object_list.html", true, true, "Services/Classification");
         
         if (is_array($all_matching_provider_object_ids) && sizeof($all_matching_provider_object_ids)) {
@@ -239,9 +239,14 @@ class ilClassificationBlockGUI extends ilBlockGUI
                 ,"object_data.title"
                 ,"object_data.description"
             );
-            //$matching = $tree->getSubTreeFilteredByObjIds($this->parent_ref_id, $all_matching_provider_object_ids,
-            //$fields);
-            $matching = $this->getSubItemIds($all_matching_provider_object_ids);
+            // see #28883 (tags + filter still work on current level only)
+            // see also JF comment on https://docu.ilias.de/goto.php?target=wiki_1357_Tagging_in_Categories
+            $matching = $tree->getSubTreeFilteredByObjIds(
+                $this->parent_ref_id,
+                $all_matching_provider_object_ids,
+                $fields
+            );
+            //$matching = $this->getSubItemIds($all_matching_provider_object_ids);
             if (sizeof($matching)) {
                 $valid_objects = array();
             
@@ -358,7 +363,6 @@ class ilClassificationBlockGUI extends ilBlockGUI
             );
         }
         $this->providers = self::$providers_cache[$this->parent_ref_id];
-        
         if ($a_check_post && (bool) !$_REQUEST["rdrw"]) {
             foreach ($this->providers as $provider) {
                 $id = get_class($provider);

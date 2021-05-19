@@ -5,6 +5,8 @@ require_once "Services/ADT/classes/class.ilADTDefinition.php";
 
 class ilADTFactory
 {
+    public const TYPE_LOCALIZED_TEXT = 'LocalizedText';
+
     protected static $instance; // [ilADTFactory]
     
     /**
@@ -39,7 +41,7 @@ class ilADTFactory
         return array(
             "Float", "Integer", "Location", "Text", "Boolean",
             "MultiText", "Date", "DateTime", "Enum", "MultiEnum", "Group",
-            'ExternalLink','InternalLink'
+            'ExternalLink','InternalLink', self::TYPE_LOCALIZED_TEXT
         );
     }
     
@@ -177,6 +179,10 @@ class ilADTFactory
         
         if ($a_multi) {
             try {
+                if ($a_adt_def->getType() == 'MultiEnum') {
+                    $class = $this->initTypeClass('Enum','SearchBridgeMulti');
+                    return new $class($a_adt_def);
+                }
                 $class = $this->initTypeClass($a_adt_def->getType(), "SearchBridgeMulti");
                 return new $class($a_adt_def);
             } catch (Exception $e) {

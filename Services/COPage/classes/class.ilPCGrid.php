@@ -1,34 +1,11 @@
 <?php
-/*
-    +-----------------------------------------------------------------------------+
-    | ILIAS open source                                                           |
-    +-----------------------------------------------------------------------------+
-    | Copyright (c) 1998-2008 ILIAS open source, University of Cologne            |
-    |                                                                             |
-    | This program is free software; you can redistribute it and/or               |
-    | modify it under the terms of the GNU General Public License                 |
-    | as published by the Free Software Foundation; either version 2              |
-    | of the License, or (at your option) any later version.                      |
-    |                                                                             |
-    | This program is distributed in the hope that it will be useful,             |
-    | but WITHOUT ANY WARRANTY; without even the implied warranty of              |
-    | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the               |
-    | GNU General Public License for more details.                                |
-    |                                                                             |
-    | You should have received a copy of the GNU General Public License           |
-    | along with this program; if not, write to the Free Software                 |
-    | Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. |
-    +-----------------------------------------------------------------------------+
-*/
 
-require_once("./Services/COPage/classes/class.ilPageContent.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
  * Grid element
  *
  * @author Alex Killing <killing@leifos.de>
- *
- * @ingroup ServicesCOPage
  */
 class ilPCGrid extends ilPageContent
 {
@@ -88,6 +65,55 @@ class ilPCGrid extends ilPageContent
         $a_pg_obj->insertContent($this, $a_hier_id, IL_INSERT_AFTER, $a_pc_id);
         $this->grid_node = $this->dom->create_element("Grid");
         $this->grid_node = $this->node->append_child($this->grid_node);
+    }
+
+    /**
+     * @param $post_layout_template
+     * @param $number_of_cells
+     * @param $s
+     * @param $m
+     * @param $l
+     * @param $xl
+     */
+    public function applyTemplate(
+        int $post_layout_template,
+        int $number_of_cells,
+        $s,
+        $m,
+        $l,
+        $xl
+    ) {
+        switch ($post_layout_template) {
+            case ilPCGridGUI::TEMPLATE_TWO_COLUMN:
+                $this->addGridCell(12, 6, 6, 6);
+                $this->addGridCell(12, 6, 6, 6);
+                break;
+
+            case ilPCGridGUI::TEMPLATE_THREE_COLUMN:
+                $this->addGridCell(12, 4, 4, 4);
+                $this->addGridCell(12, 4, 4, 4);
+                $this->addGridCell(12, 4, 4, 4);
+                break;
+
+            case ilPCGridGUI::TEMPLATE_MAIN_SIDE:
+                $this->addGridCell(12, 6, 8, 9);
+                $this->addGridCell(12, 6, 4, 3);
+                break;
+
+            case ilPCGridGUI::TEMPLATE_TWO_BY_TWO:
+                $this->addGridCell(12, 6, 6, 3);
+                $this->addGridCell(12, 6, 6, 3);
+                $this->addGridCell(12, 6, 6, 3);
+                $this->addGridCell(12, 6, 6, 3);
+                break;
+
+
+            case ilPCGridGUI::TEMPLATE_MANUAL:
+                for ($i = 0; $i < (int) $number_of_cells; $i++) {
+                    $this->addGridCell($s, $m, $l, $xl);
+                }
+                break;
+        }
     }
 
     /**

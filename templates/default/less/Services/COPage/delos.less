@@ -1,12 +1,12 @@
 /* --- Services/COPage ---*/
 
 a.ilEditSubmit {
-	background: url("@{background-images-path}ButtonsBack.png") repeat-x bottom white;
+	background: url("@{il-background-images-path}ButtonsBack.png") repeat-x bottom white;
 	padding: 2px;
 	margin: 0;
 	border: 1px solid #bababa;
-	border-bottom-color: #808080;
-	border-right-color: #808080;
+	border-bottom-color: @il-neutral-light-color;
+	border-right-color: @il-neutral-light-color;
 	text-decoration: none;
 	font-size: 80%;
 	line-height: 14px;
@@ -20,12 +20,12 @@ input.ilEditSubmit {
 	font-size: 12px;
 	line-height: 14px;
 	cursor: pointer;
-	background: url("@{background-images-path}ButtonsBack.png") repeat-x bottom white;
+	background: url("@{il-background-images-path}ButtonsBack.png") repeat-x bottom white;
 	border: 1px solid #bababa;
-	border-bottom-color: #808080;
-	border-right-color: #808080;
+	border-bottom-color: @il-neutral-light-color;
+	border-right-color: @il-neutral-light-color;
 	&:hover {
-		color: black;
+		color: @il-text-hover-color;
 	}
 }
 
@@ -53,7 +53,6 @@ button.copg-add.dropdown-toggle.btn,
 button.copg-add.dropdown-toggle.btn:focus,
 button.copg-add.dropdown-toggle.btn:hover {
 	padding: 1px 5px;
-	color: #b6b6b6;
 	text-align: center;
 	font-size: @font-size-small;
 	background-color: transparent;
@@ -61,25 +60,30 @@ button.copg-add.dropdown-toggle.btn:hover {
 	width: 100%;
 	height: 30px;
 	border: 0;
+}
 
-	.glyphicon {
-		border-radius: 50%;
-		background-color: #f3f3f3;
-		padding: 4px;
+button.copg-add.dropdown-toggle.btn,
+button.copg-add.dropdown-toggle.btn:focus,
+button.copg-add.dropdown-toggle.btn:hover,
+#copg-editor-help {
+
+	.glyphicon-plus-sign {
+		color: @il-btn-standard-bg;
+		font-size: @il-font-size-large;
 	}
 }
 
 button.copg-add.dropdown-toggle.btn:hover {
-	background-color: #f3f3f3;
-	color: #797979;
+	background-color: lighten(@il-btn-standard-bg, 50%);
+	color: @il-text-light-color;
 }
 
 [data-copg-ed-type='add-area'] ul.dropdown-menu {
 	left: 45%;
 }
 button.copg-add:hover {
-	color: lighten(@brand-secondary, 10%);
-	background-color: lighten(@brand-secondary, 52%);
+	color: lighten(@il-secondary-color, 10%);
+	background-color: lighten(@il-secondary-color, 52%);
 }
 
 div.il_droparea {
@@ -95,9 +99,9 @@ div.il_droparea {
 
 
 div.il_droparea:hover, div.ilCOPGDropActice, .il_droparea_valid_target {
-	border-color: lighten(@brand-secondary, 10%);
-	color: lighten(@brand-secondary, 10%);
-	background-color: lighten(@brand-secondary, 52%);	
+	border-color: lighten(@il-secondary-color, 10%);
+	color: lighten(@il-secondary-color, 10%);
+	background-color: lighten(@il-secondary-color, 52%);
 }
 
 div.ilCOPGNoPageContent {
@@ -115,8 +119,34 @@ div.il_editarea {
 	min-height: 20px;
 }
 
-div.il_editarea:hover {
-	border: 2px solid @brand-primary;
+.copg-state-page, .copg-state-multi {
+	div.il_editarea:hover {
+		border: 2px solid @il-main-color;
+	}
+}
+
+div.ilEditLabel {
+	position: absolute;
+	background-color: @il-main-color;
+	color: #f0f0f0;
+	font-size: 70%;
+	padding: 1px 3px;
+	margin-top: -15px;
+	margin-left: -2px;
+	border: 0;
+	height: 15px;
+	display: none;
+	z-index: 1;
+}
+
+.copg-state-page, .copg-state-multi {
+	div.il_editarea:hover > div.ilEditLabel, .copg-ghost-wrapper div.ilEditLabel {
+		display: block;
+	}
+}
+
+div.il_editarea_selected:hover > div.ilEditLabel {
+	background-color: @il-secondary-color;
 }
 
 
@@ -135,18 +165,18 @@ div.il_editarea_disabled {
 	font-size: @font-size-small;
 	margin-top: -22px;
 	padding: 2px 5px;
-	background-color: @il-primary-container-bg;
+	background-color: @il-main-dark-bg;
 }
 
 
-div.il_editarea_selected {
+div.il_editarea_selected, div.copg-current-edit, #tinytarget_ifr {
 	border-style: solid;
 	border-width: 2px;
-	border-color: lighten(@brand-secondary, 30%);
+	border-color: lighten(@il-secondary-color, 30%);
 }
 
 div.il_editarea_selected:hover {
-	border-color: @brand-secondary;
+	border-color: @il-secondary-color;
 }
 
 div.il_editarea_disabled_selected
@@ -176,26 +206,6 @@ table.il_editmenu td {
 }
 
 
-div.ilEditLabel {
-	position: absolute;
-	background-color: @brand-primary;
-	color: #f0f0f0;
-	font-size: 70%;
-	padding: 1px 3px;
-	margin-top: -15px;
-	margin-left: -2px;
-	border: 0;
-	height: 15px;
-	display: none;
-}
-
-div.il_editarea:hover > div.ilEditLabel {
-	display: block;
-}
-
-div.il_editarea_selected:hover > div.ilEditLabel {
-	background-color: @brand-secondary;
-}
 
 
 div.ilEditVAccordCntr {
@@ -222,17 +232,33 @@ div.ilEditVAccordICont {
 	background-color: white;
 }
 
-div.ilTinyMenuSection {
-	float: left;
+.ilTinyMenuSection .dropdown, .il-copg-button-group .dropdown {
+	display:inline-block;
+}
+.ilTinyMenuSection .dropdown-menu .btn, .il-copg-button-group .dropdown-menu .btn {
+	border: 0;
+}
+
+.ilTinyMenuSection .btn svg {
+	fill: black;
+	margin: -8px;
+}
+
+.ilTinyMenuSection .btn[disabled] svg {
+	fill: #D0D0D0;
+}
+
+div.ilTinyMenuSection, .il-copg-button-group {
 	white-space: nowrap;
 	/* border-right: 1px solid #e0e0e0; */
 	/* padding: 0 10px 4px 0; */
 	margin-right: 10px;
+	margin: 10px 10px 10px 0;
 
 	p {
-		margin: 20px 0 5px 0;
+		margin-bottom: 5px;
 		padding: 2px 5px;
-		background-color: darken(@il-secondary-container-bg, 4%);
+		background-color: darken(@il-main-dark-bg, 4%);
 	}
 
 	@media only screen and (max-width: @grid-float-breakpoint-max) {
@@ -243,10 +269,25 @@ div.ilTinyMenuSection {
 	}
 }
 
+div.ilTinyMenuSection button.btn {
+	background: white;
+	border: 0;
+	color: black;
+}
+
+div.il-copg-button-group ul.dropdown-menu {
+	right: auto;
+}
+
+div.il-copg-button-group-wide {
+	width: 100%;
+	float: none;
+}
+
 [dir="rtl"] div.ilTinyMenuSection {
 	float: right;
     border-right: none;
-    border-left: 1px solid #e0e0e0;
+    border-left: 1px solid @il-main-border-color;
     padding: 0 0 4px 10px;
 	margin-right: 0;
 	margin-left: 10px;
@@ -272,13 +313,6 @@ div.ilTinyMenuSection {
 }
 
 #iltinymenu {
-	/*z-index: 1040 !important;
-	position: fixed;
-	left: 0;
-	right: 0;
-	top: 0;
-	background-color: @il-secondary-container-bg;
-    .box-shadow(3px 9px 9px 0 rgba(0, 0, 0, 0.176));*/
 	.bd {
 		div {
 			&.last {
@@ -289,7 +323,7 @@ div.ilTinyMenuSection {
 				margin: 0;
 			}
 			.small {
-				color: #909090;
+				color: @il-text-light-color;
 				font-style: italic;
 			}
 		}
@@ -306,7 +340,6 @@ div.ilTinyMenuSection {
 }
 
 #iltinymenu_bd {
-	padding: 10px;
 }
 
 #ilsaving {
@@ -344,7 +377,7 @@ a.ilTinyMenuDropDown {
 div.ilc_page_toc_PageTOC {
 	font-size: 90%;
 	padding: 5px 5px 10px;
-	background-color: #fafafa;
+	background-color: @il-main-dark-bg;
 	border: 1px solid #f0f0f0;
 	float: left;
 }
@@ -388,7 +421,7 @@ td.ilc_PageDisabled {
 	padding: 20px;
 	border: 1px solid #9eadba;
 	margin-bottom: 0;
-	border-left: 3px dotted red;
+	border-left: 3px dotted @il-danger-color;
 }
 
 div.ilc_DefinitionHeader {
@@ -411,6 +444,11 @@ html.ilc_Fullscreen, body.ilc_Fullscreen {
 	margin: 0;
 	padding: 0;
 	height: 100%;
+	overflow: auto;
+	td > div, td > div > figure > div > iframe {
+		height: 100%;
+		width: 100%;
+	}
 }
 
 div.ilLMMenu {
@@ -462,7 +500,7 @@ div.ilEditModified, div.ilEditDeleted, div.ilEditNew {
 }
 
 div.ilEditModified {
-	border-color: @brand-primary;
+	border-color: @il-main-color;
 }
 
 div.ilEditDeleted {
@@ -470,7 +508,7 @@ div.ilEditDeleted {
 }
 
 div.ilEditNew {
-	border-color: @brand-secondary;
+	border-color: @il-secondary-color;
 }
 
 .ilCOPGCompareLegend {
@@ -484,16 +522,16 @@ span.ilDiffDel {
 }
 
 span.ilDiffIns {
-	background-color: lighten(@brand-secondary, 30%);
+	background-color: lighten(@il-secondary-color, 30%);
 }
 
 a.nostyle:link, a.nostyle:visited {
 	text-decoration: none;
-	color: black;
+	color: @il-text-hover-color;
 }
 
 a.nostyle:hover {
-	color: black;
+	color: @il-text-hover-color;
 }
 
 #ilEditorPanel_c {
@@ -505,7 +543,6 @@ a.nostyle:hover {
 }
 
 #ilPageEditLegend {
-	padding: 10px;
 	> div {
 		margin: 5px 0;
 	}
@@ -515,7 +552,7 @@ a.nostyle:hover {
 			width: 40px;
 			border-color: #d0d0d0;
 			color: #d0d0d0;
-			background-color: #fcfcfc;
+			background-color: @il-main-dark-bg;
 			cursor: default;
 			height: 21px;
 		}
@@ -548,13 +585,13 @@ a.nostyle:hover {
 	text-align: center;
 	display: table-cell;
 	vertical-align: middle;
-	background-color: darken(@brand-secondary, 20%);
+	background-color: darken(@il-secondary-color, 20%);
 	color: white;
 }
 
 .ilCOPgEditStyleSelectionItem {
 	padding: 10px;
-	background-color: @il-primary-container-bg;
+	background-color: @il-main-dark-bg;
 	cursor: pointer;
 }
 
@@ -593,16 +630,11 @@ div.ilc_question_MultipleChoice .ilc_qanswer_Answer > div:first-child {
 	padding-right: 10px;
 }
 
-.ilTinyInfo {
-	@media only screen and (max-width: @grid-float-breakpoint-max) {
-		display: none;
-	}
-}
 
 div.ilCOPGMediaPrint {
-	background-color: @il-secondary-container-bg !important;
+	background-color: @il-main-dark-bg !important;
 	position: relative !important;
-	background-image: url("@{background-images-path}play.svg") !important;
+	background-image: url("@{il-background-images-path}play.svg") !important;
 	background-position: 50% 50% !important;
 	background-repeat: no-repeat !important;
 	background-size: auto 90% !important;
@@ -610,17 +642,167 @@ div.ilCOPGMediaPrint {
 }
 
 /* fullscreen iframe */
-#il-copg-mob-fullscreen {
+.il-copg-mob-fullscreen {
 	width: 100%;
 	padding: 0;
 	margin: 0;
 	border: 0;
 }
 
-#ilAdvSelListTable_style_selection, #ilTinyMenuButtons ul.dropdown-menu {
+.il-copg-mob-fullscreen-modal .modal-dialog {
+	width:95%;
+}
+
+.ilTinyParagraphClassSelector ul.dropdown-menu,
+.ilTinyMenuSection > div.dropdown:nth-child(2) > ul.dropdown-menu,
+.ilSectionClassSelector ul.dropdown-menu {
 	right: auto;
 }
 
+#il_prop_cont_characteristic ul.dropdown-menu {
+	right: auto;
+}
+
+
 #iltinymenu .dropdown-menu li {
 	padding: 0;
+}
+
+#tinytarget_ifr > body#tinymce {
+	background-color: inherit;
+}
+
+#tinytarget_ifr {
+	background-color: transparent;
+}
+
+#tinytarget_div {
+
+	position: absolute;
+	top:0;
+	width: 100%;
+	height: 100%;
+
+	div.tox-edit-area {
+		background-color: transparent;
+	}
+
+	.tox-tinymce {
+		border: 0;
+		background-color: transparent;
+	}
+}
+
+.copg-ghost-wrapper {
+	min-height: 20px;
+	position: relative;		/* important for the absolute positioned tinytarget_div */
+}
+
+.copg-input-ghost {
+	visibility: hidden;
+	min-width: 100px;
+}
+
+#copg-editor-slate-content {
+	padding: 15px;
+
+	p {
+		padding: 0;
+		margin: 5px 0;
+	}
+
+	p.ilTinyInfo {
+		padding: 4px;
+		width: 100%;
+		@media only screen and (max-width: @grid-float-breakpoint-max) {
+			display: none;
+		}
+	}
+
+	div.alert {
+		margin: 10px 0;
+	}
+	form {
+		.ilFormHeader {
+			padding: 10px;
+
+			h3.ilHeader {
+				font-size: @font-size-base;
+			}
+		}
+		.col-sm-3, .col-sm-9 {
+			width: 100%;
+		}
+		.control-label {
+			text-align: left;
+			font-weight: bold;
+		}
+		.ilFormFooter {
+		}
+	}
+}
+
+p#copg-auto-save {
+	padding: 0;
+	margin: -5px 0 0 0;
+}
+
+.copg-edit-container {
+	border: 1px dashed #d0d0d0;
+}
+
+/* very important: add areas around floating images https://stackoverflow.com/questions/1260122/expand-a-div-to-fill-the-remaining-width  and https://css-tricks.com/popping-hidden-overflow/ */
+#il_EditPage [data-copg-ed-type="add-area"] {
+	position: relative;
+
+	> .dropdown {
+		overflow: hidden;
+		position: static;
+		> ul {
+			position: absolute;
+			z-index: 10;
+		}
+	}
+}
+
+/*
+ this fixes the add drop down click behaviour for touch devices
+ see: https://github.com/twbs/bootstrap/issues/4550#issuecomment-31916049
+ and: https://mantis.ilias.de/view.php?id=29785
+ */
+#il_EditPage .dropdown-backdrop {
+	position: static;
+}
+
+#ed_datatable {
+
+	background-color: @il-main-bg;
+
+	th {
+		background-color: @il-main-dark-bg;
+		.dropdown button {
+			background-color: @il-main-dark-bg;
+			text-align: center;
+			color: @il-text-color;
+			width: 100%;
+			border: 0;
+		}
+	}
+
+	th, td {
+		border: 1px solid #CCCCCC;
+	}
+}
+
+.copg-new-content-placeholder {
+	text-align: center;
+	color: @il-text-light-color;
+	padding: 20px;
+}
+
+.il-copg-drag {
+	width: 40px;
+	border: 1px solid @il-main-color;
+	height: 30px;
+	z-index: 100000;
 }

@@ -17,6 +17,8 @@ use ILIAS\GlobalScreen\Scope\Layout\Factory\ViewTitleModification;
  * Class ilPageContentProvider
  *
  * @author Fabian Schmid <fs@studer-raimann.ch>
+ * @author Michael Jansen <mjansen@databay.de>
+ * @author Maximilian Becker <mbecker@databay.de>
  */
 class PageContentProvider extends AbstractModificationProvider implements ModificationProvider
 {
@@ -148,7 +150,8 @@ class PageContentProvider extends AbstractModificationProvider implements Modifi
             $text = "powered by ILIAS (v{$ilias_version})";
 
             // Imprint
-            if ($_REQUEST["baseClass"] !== "ilImprintGUI" && \ilImprint::isActive()) {
+            $baseClass = (string) ($_REQUEST["baseClass"] ?? '');
+            if ($baseClass !== "ilImprintGUI" && \ilImprint::isActive()) {
                 $imprint_title = $this->dic->language()->txt("imprint");
                 $imprint_url = \ilLink::_getStaticLink(0, "impr");
                 $links[] = $f->link()->standard($imprint_title, $imprint_url);
@@ -180,6 +183,9 @@ class PageContentProvider extends AbstractModificationProvider implements Modifi
             }
 
             $footer = $f->mainControls()->footer($links, $text);
+
+            $tosWithdrawalGui = new \ilTermsOfServiceWithdrawalGUIHelper($this->dic->user());
+            $footer = $tosWithdrawalGui->modifyFooter($footer);
 
             if (self::$perma_link !== "") {
                 $footer = $footer->withPermanentURL(new URI(self::$perma_link));

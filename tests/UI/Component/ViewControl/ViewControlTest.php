@@ -126,12 +126,12 @@ class ViewControlTest extends ILIAS_UI_TestBase
         $expected = "<div class=\"btn-group il-viewcontrol-mode\" aria-label=\"" . $this->aria_label . "\" role=\"" . $this->role . "\">";
         foreach ($this->actions as $label => $action) {
             if ($activate_first_item) {
-                $expected .= "<button class=\"btn btn-default engaged\" aria-label=\"$label\" aria-pressed=\"true\" data-action=\"$action\" disabled=\"true\">$label</button>";
+                $expected .= "<button class=\"btn btn-default engaged\" aria-label=\"$label\" aria-pressed=\"true\" data-action=\"$action\" id=\"id_1\">$label</button>";
                 $activate_first_item = false;
             } elseif ($active == $label) {
-                $expected .= "<button class=\"btn btn-default engaged\" aria-label=\"$label\" aria-pressed=\"true\" data-action=\"$action\" disabled=\"true\">$label</button>";
+                $expected .= "<button class=\"btn btn-default engaged\" aria-label=\"$label\" aria-pressed=\"true\" data-action=\"$action\" id=\"id_1\">$label</button>";
             } else {
-                $expected .= "<button class=\"btn btn-default\" aria-label=\"$label\" aria-pressed=\"false\" data-action=\"$action\" id=\"id_1\">$label</button>";
+                $expected .= "<button class=\"btn btn-default\" aria-label=\"$label\" aria-pressed=\"false\" data-action=\"$action\" id=\"id_2\">$label</button>";
             }
         }
         $expected .= "</div>";
@@ -158,9 +158,9 @@ class ViewControlTest extends ILIAS_UI_TestBase
     {
         $expected = <<<EOT
 <div class="il-viewcontrol-section">
-<a class="btn btn-default " href="http://www.ilias.de" aria-label="previous" data-action="http://www.ilias.de"><span class="glyphicon glyphicon-chevron-left"></span></a>
+<a class="btn btn-default " href="http://www.ilias.de" aria-label="previous" data-action="http://www.ilias.de" id="id_1"><span class="glyphicon glyphicon-chevron-left"></span></a>
 <button class="btn btn-default" data-action="">Today</button>
-<a class="btn btn-default " href="http://www.github.com" aria-label="next" data-action="http://www.github.com"><span class="glyphicon glyphicon-chevron-right"></span></a>
+<a class="btn btn-default " href="http://www.github.com" aria-label="next" data-action="http://www.github.com" id="id_2"><span class="glyphicon glyphicon-chevron-right"></span></a>
 </div>
 EOT;
         return $expected;

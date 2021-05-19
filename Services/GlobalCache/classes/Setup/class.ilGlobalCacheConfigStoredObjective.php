@@ -34,15 +34,23 @@ class ilGlobalCacheConfigStoredObjective implements Setup\Objective
 
     public function getPreconditions(Setup\Environment $environment) : array
     {
-        $common_config = $environment->getConfigFor("common");
         return [
-            new ilIniFilesPopulatedObjective($common_config),
+            new ilIniFilesLoadedObjective()
         ];
     }
 
     public function achieve(Setup\Environment $environment) : Setup\Environment
     {
         $client_ini = $environment->getResource(Setup\Environment::RESOURCE_CLIENT_INI);
+
+        ilMemcacheServer::flushDB();
+
+        $memcached_nodes = $this->settings->getMemcachedNodes();
+        if (count($memcached_nodes) > 0) {
+            foreach ($memcached_nodes as $node) {
+                $node->create();
+            }
+        }
 
         $this->settings->writeToIniFile($client_ini);
 
@@ -58,7 +66,7 @@ class ilGlobalCacheConfigStoredObjective implements Setup\Objective
      */
     public function isApplicable(Setup\Environment $environment) : bool
     {
-        // The effort to check the hole ini file is here to big.
+        // The effort to check the whole ini file is too big here.
         return true;
     }
 }

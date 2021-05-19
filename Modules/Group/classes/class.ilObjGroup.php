@@ -71,6 +71,21 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
     protected $leave_end; // [ilDate]
     protected $show_members = 1;
 
+    private $session_limit = 0;
+    private $session_prev = -1;
+    private $session_next = -1;
+
+    /**
+     * @var ?\ilDateTime
+     */
+    protected $grp_start;
+
+    /**
+     * @var ?\ilDateTime
+     */
+    protected $grp_end;
+
+
     /**
      * @var bool
      */
@@ -139,7 +154,6 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
 
         $this->type = "grp";
         parent::__construct($a_id, $a_call_by_reference);
-        $this->setRegisterMode(true); // ???
     }
     
     /**
@@ -690,7 +704,57 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
         return $this->grp_end;
     }
 
-    
+    /**
+     * en/disable limited number of sessions
+     * @return
+     * @param object $a_status
+     */
+    public function enableSessionLimit(bool $a_status)
+    {
+        $this->session_limit = $a_status;
+    }
+
+    public function isSessionLimitEnabled() : bool
+    {
+        return (bool) $this->session_limit;
+    }
+
+    /**
+     * Set number of previous sessions
+     * @param int $a_num
+     */
+    public function setNumberOfPreviousSessions(int $a_num)
+    {
+        $this->session_prev = $a_num;
+    }
+
+    /**
+     * Get number of previous sessions
+     * @return
+     */
+    public function getNumberOfPreviousSessions() : int
+    {
+        return $this->session_prev;
+    }
+
+    /**
+     * Set number of upcoming sessions
+     * @param int $a_num
+     */
+    public function setNumberOfNextSessions(int $a_num)
+    {
+        $this->session_next = $a_num;
+    }
+
+    /**
+     * Get number of upcomoing sessions
+     * @return
+     */
+    public function getNumberOfNextSessions() : int
+    {
+        return $this->session_next;
+    }
+
 
     /**
      * validate group settings
@@ -764,7 +828,7 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
         $query = "INSERT INTO grp_settings (obj_id,information,grp_type,registration_type,registration_enabled," .
             "registration_unlimited,registration_start,registration_end,registration_password,registration_mem_limit," .
             "registration_max_members,waiting_list,latitude,longitude,location_zoom,enablemap,reg_ac_enabled,reg_ac,view_mode,mail_members_type," .
-            "leave_end,registration_min_members,auto_wait, grp_start, grp_end, auto_notification) " .
+            "leave_end,registration_min_members,auto_wait, grp_start, grp_end, auto_notification, session_limit, session_prev, session_next) " .
             "VALUES(" .
             $ilDB->quote($this->getId(), 'integer') . ", " .
             $ilDB->quote($this->getInformation(), 'text') . ", " .
@@ -791,8 +855,11 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
             $ilDB->quote($this->hasWaitingListAutoFill(), 'integer') . ', ' .
             $ilDB->quote($this->getStart() instanceof ilDate ? $this->getStart()->get(IL_CAL_UNIX) : null, 'integer') . ', ' .
             $ilDB->quote($this->getEnd() instanceof ilDate ? $this->getEnd()->get(IL_CAL_UNIX) : null, 'integer') . ', ' .
-            $ilDB->quote($this->getAutoNotification(), \ilDBConstants::T_INTEGER) . ' ' .
-            ")";
+            $ilDB->quote($this->getAutoNotification(), \ilDBConstants::T_INTEGER) . ', ' .
+            $ilDB->quote($this->isSessionLimitEnabled(), ilDBConstants::T_INTEGER) . ', ' .
+            $ilDB->quote($this->getNumberOfPreviousSessions(), ilDBConstants::T_INTEGER) . ', ' .
+            $ilDB->quote($this->getNumberOfNextSessions(), ilDBConstants::T_INTEGER) .
+            ')';
         $res = $ilDB->manipulate($query);
 
         $ilAppEventHandler->raise(
@@ -848,7 +915,10 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
             'period_start = ' . $ilDB->quote(\ilCalendarUtil::convertDateToUtcDBTimestamp($this->getStart()), \ilDBConstants::T_TIMESTAMP) . ', ' .
             'period_end = ' . $ilDB->quote(\ilCalendarUtil::convertDateToUtcDBTimestamp($this->getEnd()), \ilDBConstants::T_TIMESTAMP) . ', ' .
             'period_time_indication = ' . $ilDB->quote($this->getStartTimeIndication() ? 1 : 0, \ilDBConstants::T_INTEGER) . ', ' .
-            'auto_notification = ' . $ilDB->quote($this->getAutoNotification(), \ilDBConstants::T_INTEGER) . ' ' .
+            'auto_notification = ' . $ilDB->quote($this->getAutoNotification(), \ilDBConstants::T_INTEGER) . ', ' .
+            'session_limit = ' . $ilDB->quote($this->isSessionLimitEnabled(), ilDBConstants::T_INTEGER) . ', ' .
+            'session_prev = ' . $ilDB->quote($this->getNumberOfPreviousSessions(), ilDBConstants::T_INTEGER) . ', ' .
+            'session_next = ' . $ilDB->quote($this->getNumberOfNextSessions(), ilDBConstants::T_INTEGER) . ' ' .
             "WHERE obj_id = " . $ilDB->quote($this->getId(), 'integer');
         $res = $ilDB->manipulate($query);
         
@@ -953,6 +1023,9 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
                 );
             }
             $this->toggleStartTimeIndication((bool) $row->period_time_indication);
+            $this->enableSessionLimit((bool) $row->session_limit);
+            $this->setNumberOfPreviousSessions((int) $row->session_prev);
+            $this->setNumberOfNextSessions((int) $row->session_next);
         }
         $this->initParticipants();
         
@@ -977,6 +1050,9 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
         $ilUser = $DIC['ilUser'];
         $ilSetting = $DIC['ilSetting'];
 
+        /**
+         * @var ilObjGroup $new_obj
+         */
         $new_obj = parent::cloneObject($a_target_id, $a_copy_id, $a_omit_tree);
 
         // current template
@@ -1013,6 +1089,9 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
         $new_obj->setWaitingListAutoFill($this->hasWaitingListAutoFill());
         $new_obj->setPeriod($this->getStart(), $this->getEnd());
         $new_obj->setAutoNotification($this->getAutoNotification());
+        $new_obj->enableSessionLimit($this->isSessionLimitEnabled());
+        $new_obj->setNumberOfPreviousSessions($this->getNumberOfPreviousSessions());
+        $new_obj->setNumberOfNextSessions($this->getNumberOfNextSessions());
         $new_obj->update();
         
         // #13008 - Group Defined Fields
@@ -1502,30 +1581,21 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
     }
 
     /**
-    * get group status, redundant method because
-    * @access	public
-    * @param	return group status[0=public|2=closed]
+     * Read group type
+     * @return int
     */
-    public function readGroupStatus()
+    public function readGroupStatus() : int
     {
         global $DIC;
 
-        $rbacsystem = $DIC['rbacsystem'];
-        $rbacreview = $DIC['rbacreview'];
 
-        $local_roles = $rbacreview->getRolesOfRoleFolder($this->getRefId());
-
-        //get all relevant roles
-        $arr_globalRoles = array_diff($local_roles, $this->getDefaultGroupRoles());
-
-        //if one global role has no permission to join the group is officially closed !
-        foreach ($arr_globalRoles as $globalRole) {
-            if ($rbacsystem->checkPermission($this->getRefId(), $globalRole, "join")) {
-                return $this->group_status = GRP_TYPE_PUBLIC;
-            }
+        $tpl_id = ilDidacticTemplateObjSettings::lookupTemplateId($this->getRefId());
+        $logger = $DIC->logger()->grp();
+        $logger->dump($tpl_id);
+        if (!$tpl_id) {
+            return GRP_TYPE_OPEN;
         }
-
-        return $this->group_status = GRP_TYPE_CLOSED;
+        return GRP_TYPE_CLOSED;
     }
 
     /**
@@ -2175,12 +2245,41 @@ class ilObjGroup extends ilContainer implements ilMembershipRegistrationCodes
         global $DIC;
         $ilDB = $DIC["ilDB"];
         $query = 'SELECT show_members FROM grp_settings'
-            .' WHERE obj_id = '.$ilDB->quote($a_obj_id,'integer');
+            . ' WHERE obj_id = ' . $ilDB->quote($a_obj_id, 'integer');
         $res = $ilDB->query($query);
-        if($ilDB->numRows($res) == 0) {
+        if ($ilDB->numRows($res) == 0) {
             return false;
         }
         $row = $ilDB->fetchAssoc($res);
-        return (bool)$row['show_members'];
+        return (bool) $row['show_members'];
+    }
+
+
+    /**
+     * Get subitems of container
+     * @param bool $a_admin_panel_enabled[optional]
+     * @param bool $a_include_side_block[optional]
+     * @return array
+     */
+    public function getSubItems(
+        $a_admin_panel_enabled = false,
+        $a_include_side_block = false,
+        $a_get_single = 0,
+        \ilContainerUserFilter $container_user_filter = null
+    ) {
+        // Caching
+        if (is_array($this->items[(int) $a_admin_panel_enabled][(int) $a_include_side_block])) {
+            return $this->items[(int) $a_admin_panel_enabled][(int) $a_include_side_block];
+        }
+
+        // Results are stored in $this->items
+        parent::getSubItems($a_admin_panel_enabled, $a_include_side_block, $a_get_single);
+        $this->items = ilContainerSessionsContentGUI::prepareSessionPresentationLimitation(
+            $this->items,
+            $this,
+            (bool) $a_admin_panel_enabled,
+            (bool) $a_include_side_block
+        );
+        return $this->items[(int) $a_admin_panel_enabled][(int) $a_include_side_block];
     }
 } //END class.ilObjGroup

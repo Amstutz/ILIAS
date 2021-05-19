@@ -1,20 +1,12 @@
 <?php
 
-/* Copyright (c) 1998-2011 ILIAS open source, Extended GPL, see docs/LICENSE */
-
-require_once("./Services/COPage/classes/class.ilPageContentGUI.php");
-require_once("./Services/COPage/classes/class.ilPCInteractiveImage.php");
-include_once("./Services/COPage/classes/class.ilMediaAliasItem.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
  * User interface class for interactive images
  *
  * @author Alex Killing <alex.killing@gmx.de>
- * @version $Id$
- *
  * @ilCtrl_Calls ilPCInteractiveImageGUI: ilPCIIMTriggerEditorGUI
- *
- * @ingroup ServicesCOPage
  */
 class ilPCInteractiveImageGUI extends ilPageContentGUI
 {
@@ -61,31 +53,20 @@ class ilPCInteractiveImageGUI extends ilPageContentGUI
         if (is_object($this->content_obj)) {
             $tpl->setTitleIcon(ilUtil::getImagePath("icon_mob.svg"));
             $this->getTabs($this->tabs_gui);
-
-        /*			$mob = $this->content_obj->getMediaObject();
-                    if (is_object($mob))
-                    {
-                        $tpl->setVariable("HEADER", $lng->txt("mob").": ".
-                            $this->content_obj->getMediaObject()->getTitle());
-                        $mob_gui = new ilObjMediaObjectGUI("", $this->content_obj->getMediaObject()->getId(),false, false);
-                        $mob_gui->setBackTitle($this->page_back_title);
-                        $mob_gui->setEnabledMapAreas($this->getEnabledMapAreas());
-                        $mob_gui->getTabs($this->tabs_gui);
-                    }*/
-        } else {
         }
 
         switch ($next_class) {
             // trigger editor
             case "ilpciimtriggereditorgui":
-                require_once("./Services/COPage/classes/class.ilPCIIMTriggerEditorGUI.php");
                 $ilTabs->setTabActive("triggers");
                 $image_map_edit = new ilPCIIMTriggerEditorGUI(
                     $this->content_obj,
                     $this->pg_obj
                 );
                 $ret = $this->ctrl->forwardCommand($image_map_edit);
-                $tpl->setContent($ret);
+                if ($ret != "") {
+                    $tpl->setContent($ret);
+                }
                 break;
             
             default:
@@ -112,31 +93,31 @@ class ilPCInteractiveImageGUI extends ilPageContentGUI
             $ilTabs->setBackTarget(
                 $lng->txt("pg"),
                 $ilCtrl->getParentReturn($this)
-                );
+            );
 
             $ilTabs->addTab(
                 "triggers",
                 $lng->txt("cont_active_areas"),
                 $ilCtrl->getLinkTargetByClass("ilpciimtriggereditorgui", "editMapAreas")
-                );
+            );
 
             $ilTabs->addTab(
                 "list_overlays",
                 $lng->txt("cont_overlay_images"),
                 $ilCtrl->getLinkTarget($this, "listOverlayImages")
-                );
+            );
 
             $ilTabs->addTab(
                 "content_popups",
                 $lng->txt("cont_content_popups"),
                 $ilCtrl->getLinkTarget($this, "listContentPopups")
-                );
+            );
 
             $ilTabs->addTab(
                 "edit_base_image",
                 $lng->txt("cont_base_image") . " & " . $lng->txt("cont_caption"),
                 $ilCtrl->getLinkTarget($this, "editBaseImage")
-                );
+            );
         }
     }
 
@@ -208,7 +189,6 @@ class ilPCInteractiveImageGUI extends ilPageContentGUI
         $lng = $this->lng;
         $ilCtrl = $this->ctrl;
 
-        include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
 
         // image file
@@ -273,12 +253,16 @@ class ilPCInteractiveImageGUI extends ilPageContentGUI
         $media_item->setPurpose("Standard");
         
         $file = $mob_dir . "/" . $_FILES['image_file']['name'];
-        ilUtil::moveUploadedFile(
-            $_FILES['image_file']['tmp_name'],
-            $_FILES['image_file']['name'],
-            $file
-        );
-
+        try {
+            ilUtil::moveUploadedFile(
+                $_FILES['image_file']['tmp_name'],
+                $_FILES['image_file']['name'],
+                $file
+            );
+        } catch (ilException $e) {
+            ilUtil::sendFailure($this->lng->txt("file_is_infected"), true);
+            return;
+        }
         // get mime type
         $format = ilObjMediaObject::getMimeType($file);
         $location = $_FILES['image_file']['name'];
@@ -469,7 +453,6 @@ class ilPCInteractiveImageGUI extends ilPageContentGUI
             $ilCtrl->getLinkTarget($this, "addOverlayImages")
         );
         
-        include_once("./Services/COPage/classes/class.ilPCIIMOverlaysTableGUI.php");
         $tab = new ilPCIIMOverlaysTableGUI(
             $this,
             "listOverlayImages",
@@ -508,13 +491,11 @@ class ilPCInteractiveImageGUI extends ilPageContentGUI
         
         $ilTabs->setTabActive("list_overlays");
         
-        include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
         $form->setTitle($lng->txt("cont_add_images"));
         $form->setFormAction($ilCtrl->getFormAction($this));
         
         // file input
-        include_once("./Services/Form/classes/class.ilFileWizardInputGUI.php");
         $fi = new ilFileWizardInputGUI($lng->txt("file"), "ovfile");
         $fi->setSuffixes(array("gif", "jpeg", "jpg", "png"));
         $fi->setFilenames(array(0 => ''));
@@ -584,7 +565,6 @@ class ilPCInteractiveImageGUI extends ilPageContentGUI
             ilUtil::sendFailure($lng->txt("no_checkbox"), true);
             $ilCtrl->redirect($this, "listOverlayImages");
         } else {
-            include_once("./Services/Utilities/classes/class.ilConfirmationGUI.php");
             $cgui = new ilConfirmationGUI();
             $cgui->setFormAction($ilCtrl->getFormAction($this));
             $cgui->setHeaderText($lng->txt("cont_really_delete_overlays"));
@@ -644,7 +624,6 @@ class ilPCInteractiveImageGUI extends ilPageContentGUI
             $ilCtrl->getLinkTarget($this, "addPopup")
         );
         
-        include_once("./Services/COPage/classes/class.ilPCIIMPopupTableGUI.php");
         $tab = new ilPCIIMPopupTableGUI(
             $this,
             "listContentPopups",
@@ -703,7 +682,6 @@ class ilPCInteractiveImageGUI extends ilPageContentGUI
             ilUtil::sendFailure($lng->txt("no_checkbox"), true);
             $ilCtrl->redirect($this, "listContentPopups");
         } else {
-            include_once("./Services/Utilities/classes/class.ilConfirmationGUI.php");
             $cgui = new ilConfirmationGUI();
             $cgui->setFormAction($ilCtrl->getFormAction($this));
             $cgui->setHeaderText($lng->txt("cont_really_delete_popups"));

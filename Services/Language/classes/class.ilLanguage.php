@@ -207,7 +207,24 @@ class ilLanguage
     {
         return $this->lang_default ? $this->lang_default : 'en';
     }
-    
+
+    public function getTextDirection()
+    {
+        $rtl = array('ar', 'fa', 'ur', 'he');
+        if (in_array($this->getContentLanguage(), $rtl)) {
+            return 'rtl';
+        }
+        return 'ltr';
+    }
+
+    public function getContentLanguage()
+    {
+        if ($this->getUserLanguage()) {
+            return $this->getUserLanguage();
+        }
+        return $this->getLangKey();
+    }
+
     /**
      * gets the text for a given topic in a given language
      * if the topic is not in the list, the topic itself with "-" will be returned
@@ -311,7 +328,7 @@ class ilLanguage
             $lang_key = $this->lang_user;
         }
 
-        if (is_array($this->cached_modules[$a_module])) {
+        if (isset($this->cached_modules[$a_module]) && is_array($this->cached_modules[$a_module])) {
             $this->text = array_merge($this->text, $this->cached_modules[$a_module]);
 
             if ($this->usage_log_enabled) {
@@ -328,7 +345,11 @@ class ilLanguage
                 $ilDB->quote($a_module, "text");
         $r = $ilDB->query($q);
         $row = $r->fetchRow(ilDBConstants::FETCHMODE_ASSOC);
-        
+
+        if ($row === false) {
+            return;
+        }
+
         $new_text = unserialize($row["lang_array"]);
         if (is_array($new_text)) {
             $this->text = array_merge($this->text, $new_text);
@@ -375,7 +396,7 @@ class ilLanguage
         ));
         $rec = $ilDB->fetchAssoc($set);
         
-        if ($rec["value"] != "") {
+        if (isset($rec["value"]) && $rec["value"] != "") {
             // remember the used topics
             self::$used_topics[$a_id] = $a_id;
             self::$used_modules[$a_mod] = $a_mod;
@@ -451,7 +472,7 @@ class ilLanguage
             $ilUser = $DIC->user();
         }
 
-        if (!ilSession::get('lang') && !$_GET['lang']) {
+        if (!ilSession::get('lang') && empty($_GET['lang'])) {
             if (
                 $ilUser instanceof ilObjUser &&
                 (!$ilUser->getId() || $ilUser->isAnonymous())
@@ -578,7 +599,7 @@ class ilLanguage
             return false;
         }
 
-        if (DEVMODE) {
+        if (defined("DEVMODE") && DEVMODE) {
             return true;
         }
 

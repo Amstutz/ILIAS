@@ -116,25 +116,6 @@ class ilObjGlossary extends ilObject implements ilAdvancedMetaDataSubItems
     }
 
     /**
-    * get description of glossary object
-    *
-    * @return	string		description
-    */
-    public function getDescription()
-    {
-        return parent::getDescription();
-    }
-
-    /**
-    * set description of glossary object
-    */
-    public function setDescription($a_description)
-    {
-        parent::setDescription($a_description);
-    }
-
-    
-    /**
     * set glossary type (virtual: fixed/level/subtree, normal:none)
     */
     public function setVirtualMode($a_mode)
@@ -168,25 +149,6 @@ class ilObjGlossary extends ilObject implements ilAdvancedMetaDataSubItems
     public function isVirtual()
     {
         return $this->virtual;
-    }
-
-    /**
-    * get title of glossary object
-    *
-    * @return	string		title
-    */
-    public function getTitle()
-    {
-        return parent::getTitle();
-    }
-
-    /**
-    * set title of glossary object
-    */
-    public function setTitle($a_title)
-    {
-        parent::setTitle($a_title);
-        //		$this->meta_data->setTitle($a_title);
     }
 
     /**
@@ -356,12 +318,21 @@ class ilObjGlossary extends ilObject implements ilAdvancedMetaDataSubItems
         $this->auto_glossaries = array();
         if (is_array($a_val)) {
             foreach ($a_val as $v) {
-                $v = (int) $v;
-                if ($v > 0 && ilObject::_lookupType($v) == "glo" &&
-                    !in_array($v, $this->auto_glossaries)) {
-                    $this->auto_glossaries[] = $v;
-                }
+                $this->addAutoGlossary($v);
             }
+        }
+    }
+
+    /**
+     * Add auto glossary
+     * @param int $glo_id
+     */
+    public function addAutoGlossary($glo_id)
+    {
+        $glo_id = (int) $glo_id;
+        if ($glo_id > 0 && ilObject::_lookupType($glo_id) == "glo" &&
+            !in_array($glo_id, $this->auto_glossaries)) {
+            $this->auto_glossaries[] = $glo_id;
         }
     }
 
@@ -1005,7 +976,7 @@ class ilObjGlossary extends ilObject implements ilAdvancedMetaDataSubItems
             "SELECT id FROM glossary " .
             " WHERE " . $this->db->in("id", $glo_ids, false, "integer") .
             " AND is_online = " . $this->db->quote("y", "text")
-            );
+        );
         $online_glo_ids = array();
         while ($rec = $this->db->fetchAssoc($set)) {
             $online_glo_ids[] = $rec["id"];

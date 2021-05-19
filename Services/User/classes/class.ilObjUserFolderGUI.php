@@ -37,11 +37,7 @@ class ilObjUserFolderGUI extends ilObjectGUI
         global $DIC;
 
         $ilCtrl = $DIC['ilCtrl'];
-        // TODO: move this to class.ilias.php
-        define(
-            'USER_FOLDER_ID',
-            7
-        );
+
         $this->type = "usrf";
         parent::__construct(
             $a_data,
@@ -52,7 +48,7 @@ class ilObjUserFolderGUI extends ilObjectGUI
 
         $this->lng->loadLanguageModule('search');
         $this->lng->loadLanguageModule("user");
-
+        $this->lng->loadLanguageModule('tos');
         $ilCtrl->saveParameter(
             $this,
             "letter"
@@ -388,7 +384,7 @@ class ilObjUserFolderGUI extends ilObjectGUI
                 $this,
                 "chooseLetter"
             );
-            $ai->setHighlighted($_GET["letter"]);
+            $ai->setHighlighted($_GET["letter"] ?? null);
             $ilToolbar->addInputItem(
                 $ai,
                 true
@@ -1024,7 +1020,7 @@ class ilObjUserFolderGUI extends ilObjectGUI
             return $utab->getUserIdsForFilter();
         } else {
             return $access->filterUserIdsByRbacOrPositionOfCurrentUser(
-                'read_user',
+                'read_users',
                 \ilObjUserFolder::ORG_OP_EDIT_USER_ACCOUNTS,
                 USER_FOLDER_ID,
                 (array) $_POST['id']
@@ -1096,7 +1092,6 @@ class ilObjUserFolderGUI extends ilObjectGUI
         }
 
         // display confirmation message
-        include_once("./Services/Utilities/classes/class.ilConfirmationGUI.php");
         $cgui = new ilConfirmationGUI();
         $cgui->setFormAction($this->ctrl->getFormAction($this));
         $cgui->setHeaderText($this->lng->txt("info_" . $action . "_sure"));
@@ -1215,17 +1210,12 @@ class ilObjUserFolderGUI extends ilObjectGUI
                 'view'
             )
         );
-
-        if (!$rbacsystem->checkAccess(
-            "write",
-            $this->object->getRefId()
-        )) {
+        if (!$rbacsystem->checkAccess('create_usr', $this->object->getRefId())) {
             $this->ilias->raiseError(
                 $this->lng->txt("permission_denied"),
                 $this->ilias->error_obj->MESSAGE
             );
         }
-
         $this->initUserImportForm();
         $tpl->setContent($this->form->getHTML());
     }
@@ -1251,6 +1241,7 @@ class ilObjUserFolderGUI extends ilObjectGUI
             "importFile"
         );
         $fi->setSuffixes(array("xml", "zip"));
+        $fi->setRequired(true);
         //$fi->enableFileNameSelection();
         //$fi->setInfo($lng->txt(""));
         $this->form->addItem($fi);
@@ -1599,9 +1590,8 @@ class ilObjUserFolderGUI extends ilObjectGUI
                 }
             } //foreach role
 
-            $l_roles[""] = "";
             natcasesort($l_roles);
-            $l_roles[""] = $this->lng->txt("usrimport_ignore_role");
+            $l_roles["ignore"] = $this->lng->txt("usrimport_ignore_role");
 
             $roleMailboxSearch = new \ilRoleMailboxSearch(new \ilMailRfc822AddressParserFactory());
             $local_selects = [];
@@ -1615,14 +1605,14 @@ class ilObjUserFolderGUI extends ilObjectGUI
                         1
                     ) == '#') ? $role['name'] : '#' . $role['name'];
                     $matching_role_ids = $roleMailboxSearch->searchRoleIdsByAddressString($searchName);
-                    $pre_select = count($matching_role_ids) == 1 ? $role_id . "-" . $matching_role_ids[0] : "";
+                    $pre_select = count($matching_role_ids) == 1 ? $role_id . "-" . $matching_role_ids[0] : "ignore";
 
                     if ($this->object->getRefId() == USER_FOLDER_ID) {
                         // There are too many roles in a large ILIAS installation
                         // that's why whe show only a choice with the the option "ignore",
                         // and the matching roles.
                         $selectable_roles = array();
-                        $selectable_roles[""] = $this->lng->txt("usrimport_ignore_role");
+                        $selectable_roles["ignore"] = $this->lng->txt("usrimport_ignore_role");
                         foreach ($matching_role_ids as $id) {
                             $selectable_roles[$role_id . "-" . $id] = $l_roles[$id];
                         }
@@ -1640,7 +1630,7 @@ class ilObjUserFolderGUI extends ilObjectGUI
                     } else {
                         $selectable_roles = array();
                         foreach ($l_roles as $local_role_id => $value) {
-                            if ($local_role_id !== "") {
+                            if ($local_role_id !== "ignore") {
                                 $selectable_roles[$role_id . "-" . $local_role_id] = $value;
                             }
                         }
@@ -2094,6 +2084,7 @@ class ilObjUserFolderGUI extends ilObjectGUI
             'user_reactivate_code' => (int) $ilSetting->get('user_reactivate_code'),
             'user_own_account' => (int) $ilSetting->get('user_delete_own_account'),
             'user_own_account_email' => $ilSetting->get('user_delete_own_account_email'),
+            'tos_withdrawal_usr_deletion' => (bool) $ilSetting->get('tos_withdrawal_usr_deletion'),
 
             'session_handling_type' => $ilSetting->get(
                 'session_handling_type',
@@ -2244,6 +2235,10 @@ class ilObjUserFolderGUI extends ilObjectGUI
                 $ilSetting->set(
                     'user_delete_own_account_email',
                     $this->form->getInput('user_own_account_email')
+                );
+                $ilSetting->set(
+                    'tos_withdrawal_usr_deletion',
+                    (string) ((int) $this->form->getInput('tos_withdrawal_usr_deletion'))
                 );
 
                 $ilSetting->set(
@@ -2444,6 +2439,14 @@ class ilObjUserFolderGUI extends ilObjectGUI
             "user_own_account_email"
         );
         $own->addSubItem($own_email);
+
+        $withdrawalProvokesDeletion = new ilCheckboxInputGUI(
+            $this->lng->txt('tos_withdrawal_usr_deletion'),
+            'tos_withdrawal_usr_deletion'
+        );
+        $withdrawalProvokesDeletion->setInfo($this->lng->txt('tos_withdrawal_usr_deletion_info'));
+        $withdrawalProvokesDeletion->setValue('1');
+        $this->form->addItem($withdrawalProvokesDeletion);
 
         // BEGIN SESSION SETTINGS
 
@@ -3091,7 +3094,6 @@ class ilObjUserFolderGUI extends ilObjectGUI
         }
 
         // display confirmation message
-        include_once("./Services/Utilities/classes/class.ilConfirmationGUI.php");
         $cgui = new ilConfirmationGUI();
         $cgui->setFormAction($this->ctrl->getFormAction($this));
         $cgui->setHeaderText($this->lng->txt("info_delete_sure"));
@@ -3835,7 +3837,7 @@ class ilObjUserFolderGUI extends ilObjectGUI
         global $DIC;
         $access = $DIC->access();
 
-        if (!$this->checkPermissionBool("read_user")) {
+        if (!$this->checkPermissionBool("read_users")) {
             $a_user_ids = $access->filterUserIdsByPositionOfCurrentUser(
                 \ilObjUserFolder::ORG_OP_EDIT_USER_ACCOUNTS,
                 USER_FOLDER_ID,
@@ -4148,6 +4150,8 @@ class ilObjUserFolderGUI extends ilObjectGUI
 
     public function addToExternalSettingsForm($a_form_id)
     {
+        global $DIC;
+
         switch ($a_form_id) {
             case ilAdministrationSettingsFormHandler::FORM_SECURITY:
 
@@ -4188,6 +4192,18 @@ class ilObjUserFolderGUI extends ilObjectGUI
                 $fields['ps_security_protection'] = array(null, null, $subitems);
 
                 return array(array("generalSettings", $fields));
+                
+            case ilAdministrationSettingsFormHandler::FORM_TOS:
+                return [
+                    [
+                        'generalSettings', [
+                            'tos_withdrawal_usr_deletion' => $DIC->settings()->get(
+                                'tos_withdrawal_usr_deletion',
+                                false
+                            ) ? $DIC->language()->txt('enabled') : $DIC->language()->txt('disabled'),
+                        ]
+                    ],
+                ];
         }
     }
 

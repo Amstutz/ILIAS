@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+namespace ILIAS\UI\examples\ViewControl\Pagination;
 
 function base()
 {
@@ -8,7 +10,7 @@ function base()
     $url = $DIC->http()->request()->getRequestTarget();
 
     $parameter_name = 'page';
-    $current_page = (int) @$_GET[$parameter_name];
+    $current_page = (int) (array_key_exists($parameter_name, $_GET) ? $_GET[$parameter_name] : 0);
 
     $pagination = $factory->viewControl()->pagination()
         ->withTargetURL($url, $parameter_name)

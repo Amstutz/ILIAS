@@ -124,13 +124,10 @@ class ilFormatMail extends ilMail
     * @access	public
     * @param array names to append
     * @param string rcp type ('to','cc','bc')
-    * @return string
+    * @return array
     */
     public function appendSearchResult($a_names, $a_type)
     {
-        if (empty($this->mail_data)) {
-            return false;
-        }
         $name_str = implode(',', $a_names);
         switch ($a_type) {
             case 'to':
@@ -158,6 +155,7 @@ class ilFormatMail extends ilMail
                 break;
 
         }
+
         return $this->mail_data;
     }
 
@@ -183,24 +181,26 @@ class ilFormatMail extends ilMail
 
         return $formatted;
     }
-                    
-                
 
     /**
-    * append signature to mail body
-    * @access	public
-    * @return string
-    */
-    public function appendSignature()
+     * @return string
+     */
+    public function appendSignature() : string
     {
-        return $this->mail_data["m_message"] .= chr(13) . chr(10) . $this->mail_options->getSignature();
+        $message = (string) ($this->mail_data['m_message'] ?? '');
+        $message .= chr(13) . chr(10) . $this->mail_options->getSignature();
+
+        return $message;
     }
 
     /**
      * @return string
      */
-    public function prependSignature()
+    public function prependSignature() : string
     {
-        return $this->mail_options->getSignature() . chr(13) . chr(10) . chr(13) . chr(10) . $this->mail_data["m_message"];
+        $message = (string) ($this->mail_data['m_message'] ?? '');
+        $message = $this->mail_options->getSignature() . chr(13) . chr(10) . chr(13) . chr(10) . $message;
+
+        return $message;
     }
 } // END class.ilFormatMail

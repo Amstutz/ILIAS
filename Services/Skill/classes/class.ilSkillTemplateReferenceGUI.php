@@ -110,15 +110,11 @@ class ilSkillTemplateReferenceGUI extends ilBasicSkillTemplateGUI
             // usage
             $this->addUsageTab($ilTabs);
 
-            // back link
-            /*
-                        $ilCtrl->setParameterByClass("ilskillrootgui", "obj_id",
-                            $this->node_object->skill_tree->getRootId());
-                        $ilTabs->setBackTarget($lng->txt("obj_skmg"),
-                            $ilCtrl->getLinkTargetByClass("ilskillrootgui", "listSkills"));
-                        $ilCtrl->setParameterByClass("ilskillrootgui", "obj_id",
-                            $_GET["obj_id"]);*/
-            
+            // assigned objects
+            if ($obj_type != "sctp") {
+                $this->addObjectsTab($ilTabs);
+            }
+
             $tid = ilSkillTemplateReference::_lookupTemplateId($this->node_object->getId());
             $add = " (" . ilSkillTreeNode::_lookupTitle($tid) . ")";
     
@@ -134,9 +130,6 @@ class ilSkillTemplateReferenceGUI extends ilBasicSkillTemplateGUI
 
     /**
      * Insert
-     *
-     * @param
-     * @return
      */
     public function insert()
     {
@@ -174,6 +167,8 @@ class ilSkillTemplateReferenceGUI extends ilBasicSkillTemplateGUI
         $lng = $this->lng;
         $ilCtrl = $this->ctrl;
 
+        //TODO: Refactoring to UI Form when non-editable input is available
+
         $this->form = new ilPropertyFormGUI();
 
         // select skill template
@@ -194,19 +189,6 @@ class ilSkillTemplateReferenceGUI extends ilBasicSkillTemplateGUI
                 $this->form->addItem($ne);
             }
         }
-        
-        // order nr
-        $ni = new ilNumberInputGUI($lng->txt("skmg_order_nr"), "order_nr");
-        $ni->setInfo($lng->txt("skmg_order_nr_info"));
-        $ni->setMaxLength(6);
-        $ni->setSize(6);
-        $ni->setRequired(true);
-        if ($a_mode == "create") {
-            $tree = new ilSkillTree();
-            $max = $tree->getMaxOrderNr((int) $_GET["obj_id"]);
-            $ni->setValue($max + 10);
-        }
-        $this->form->addItem($ni);
 
         // template
         $options = array(
@@ -259,7 +241,6 @@ class ilSkillTemplateReferenceGUI extends ilBasicSkillTemplateGUI
         $values["description"] = $this->node_object->getDescription();
         $values["selectable"] = $this->node_object->getSelfEvaluation();
         $values["status"] = $this->node_object->getStatus();
-        $values["order_nr"] = $this->node_object->getOrderNr();
         $this->form->setValuesByArray($values);
     }
 
@@ -272,15 +253,17 @@ class ilSkillTemplateReferenceGUI extends ilBasicSkillTemplateGUI
             return;
         }
 
+        $tree = new ilSkillTree();
+
         $sktr = new ilSkillTemplateReference();
         $sktr->setTitle($_POST["title"]);
         $sktr->setDescription($_POST["description"]);
         $sktr->setSkillTemplateId($_POST["skill_template_id"]);
         $sktr->setSelfEvaluation($_POST["selectable"]);
-        $sktr->setOrderNr($_POST["order_nr"]);
+        $sktr->setOrderNr($tree->getMaxOrderNr($this->requested_obj_id) + 10);
         $sktr->setStatus($_POST["status"]);
         $sktr->create();
-        ilSkillTreeNode::putInTree($sktr, (int) $_GET["obj_id"], IL_LAST_NODE);
+        ilSkillTreeNode::putInTree($sktr, $this->requested_obj_id, IL_LAST_NODE);
         $this->node_object = $sktr;
     }
 
@@ -324,7 +307,6 @@ class ilSkillTemplateReferenceGUI extends ilBasicSkillTemplateGUI
             $this->node_object->setTitle($_POST["title"]);
             $this->node_object->setDescription($_POST["description"]);
             $this->node_object->setSelfEvaluation($_POST["selectable"]);
-            $this->node_object->setOrderNr($_POST["order_nr"]);
             $this->node_object->setStatus($_POST["status"]);
             $this->node_object->update();
 
@@ -333,14 +315,11 @@ class ilSkillTemplateReferenceGUI extends ilBasicSkillTemplateGUI
         }
 
         $this->form->setValuesByPost();
-        $tpl->setContent($this->form->getHtml());
+        $tpl->setContent($this->form->getHTML());
     }
 
     /**
      * Cancel
-     *
-     * @param
-     * @return
      */
     public function cancel()
     {
@@ -379,5 +358,22 @@ class ilSkillTemplateReferenceGUI extends ilBasicSkillTemplateGUI
             $table = new ilSkillLevelTableGUI((int) $sk_id, $this, "edit", $this->node_object->getId());
             $tpl->setContent($table->getHTML());
         }
+    }
+
+    /**
+     * Show assigned objects
+     */
+    public function showObjects()
+    {
+        $tpl = $this->tpl;
+
+        $this->setTabs("objects");
+
+        $usage_info = new ilSkillUsage();
+        $objects = $usage_info->getAssignedObjectsForSkill($this->base_skill_id, $this->tref_id);
+
+        $tab = new ilSkillAssignedObjectsTableGUI($this, "showObjects", $objects);
+
+        $tpl->setContent($tab->getHTML());
     }
 }

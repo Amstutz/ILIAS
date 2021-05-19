@@ -1,36 +1,15 @@
 <?php
- /*
-   +----------------------------------------------------------------------------+
-   | ILIAS open source                                                          |
-   +----------------------------------------------------------------------------+
-   | Copyright (c) 1998-2001 ILIAS open source, University of Cologne           |
-   |                                                                            |
-   | This program is free software; you can redistribute it and/or              |
-   | modify it under the terms of the GNU General Public License                |
-   | as published by the Free Software Foundation; either version 2             |
-   | of the License, or (at your option) any later version.                     |
-   |                                                                            |
-   | This program is distributed in the hope that it will be useful,            |
-   | but WITHOUT ANY WARRANTY; without even the implied warranty of             |
-   | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              |
-   | GNU General Public License for more details.                               |
-   |                                                                            |
-   | You should have received a copy of the GNU General Public License          |
-   | along with this program; if not, write to the Free Software                |
-   | Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. |
-   +----------------------------------------------------------------------------+
-*/
+
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* Basic class for all survey question types
-*
-* The SurveyQuestionGUI class defines and encapsulates basic methods and attributes
-* for survey question types to be used for all parent classes.
-*
-* @author		Helmut Schottmüller <helmut.schottmueller@mac.com>
-* @version	$Id$
-* @ingroup ModulesSurveyQuestionPool
-*/
+ * Basic class for all survey question types
+ *
+ * The SurveyQuestionGUI class defines and encapsulates basic methods and attributes
+ * for survey question types to be used for all parent classes.
+ *
+ * @author		Helmut Schottmüller <helmut.schottmueller@mac.com>
+ */
 abstract class SurveyQuestionGUI
 {
     /**
@@ -603,7 +582,7 @@ abstract class SurveyQuestionGUI
     // EXECUTION
     //
     
-    abstract public function getWorkingForm($working_data = "", $question_title = 1, $show_questiontext = 1, $error_message = "", $survey_id = null);
+    abstract public function getWorkingForm($working_data = "", $question_title = 1, $show_questiontext = 1, $error_message = "", $survey_id = null, $compress_view = false);
     
     /**
     * Creates the HTML output of the question material(s)
@@ -902,7 +881,7 @@ abstract class SurveyQuestionGUI
             $categories = ilSurveyPhrases::_getCategoriesForPhrase($phrase_id);
                 
             $opt = new ilRadioOption($phrase_array["title"], $phrase_id);
-            $opt->setInfo(join($categories, ","));
+            $opt->setInfo(join(",", $categories));
             $group->addOption($opt);
             
             if ($phrase_array["org_title"] == "dp_standard_numbers") {

@@ -49,7 +49,7 @@ class AdministrationMainBarProvider extends AbstractStaticMainMenuProvider
                     $icon = $this->dic->ui()->factory()->symbol()->icon()->standard($titems[$group_item]["type"], $titems[$group_item]["title"])
                         ->withIsOutlined(true);
 
-                    if ($_GET["admin_mode"] != 'repository' && $titems[$group_item]["ref_id"] == ROOT_FOLDER_ID) {
+                    if (isset($_GET["admin_mode"]) && $_GET["admin_mode"] != 'repository' && $titems[$group_item]["ref_id"] == ROOT_FOLDER_ID) {
                         $identification = $this->if->identifier('mm_adm_rep');
                         $action = "ilias.php?baseClass=ilAdministrationGUI&ref_id=" . $titems[$group_item]["ref_id"] . "&admin_mode=repository";
                     } else {
@@ -195,7 +195,7 @@ class AdministrationMainBarProvider extends AbstractStaticMainMenuProvider
         // admin menu layout
         $layout = array(
             "maintenance" =>
-                array("adm", "lngf", "hlps", "wfe", "pdfg", 'logs', 'sysc', "recf", "root"),
+                array("adm", "lngf", "hlps", "wfe", "pdfg", 'fils', 'logs', 'sysc', "recf", "root"),
             "layout_and_navigation" =>
                 array("mme", "stys", "adve", "accs"),
             "user_administration" =>
@@ -205,13 +205,13 @@ class AdministrationMainBarProvider extends AbstractStaticMainMenuProvider
             "achievements" =>
                 array("lhts", "skmg", "trac", "bdga", "cert"),
             "communication" =>
-                array("mail", "cadm", "nwss", "coms"),
+                array("mail", "cadm", "nwss", "coms", "adn"),
             "search_and_find" =>
                 array("seas", "mds", "taxs"),
             "extending_ilias" =>
-                array('ecss', "ltis", "cmis", "cmps", "extt"),
+                array('ecss', "ltis", "wbdv", "cmis", "cmps", "extt"),
             "repository_and_objects" =>
-                array("reps", "crss", "grps", "prgs", "bibs", "blga", "chta", "facs", "frma", "lrss",
+                array("reps", "crss", "grps", "prgs", "bibs", "blga", "cpad", "chta", "facs", "frma", "lrss",
                     "mcts", "mobs", "svyf", "assf", "wbrs", "wiks"),
         );
         $groups = [];
@@ -220,7 +220,7 @@ class AdministrationMainBarProvider extends AbstractStaticMainMenuProvider
             $groups[$group] = array();
             $entries_since_last_sep = false;
             foreach ($entries as $e) {
-                if ($e == "---" || $titems[$e]["type"] != "") {
+                if ($e == "---" || (isset($titems[$e]["type"]) && $titems[$e]["type"] != "")) {
                     if ($e == "---" && $entries_since_last_sep) {
                         $groups[$group][] = $e;
                         $entries_since_last_sep = false;

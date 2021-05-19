@@ -1,4 +1,7 @@
 <?php
+declare(strict_types=1);
+namespace ILIAS\UI\examples\Tree\Expandable;
+
 function expandable()
 {
     global $DIC;
@@ -65,7 +68,7 @@ function expandable()
         'modal' => $modal
     ];
 
-    $tree = $f->tree()->expandable($recursion)
+    $tree = $f->tree()->expandable("Label", $recursion)
         ->withEnvironment($environment)
         ->withData($data)
         ->withHighlightOnNodeClick(true);

@@ -29,7 +29,8 @@ class ilLMPresentationService
         bool $offline = false,
         bool $export_all_languages = false,
         string $export_format = "",
-        ilCtrl $ctrl = null
+        ilCtrl $ctrl = null,
+        bool $embed_mode = false
     ) {
         global $DIC;
 
@@ -59,10 +60,13 @@ class ilLMPresentationService
 
         $this->navigation_status = new ilLMNavigationStatus(
             $user,
-            $this->request->getRequestedObjId(),
+            (int) $this->request->getRequestedObjId(),
             $this->lm_tree,
             $this->lm,
-            $this->lm_set
+            $this->lm_set,
+            $this->request->getRequestedBackPage(),
+            $this->request->getRequestedCmd(),
+            (int) $this->request->getRequestedFocusId()
         );
 
         $this->tracker = ilLMTracker::getInstance($this->lm->getRefId());
@@ -79,7 +83,8 @@ class ilLMPresentationService
             $this->presentation_status->offline(),
             $this->presentation_status->getExportFormat(),
             $this->presentation_status->exportAllLanguages(),
-            $ctrl
+            $ctrl,
+            $embed_mode
         );
     }
 

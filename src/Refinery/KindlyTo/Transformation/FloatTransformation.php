@@ -5,6 +5,7 @@
 namespace ILIAS\Refinery\KindlyTo\Transformation;
 
 use ILIAS\Refinery\DeriveApplyToFromTransform;
+use ILIAS\Refinery\DeriveInvokeFromTransform;
 use ILIAS\Refinery\Transformation;
 use ILIAS\Refinery\ConstraintViolationException;
 
@@ -14,6 +15,7 @@ class FloatTransformation implements Transformation
     const REG_STRING_FLOATING = '/^\s*-?\d+[eE]-?\d+\s*$/';
 
     use DeriveApplyToFromTransform;
+    use DeriveInvokeFromTransform;
 
     /**
      * @inheritdoc
@@ -44,24 +46,16 @@ class FloatTransformation implements Transformation
             }
 
             throw new ConstraintViolationException(
-                sprintf('The value "%s" could not be transformed into an float', $from),
+                sprintf('The value "%s" could not be transformed into an float', var_export($from, true)),
                 'not_float',
                 $from
             );
         }
 
         throw new ConstraintViolationException(
-            sprintf('The value "%s" could not be transformed into an float', $from),
+            sprintf('The value "%s" could not be transformed into an float', var_export($from, true)),
             'not_float',
             $from
         );
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function __invoke($from)
-    {
-        return $this->transform($from);
     }
 }

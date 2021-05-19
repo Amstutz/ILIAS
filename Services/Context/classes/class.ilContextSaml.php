@@ -1,7 +1,6 @@
 <?php
-/* Copyright (c) 1998-2017 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-require_once 'Services/Context/interfaces/interface.ilContextTemplate.php';
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
  * Class ilContextSaml
@@ -88,5 +87,17 @@ class ilContextSaml implements ilContextTemplate
     public static function isSessionMainContext()
     {
         return false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function modifyHttpPath(string $httpPath) : string
+    {
+        if (strpos($httpPath, '/Services/Saml/lib/') !== false && strpos($httpPath, '/metadata.php') === false) {
+            return substr($httpPath, 0, strpos($httpPath, '/Services/Saml/lib/'));
+        }
+
+        return $httpPath;
     }
 }

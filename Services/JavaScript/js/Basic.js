@@ -377,7 +377,7 @@ il.Object = {
 		this.url_rating = url;
 	},
 			
-	saveRating: function(mark) {		
+	saveRating: function(mark) {
 		il.Util.sendAjaxGetRequestToUrl(this.url_rating + "&rating=" + mark, {}, {url_redraw: this.url_redraw_ah}, this.redrawAfterRating);
 	},
 			
@@ -666,30 +666,6 @@ il.UICore = {
 			}
 		});
 		return;
-		/*
-		var n = document.getElementById('ilRightPanel');
-		if (!n) {
-			var b = $("body");
-			b.append("<div class='yui-skin-sam'><div id='ilRightPanel' class='ilOverlay ilRightPanel'>" +
-				"&nbsp;</div>");
-			var n = document.getElementById('ilRightPanel');
-			il.Overlay.add("ilRightPanel", {yuicfg: {}});
-			il.Overlay.show(null, "ilRightPanel");
-		}
-		else
-		{
-			il.Overlay.show(null, "ilRightPanel");
-		}
-		
-		il.Overlay.subscribe("ilRightPanel", "hide", function () {il.UICore.unloadWrapperFromRightPanel();});
-		
-		il.UICore.setRightPanelContent("");
-
-		n = document.getElementById('ilRightPanel');
-		n.style.width = '500px';
-		n.style.height = '100%';
-
-		 */
 	},
 	
 	setRightPanelContent: function (c) {
@@ -1051,3 +1027,70 @@ function startSAHS(SAHSurl, SAHStarget, SAHSopenMode, SAHSwidth, SAHSheight)
 	}
 }
 
+/**
+ * Related to https://mantis.ilias.de/view.php?id=26494
+ * jQuery "inputFilter" Extension.
+ */
+(function($) {
+	/**
+	 * @param {mixed} inputFilter
+	 * @returns {jQuery}
+	 */
+	$.fn.inputFilter = function(inputFilter) {
+		return this.on("input keydown keyup mousedown mouseup select contextmenu drop", function(e) {
+			if ("-" === $.trim(this.value)) {
+				// https://mantis.ilias.de/view.php?id=29417
+			} else if (inputFilter(this.value)) {
+				this.oldValue = this.value;
+				this.oldSelectionStart = this.selectionStart;
+				this.oldSelectionEnd = this.selectionEnd;
+			} else if (this.hasOwnProperty("oldValue")) {
+				this.value = this.oldValue;
+				this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+			} else {
+				this.value = "";
+			}
+		});
+	};
+}(jQuery));
+
+/**
+ * Related to https://mantis.ilias.de/view.php?id=26494
+ * UI-Feedback : check if a numeric field isset but value is not numeric.
+ */
+function numericInputCheck() {
+
+	const numericInput = $( '.ilcqinput_NumericInput' );
+
+	// Only if present.
+	if ( numericInput.length ) {
+
+		// Append ilcqinput_NumericInputInvalid class for visually distinguishable numeric input fields.
+		// -> Onload.
+		let value = $( numericInput ).val().toString().replace( ',', '.' );
+		if ( value && !$.isNumeric( value ) ) {
+			$( numericInput ).addClass( 'ilcqinput_NumericInputInvalid' );
+		} else {
+			$( numericInput ).removeClass( 'ilcqinput_NumericInputInvalid' );
+		}
+		// -> OnChange.
+		$( numericInput ).on( 'change', function() {
+			let value = $( this ).val().toString().replace( ',', '.' );
+			if ( value && !$.isNumeric( value ) ) {
+				$( this ).addClass( 'ilcqinput_NumericInputInvalid' );
+			} else {
+				$( this ).removeClass( 'ilcqinput_NumericInputInvalid' );
+			}
+		} );
+
+		// Only allow numeric values foreach ".ilcqinput_NumericInput" classified input field.
+		$( numericInput ).inputFilter( function( value ) {
+			value = value.toString().replace( ',', '.' );
+			return !$.trim( value ) || $.isNumeric( value );
+		} );
+	}
+}
+
+$(document).ready( function(  ) {
+		numericInputCheck();
+});

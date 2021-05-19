@@ -170,12 +170,15 @@ class ilObjTermsOfServiceGUI extends ilObject2GUI
             $this->rbacsystem->checkAccess('write', $this->object->getRefId())
         );
 
+        ilAdministrationSettingsFormHandler::addFieldsToForm(
+            ilAdministrationSettingsFormHandler::FORM_TOS,
+            $form,
+            $this
+        );
+
         return $form;
     }
 
-    /**
-     *
-     */
     protected function saveSettings() : void
     {
         if (!$this->rbacsystem->checkAccess('write', $this->object->getRefId())) {
@@ -186,18 +189,13 @@ class ilObjTermsOfServiceGUI extends ilObject2GUI
         if ($form->saveObject()) {
             ilUtil::sendSuccess($this->lng->txt('saved_successfully'), true);
             $this->ctrl->redirect($this, 'settings');
-        } else {
-            if ($form->hasTranslatedError()) {
-                ilUtil::sendFailure($form->getTranslatedError());
-            }
+        } elseif ($form->hasTranslatedError()) {
+            ilUtil::sendFailure($form->getTranslatedError());
         }
 
         $this->tpl->setContent($form->getHTML());
     }
 
-    /**
-     *
-     */
     protected function showMissingDocuments() : void
     {
         if ($this->object->getStatus()) {
@@ -209,9 +207,6 @@ class ilObjTermsOfServiceGUI extends ilObject2GUI
         }
     }
 
-    /**
-     *
-     */
     protected function settings() : void
     {
         if (!$this->rbacsystem->checkAccess('read', $this->object->getRefId())) {

@@ -12,7 +12,7 @@ include_once './Services/DidacticTemplate/classes/class.ilDidacticTemplateSettin
 class ilDidacticTemplateSettings
 {
     private static $instance = null;
-    private static $instances = null;
+    private static $instances = [];
 
 
     private $templates = array();
@@ -47,10 +47,29 @@ class ilDidacticTemplateSettings
      */
     public static function getInstanceByObjectType($a_obj_type)
     {
-        if (self::$instances[$a_obj_type]) {
+        if (isset(self::$instances[$a_obj_type])) {
             return self::$instances[$a_obj_type];
         }
         return self::$instances[$a_obj_type] = new ilDidacticTemplateSettings($a_obj_type);
+    }
+
+    /**
+     * @return string[]
+     * @throws ilDatabaseException
+     */
+    public static function lookupAssignedObjectTypes() : array
+    {
+        global $DIC;
+
+        $db = $DIC->database();
+        $query = 'select distinct (obj_type) from didactic_tpl_sa ' .
+            'group by obj_type';
+        $res = $db->query($query);
+        $types = [];
+        while ($row = $res->fetchRow(ilDBConstants::FETCHMODE_OBJECT)) {
+            $types[] = $row->obj_type;
+        }
+        return $types;
     }
 
     /**
@@ -100,7 +119,6 @@ class ilDidacticTemplateSettings
 
     /**
      * Read active didactic templates
-     * @global ilDB $ilDB
      * @return bool
      */
     protected function read()

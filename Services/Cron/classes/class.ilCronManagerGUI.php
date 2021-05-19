@@ -1,39 +1,39 @@
 <?php
-
 /* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-include_once "Services/Cron/classes/class.ilCronManager.php";
+use ILIAS\UI\Factory;
+use ILIAS\UI\Renderer;
 
 /**
  * Class ilCronManagerGUI
- *
  * @author Jörg Lützenkirchen <luetzenkirchen@leifos.com>
- * $Id: class.ilObjFolderGUI.php 25134 2010-08-13 14:22:11Z smeyer $
- *
  * @ilCtrl_Calls ilCronManagerGUI: ilPropertyFormGUI
  * @ingroup ServicesCron
  */
 class ilCronManagerGUI
 {
-    /**
-     * @var \ilLanguage
-     */
+    /** @var \ilLanguage */
     protected $lng;
-
-    /**
-     * @var \ilCtrl
-     */
+    /** @var \ilCtrl */
     protected $ctrl;
-
-    /**
-     * @var \ilSetting
-     */
+    /** @var \ilSetting */
     protected $settings;
-    
-    /**
-     * @var \ilTemplate
-     */
+    /** @var \ilTemplate */
     protected $tpl;
+    /** @var Factory */
+    private $uiFactory;
+    /** @var Renderer */
+    private $uiRenderer;
+    /** @var ilUIService */
+    private $uiService;
+    /** @var ilCronJobRepository */
+    private $repository;
+    /** @var \ILIAS\DI\RBACServices */
+    private $rbac;
+    /** @var ilErrorHandling */
+    private $error;
+    /** @var \ILIAS\DI\Container */
+    private $dic;
 
     /**
      * ilCronManagerGUI constructor.
@@ -46,42 +46,85 @@ class ilCronManagerGUI
         $this->ctrl = $DIC->ctrl();
         $this->settings = $DIC->settings();
         $this->tpl = $DIC->ui()->mainTemplate();
+        $this->uiFactory = $DIC->ui()->factory();
+        $this->uiRenderer = $DIC->ui()->renderer();
+        $this->uiRenderer = $DIC->ui()->renderer();
+        $this->uiService = $DIC->uiService();
+        $this->dic = $DIC;
+        $this->rbac = $DIC->rbac();
+        $this->error = $DIC['ilErr'];
+        $this->repository = new ilCronJobRepositoryImpl();
 
         $this->lng->loadLanguageModule('cron');
+        $this->lng->loadLanguageModule('cmps');
     }
 
-    public function executeCommand()
+    public function executeCommand() : void
     {
+        if (!$this->rbac->system()->checkAccess('visible,read', SYSTEM_FOLDER_ID)) {
+            $this->error->raiseError($this->lng->txt('no_permission'), $this->error->WARNING);
+        }
+
         $class = $this->ctrl->getNextClass($this);
 
-        switch ($class) {
-            case "ilpropertyformgui":
-                $form = $this->initEditForm($_REQUEST['jid']);
+        switch (strtolower($class)) {
+            case strtolower(ilPropertyFormGUI::class):
+                $form = $this->initEditForm(ilUtil::stripSlashes($_REQUEST['jid']));
                 $this->ctrl->forwardCommand($form);
                 break;
         }
-        $cmd = $this->ctrl->getCmd("render");
-        $this->$cmd();
 
-        return true;
+        $cmd = $this->ctrl->getCmd('render');
+        $this->$cmd();
     }
 
-    protected function render()
+    protected function render() : void
     {
+        $tstamp = $this->lng->txt('cronjob_last_start_unknown');
         if ($this->settings->get('last_cronjob_start_ts')) {
             $tstamp = ilDatePresentation::formatDate(new ilDateTime($this->settings->get('last_cronjob_start_ts'), IL_CAL_UNIX));
-        } else {
-            $tstamp = $this->lng->txt('cronjob_last_start_unknown');
         }
-        ilUtil::sendInfo($this->lng->txt('cronjob_last_start') . ": " . $tstamp);
-        
-        include_once "Services/Cron/classes/class.ilCronManagerTableGUI.php";
-        $tbl = new ilCronManagerTableGUI($this, "render");
-        $this->tpl->setContent($tbl->getHTML());
+
+        $message = $this->uiFactory->messageBox()->info($this->lng->txt('cronjob_last_start') . ': ' . $tstamp);
+
+        $cronJobs = $this->repository->findAll();
+
+        $tableFilterMediator = new ilCronManagerTableFilterMediator(
+            $cronJobs,
+            $this->uiFactory,
+            $this->uiService,
+            $this->lng
+        );
+        $filter = $tableFilterMediator->filter($this->ctrl->getFormAction(
+            $this,
+            'render',
+            '',
+            true
+        ));
+
+        $tbl = new ilCronManagerTableGUI(
+            $this,
+            'render',
+            $this->dic,
+            $this->rbac->system()->checkAccess('write', SYSTEM_FOLDER_ID)
+        );
+        $this->tpl->setContent(implode('', [
+            $this->uiRenderer->render([$message, $filter]),
+            $tbl->populate(
+                $tableFilterMediator->filteredJobs(
+                    $filter,
+                    false
+                )
+            )->getHTML()
+        ]));
     }
     
     public function edit(ilPropertyFormGUI $a_form = null)
     {
+        if (!$this->rbac->system()->checkAccess('write', SYSTEM_FOLDER_ID)) {
+            $this->error->raiseError($this->lng->txt('no_permission'), $this->error->WARNING);
+        }
+
         $id = $_REQUEST["jid"];
         if (!$id) {
             $this->ctrl->redirect($this, "render");
@@ -175,9 +218,10 @@ class ilCronManagerGUI
         }
 
         $this->ctrl->setParameter($this, "jid", $a_job_id);
-        
-        $data = array_pop(ilCronManager::getCronJobData($job->getId()));
-        
+
+        $jobData = ilCronManager::getCronJobData($job->getId());
+        $data = array_pop($jobData);
+
         include_once("Services/Cron/classes/class.ilCronJob.php");
         include_once("Services/Form/classes/class.ilPropertyFormGUI.php");
         $form = new ilPropertyFormGUI();
@@ -230,6 +274,10 @@ class ilCronManagerGUI
     
     public function update()
     {
+        if (!$this->rbac->system()->checkAccess('write', SYSTEM_FOLDER_ID)) {
+            $this->error->raiseError($this->lng->txt('no_permission'), $this->error->WARNING);
+        }
+
         $id = $_REQUEST["jid"];
         if (!$id) {
             $this->ctrl->redirect($this, "render");
@@ -277,6 +325,10 @@ class ilCronManagerGUI
     
     public function confirmedRun()
     {
+        if (!$this->rbac->system()->checkAccess('write', SYSTEM_FOLDER_ID)) {
+            $this->error->raiseError($this->lng->txt('no_permission'), $this->error->WARNING);
+        }
+
         $job_id = $_GET["jid"];
         if ($job_id) {
             if (ilCronManager::runJobManual($job_id)) {
@@ -296,6 +348,10 @@ class ilCronManagerGUI
     
     public function confirmedActivate()
     {
+        if (!$this->rbac->system()->checkAccess('write', SYSTEM_FOLDER_ID)) {
+            $this->error->raiseError($this->lng->txt('no_permission'), $this->error->WARNING);
+        }
+
         $jobs = $this->getMultiActionData();
         if ($jobs) {
             foreach ($jobs as $job) {
@@ -318,6 +374,10 @@ class ilCronManagerGUI
     
     public function confirmedDeactivate()
     {
+        if (!$this->rbac->system()->checkAccess('write', SYSTEM_FOLDER_ID)) {
+            $this->error->raiseError($this->lng->txt('no_permission'), $this->error->WARNING);
+        }
+
         $jobs = $this->getMultiActionData();
         if ($jobs) {
             foreach ($jobs as $job) {
@@ -339,6 +399,10 @@ class ilCronManagerGUI
     
     public function confirmedReset()
     {
+        if (!$this->rbac->system()->checkAccess('write', SYSTEM_FOLDER_ID)) {
+            $this->error->raiseError($this->lng->txt('no_permission'), $this->error->WARNING);
+        }
+
         $jobs = $this->getMultiActionData();
         if ($jobs) {
             foreach ($jobs as $job) {
@@ -374,6 +438,10 @@ class ilCronManagerGUI
     
     protected function confirm($a_action)
     {
+        if (!$this->rbac->system()->checkAccess('write', SYSTEM_FOLDER_ID)) {
+            $this->error->raiseError($this->lng->txt('no_permission'), $this->error->WARNING);
+        }
+
         $jobs = $this->getMultiActionData();
         if (!$jobs) {
             $this->ctrl->redirect($this, "render");
@@ -394,11 +462,11 @@ class ilCronManagerGUI
             }
         }
 
-        include_once("./Services/Utilities/classes/class.ilConfirmationGUI.php");
         $cgui = new ilConfirmationGUI();
         
         if (sizeof($jobs) == 1) {
-            $job_id = array_pop(array_keys($jobs));
+            $jobKeys = array_keys($jobs);
+            $job_id = array_pop($jobKeys);
             $job = array_pop($jobs);
             $title = $job->getTitle();
             if (!$title) {

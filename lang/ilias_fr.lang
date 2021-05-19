@@ -773,7 +773,7 @@ assessment#:#log_user_answered_question#:#L'utilisateur a répondu à une questi
 assessment#:#log_user_entered_values#:#Valeurs saisies par l'utilisateur
 assessment#:#log_user_not_entered_values#:#L'utilisateur n'a saisi aucune valeur
 assessment#:#log_user_solution_willingly_deleted#:#L’utilisateur a supprimé la réponse.
-assessment#:#log_wrong_test_password_entered#:#Le Participant a entré un mot de passe de test erroné. Contribution: '%s'
+assessment#:#log_wrong_test_password_entered#:#Le Participant a entré un mot de passe de test erroné.
 assessment#:#longmenu#:#Longmenu
 assessment#:#longmenu_text#:#Texte de menu long
 assessment#:#mailnottype#:#Envoyer notification lorsqu'un utilisateur achève un passage de test.
@@ -1858,7 +1858,7 @@ auth#:#auth_info_migrate#:#Si vous avez déjà  un compte ILIAS, saisir nom d'ut
 auth#:#auth_ldap_server_ds#:#Serveur LDAP
 auth#:#auth_login_editor#:#Editeur de la page de connexion
 auth#:#auth_oidc#:#OpenId Connect
-auth#:#auth_oidc_mapping_table#:#Zuordnung von ILIAS-Benutzerdaten zu OpenId Connect Attributen  
+auth#:#auth_oidc_mapping_table#:#Zuordnung von ILIAS-Benutzerdaten zu OpenId Connect Attributen
 auth#:#auth_oidc_profile#:#Zuordnung der Profildaten
 auth#:#auth_oidc_role_mapping_table#:#Zurodnung von ILIAS-Rollen zu OpenId Connect Attributen
 auth#:#auth_oidc_roles#:#Rollenzuordnung
@@ -1880,7 +1880,7 @@ auth#:#auth_oidc_settings_login_option_enforce_info#:#Eine Anmeldung beim OpenId
 auth#:#auth_oidc_settings_login_options#:#Anmeldeoptionen
 auth#:#auth_oidc_settings_logout_scope#:#Verhalten beim Abmelden
 auth#:#auth_oidc_settings_logout_scope_global#:#Global abmelden
-auth#:#auth_oidc_settings_logout_scope_global_info#:#Wenn aktiviert, wird beim Abmelden sowohl die OpenId Connect Sitzung als auch die ILIAS-Sitzung beendet. 
+auth#:#auth_oidc_settings_logout_scope_global_info#:#Wenn aktiviert, wird beim Abmelden sowohl die OpenId Connect Sitzung als auch die ILIAS-Sitzung beendet.
 auth#:#auth_oidc_settings_logout_scope_local#:#nur bei ILIAS abmelden
 auth#:#auth_oidc_settings_logout_scope_local_info#:#Wenn aktiviert, wird beim Abmelden nur die ILIAS-Sitzung beendet.
 auth#:#auth_oidc_settings_provider#:#Provider-Url
@@ -11113,7 +11113,6 @@ prtf#:#prtf_template_import_blog_create#:#Créer Nouveau Blog
 prtf#:#prtf_template_import_blog_ignore#:#Supprimer Page de Blog
 prtf#:#prtf_template_import_blog_reuse#:#Utiliser Blog Existant
 prtf#:#prtf_template_import_new_skills#:#Lorsque activé, ces éléments sont ajoutés à vos compétences personnelles.
-prtf#:#prtf_template_import_quota_failure#:#Ce modèle de Portfolio ne peut pas être copié car il y a dépassement du quota d'espace disque.
 prtf#:#prtf_unset_as_default#:#Ne Plus Utiliser Comme Profil
 prtf#:#prtf_unset_default_share_info#:#Les derniers changements ont été enregistrés. Veuillez vérifier les paramètres de partage du Portfolio.
 prtf#:#prtf_use_page_layout#:#Utiliser Mise en Page
@@ -15448,8 +15447,6 @@ pwsp#:#pwsp_enable_personal_resources#:#Enable personal resources###07 02 2020 n
 file#:#personal_resources_disk_quota#:#Hard Disk Quota for Personal Resources###07 02 2020 new variable
 file#:#personal_resources_disk_quota_info#:#Allows definition of a hard disk quota for each user account and each global role. This quota only affects files in the personal resources and in portfolios. As soon as a user exceeds the defined quota, ILIAS will prohibit the user to upload more files until the used disk space is again under quota.###07 02 2020 new variable
 common#:#personal_resources#:#Personal Resources###07 02 2020 new variable
-file#:#personal_resources_quota_exceeded_warning#:#You have exceeded the disk quota for your personal resources.###07 02 2020 new variable
-file#:#personal_resources_quota_status_legend#:#You are using %1$s of your available disk quota of %2$s (%3$d%%).###07 02 2020 new variable
 wsp#:#wsp_personal_resources_description#:#Here you can manage your private files, blogs and artifacts.###07 02 2020 new variable
 administration#:#adm_personal_workspace#:#Personal Workspace###07 02 2020 new variable
 dash#:#dash_favourites#:#Favourites###07 02 2020 new variable
@@ -15937,7 +15934,7 @@ prg#:#last_edited_by#:#Last Editor###07 02 2020 new variable
 prg#:#last_edited#:#Last edited###07 02 2020 new variable
 prg#:#add_category#:#Add Category###07 02 2020 new variable
 prg#:#modal_categories_title#:#Category to be monitored###07 02 2020 new variable
-prg#:#category#:#Category RefId###07 02 2020 new variable
+prg#:#category#:#Category###07 02 2020 new variable
 common#:#obj_prgr#:#Link to Study Programme###07 02 2020 new variable
 common#:#obj_prgrs#:#Links to Study Programmes###07 02 2020 new variable
 prg#:#prgr_new#:#Create Study Programme Link###07 02 2020 new variable

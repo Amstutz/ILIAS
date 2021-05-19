@@ -1,15 +1,11 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-include_once("./Services/Table/classes/class.ilTable2GUI.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
  * Upload dir files table
  *
- * @author Alex Killing <alex.killing@gmx.de>
- * @version $Id$
- *
- * @ingroup Services
+ * @author Alexander Killing <killing@leifos.de>
  */
 class ilUploadDirFilesTableGUI extends ilTable2GUI
 {
@@ -35,7 +31,10 @@ class ilUploadDirFilesTableGUI extends ilTable2GUI
         $lng = $DIC->language();
 
         $mset = new ilSetting("mobs");
-        $this->upload_dir = trim($mset->get("upload_dir"));
+
+        $import_directory_factory = new ilImportDirectoryFactory();
+        $mob_import_directory = $import_directory_factory->getInstanceForComponent(ilImportDirectoryFactory::TYPE_MOB);
+        $this->upload_dir = $mob_import_directory->getAbsolutePath();
 
         //var_dump($_POST);
         parent::__construct($a_parent_obj, $a_parent_cmd);

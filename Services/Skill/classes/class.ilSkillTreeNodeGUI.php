@@ -34,6 +34,21 @@ class ilSkillTreeNodeGUI
      */
     protected $user;
 
+    /**
+     * @var ilTree
+     */
+    protected $tree;
+
+    /**
+     * @var ilPropertyFormGUI
+     */
+    protected $form;
+
+    /**
+     * @var object
+     */
+    protected $parentgui;
+
     public $node_object;
     public $in_use = false;
     public $use_checked = false;
@@ -41,10 +56,31 @@ class ilSkillTreeNodeGUI
      * @var ilAccessHandler
      */
     public $access;
+
+    /**
+     * @var \Psr\Http\Message\ServerRequestInterface
+     */
+    protected $request;
+
     /**
      * @var int
      */
-    public $ref_id;
+    protected $requested_ref_id;
+
+    /**
+     * @var int
+     */
+    protected $requested_obj_id;
+
+    /**
+     * @var string
+     */
+    protected $requested_backcmd;
+
+    /**
+     * @var int
+     */
+    protected $requested_tmpmode;
 
     /**
     * constructor
@@ -61,10 +97,17 @@ class ilSkillTreeNodeGUI
         $this->tpl = $DIC["tpl"];
         $this->user = $DIC->user();
         $ilAccess = $DIC->access();
+        $this->tree = $DIC->repositoryTree();
+        $this->request = $DIC->http()->request();
 
         $this->node_object = null;
         $this->access = $ilAccess;
-        $this->ref_id = (int) $_GET["ref_id"];
+
+        $params = $this->request->getQueryParams();
+        $this->requested_ref_id = (int) ($params["ref_id"] ?? 0);
+        $this->requested_obj_id = (int) ($params["obj_id"] ?? 0);
+        $this->requested_backcmd = (string) ($params["backcmd"] ?? "");
+        $this->requested_tmpmode = (int) ($params["tmpmode"] ?? 0);
 
         if ($a_node_id > 0 &&
             $this->getType() == ilSkillTreeNode::_lookupType($a_node_id)) {
@@ -105,7 +148,7 @@ class ilSkillTreeNodeGUI
      */
     public function checkPermissionBool($a_perm)
     {
-        return $this->access->checkAccess($a_perm, "", $this->ref_id);
+        return $this->access->checkAccess($a_perm, "", $this->requested_ref_id);
     }
 
 
@@ -155,7 +198,7 @@ class ilSkillTreeNodeGUI
     {
         $ilCtrl = $this->ctrl;
 
-        $ilCtrl->setParameter($this, "backcmd", $_GET["backcmd"]);
+        $ilCtrl->setParameter($this, "backcmd", $this->requested_backcmd);
         $this->getParentGUI()->deleteNodes($this);
     }
 
@@ -193,9 +236,9 @@ class ilSkillTreeNodeGUI
         ilUtil::sendInfo($lng->txt("skmg_selected_items_have_been_cut"), true);
         
         ilSkillTreeNode::saveChildsOrder(
-            (int) $_GET["obj_id"],
+            $this->requested_obj_id,
             array(),
-            $_GET["tmpmode"]
+            $this->requested_tmpmode
         );
 
         $this->redirectToParent();
@@ -259,9 +302,9 @@ class ilSkillTreeNodeGUI
 
         $this->getParentGUI()->confirmedDelete(false);
         ilSkillTreeNode::saveChildsOrder(
-            (int) $_GET["obj_id"],
+            $this->requested_obj_id,
             array(),
-            $_GET["tmpmode"]
+            $this->requested_tmpmode
         );
 
         $this->redirectToParent();
@@ -276,12 +319,12 @@ class ilSkillTreeNodeGUI
         $tpl = $this->tpl;
         $ilCtrl = $this->ctrl;
         
-        $ilLocator->addRepositoryItems($_GET["ref_id"]);
+        $ilLocator->addRepositoryItems($this->requested_ref_id);
         $this->getParentGUI()->addLocatorItems();
         
-        if ($_GET["obj_id"] > 0) {
+        if ($this->requested_obj_id > 0) {
             $tree = new ilSkillTree();
-            $path = $tree->getPathFull($_GET["obj_id"]);
+            $path = $tree->getPathFull($this->requested_obj_id);
             for ($i = 1; $i < count($path); $i++) {
                 switch ($path[$i]["type"]) {
                     case "scat":
@@ -298,8 +341,7 @@ class ilSkillTreeNodeGUI
                             ),
                             "",
                             0,
-                            $path[$i]["type"],
-                            ilUtil::getImagePath("icon_skmg.svg")
+                            $path[$i]["type"]
                         );
                         break;
 
@@ -317,15 +359,14 @@ class ilSkillTreeNodeGUI
                             ),
                             "",
                             0,
-                            $path[$i]["type"],
-                            ilUtil::getImagePath("icon_skmg.svg")
+                            $path[$i]["type"]
                         );
                         break;
                         
                 }
             }
         }
-        $ilCtrl->setParameter($this, "obj_id", $_GET["obj_id"]);
+        $ilCtrl->setParameter($this, "obj_id", $this->requested_obj_id);
         
         $tpl->setLocator();
     }
@@ -336,14 +377,15 @@ class ilSkillTreeNodeGUI
     public function setSkillNodeDescription()
     {
         $tpl = $this->tpl;
-        
+
+        $desc = "";
         if (is_object($this->node_object)) {
             $tree = new ilSkillTree();
-            $path = $this->node_object->skill_tree->getSkillTreePath(
+            $path = $this->node_object->getSkillTree()->getSkillTreePath(
                 $this->node_object->getId(),
                 $this->tref_id
             );
-            $desc = "";
+            $sep = "";
             foreach ($path as $p) {
                 if (in_array($p["type"], array("scat", "skll", "sktr"))) {
                     $desc .= $sep . $p["title"];
@@ -435,14 +477,14 @@ class ilSkillTreeNodeGUI
             $this->saveItem();
             ilUtil::sendSuccess($lng->txt("msg_obj_modified"), true);
             ilSkillTreeNode::saveChildsOrder(
-                (int) $_GET["obj_id"],
+                $this->requested_obj_id,
                 array(),
                 in_array($this->getType(), array("sktp", "sctp"))
             );
             $this->afterSave();
         } else {
             $this->form->setValuesByPost();
-            $tpl->setContent($this->form->getHtml());
+            $tpl->setContent($this->form->getHTML());
         }
     }
     
@@ -476,7 +518,7 @@ class ilSkillTreeNodeGUI
             $this->afterUpdate();
         } else {
             $this->form->setValuesByPost();
-            $tpl->setContent($this->form->getHtml());
+            $tpl->setContent($this->form->getHTML());
         }
     }
     
@@ -522,7 +564,7 @@ class ilSkillTreeNodeGUI
         $ni->setRequired(true);
         if ($a_mode == "create") {
             $tree = new ilSkillTree();
-            $max = $tree->getMaxOrderNr((int) $_GET["obj_id"]);
+            $max = $tree->getMaxOrderNr($this->requested_obj_id);
             $ni->setValue($max + 10);
         }
         $this->form->addItem($ni);
@@ -539,15 +581,12 @@ class ilSkillTreeNodeGUI
             }
         }
         
-        $ilCtrl->setParameter($this, "obj_id", $_GET["obj_id"]);
+        $ilCtrl->setParameter($this, "obj_id", $this->requested_obj_id);
         $this->form->setFormAction($ilCtrl->getFormAction($this));
     }
 
     /**
      * Cancel saving
-     *
-     * @param
-     * @return
      */
     public function cancelSave()
     {
@@ -558,21 +597,20 @@ class ilSkillTreeNodeGUI
      * Redirect to parent (identified by current obj_id)
      *
      * @param
-     * @return
      */
     public function redirectToParent($a_tmp_mode = false)
     {
         $ilCtrl = $this->ctrl;
         
-        if ($_GET["tmpmode"]) {
+        if ($this->requested_tmpmode) {
             $a_tmp_mode = true;
         }
         
-        $t = ilSkillTreeNode::_lookupType((int) $_GET["obj_id"]);
+        $t = ilSkillTreeNode::_lookupType($this->requested_obj_id);
 
         switch ($t) {
             case "skrt":
-                $ilCtrl->setParameterByClass("ilskillrootgui", "obj_id", (int) $_GET["obj_id"]);
+                $ilCtrl->setParameterByClass("ilskillrootgui", "obj_id", $this->requested_obj_id);
                 if ($a_tmp_mode) {
                     $ilCtrl->redirectByClass("ilskillrootgui", "listTemplates");
                 } else {
@@ -581,12 +619,12 @@ class ilSkillTreeNodeGUI
                 break;
 
             case "sctp":
-                $ilCtrl->setParameterByClass("ilskilltemplatecategorygui", "obj_id", (int) $_GET["obj_id"]);
+                $ilCtrl->setParameterByClass("ilskilltemplatecategorygui", "obj_id", $this->requested_obj_id);
                 $ilCtrl->redirectByClass("ilskilltemplatecategorygui", "listItems");
                 break;
 
             case "scat":
-                $ilCtrl->setParameterByClass("ilskillcategorygui", "obj_id", (int) $_GET["obj_id"]);
+                $ilCtrl->setParameterByClass("ilskillcategorygui", "obj_id", $this->requested_obj_id);
                 $ilCtrl->redirectByClass("ilskillcategorygui", "listItems");
                 break;
         }
@@ -605,12 +643,12 @@ class ilSkillTreeNodeGUI
         }
 
         ilSkillTreeNode::saveChildsOrder(
-            (int) $_GET["obj_id"],
+            $this->requested_obj_id,
             $_POST["order"],
-            (int) $_GET["tmpmode"]
+            $this->requested_tmpmode
         );
         ilUtil::sendSuccess($lng->txt("msg_obj_modified"), true);
-        $this->redirectToParent((int) $_GET["tmpmode"]);
+        $this->redirectToParent($this->requested_tmpmode);
     }
 
     /**
@@ -618,7 +656,7 @@ class ilSkillTreeNodeGUI
      */
     public function insertBasicSkillClip()
     {
-        $nodes = ilSkillTreeNode::insertItemsFromClip("skll", (int) $_GET["obj_id"]);
+        $nodes = ilSkillTreeNode::insertItemsFromClip("skll", $this->requested_obj_id);
         $this->redirectToParent();
     }
 
@@ -627,7 +665,7 @@ class ilSkillTreeNodeGUI
      */
     public function insertSkillCategoryClip()
     {
-        $nodes = ilSkillTreeNode::insertItemsFromClip("scat", (int) $_GET["obj_id"]);
+        $nodes = ilSkillTreeNode::insertItemsFromClip("scat", $this->requested_obj_id);
         $this->redirectToParent();
     }
     
@@ -636,7 +674,7 @@ class ilSkillTreeNodeGUI
      */
     public function insertTemplateReferenceClip()
     {
-        $nodes = ilSkillTreeNode::insertItemsFromClip("sktr", (int) $_GET["obj_id"]);
+        $nodes = ilSkillTreeNode::insertItemsFromClip("sktr", $this->requested_obj_id);
         $this->redirectToParent();
     }
     
@@ -645,7 +683,7 @@ class ilSkillTreeNodeGUI
      */
     public function insertSkillTemplateClip()
     {
-        $nodes = ilSkillTreeNode::insertItemsFromClip("sktp", (int) $_GET["obj_id"]);
+        $nodes = ilSkillTreeNode::insertItemsFromClip("sktp", $this->requested_obj_id);
         $this->redirectToParent();
     }
 
@@ -654,7 +692,7 @@ class ilSkillTreeNodeGUI
      */
     public function insertTemplateCategoryClip()
     {
-        $nodes = ilSkillTreeNode::insertItemsFromClip("sctp", (int) $_GET["obj_id"]);
+        $nodes = ilSkillTreeNode::insertItemsFromClip("sctp", $this->requested_obj_id);
         $this->redirectToParent();
     }
     
@@ -686,7 +724,6 @@ class ilSkillTreeNodeGUI
      * Add usage tab
      *
      * @param
-     * @return
      */
     public function addUsageTab($a_tabs)
     {
@@ -724,6 +761,41 @@ class ilSkillTreeNodeGUI
 
         $tpl->setContent($html);
     }
+
+    /**
+     * @param $a_tabs
+     */
+    public function addObjectsTab($a_tabs)
+    {
+        $lng = $this->lng;
+        $ilCtrl = $this->ctrl;
+
+        $a_tabs->addTab(
+            "objects",
+            $lng->txt("skmg_assigned_objects"),
+            $ilCtrl->getLinkTarget($this, "showObjects")
+        );
+    }
+
+    /**
+     * Show assigned objects
+     */
+    public function showObjects()
+    {
+        $tpl = $this->tpl;
+
+        $this->setTabs("objects");
+
+        $base_skill_id = ($this->base_skill_id > 0)
+            ? $this->base_skill_id
+            : $this->node_object->getId();
+        $usage_info = new ilSkillUsage();
+        $objects = $usage_info->getAssignedObjectsForSkill($base_skill_id, $this->tref_id);
+
+        $tab = new ilSkillAssignedObjectsTableGUI($this, "showObjects", $objects);
+
+        $tpl->setContent($tab->getHTML());
+    }
     
     /**
      * Export seleced nodes
@@ -739,7 +811,7 @@ class ilSkillTreeNodeGUI
         $exp = new ilExport();
         $conf = $exp->getConfig("Services/Skill");
         $conf->setSelectedNodes($_POST["id"]);
-        $exp->exportObject("skmg", ilObject::_lookupObjId((int) $_GET["ref_id"]));
+        $exp->exportObject("skmg", ilObject::_lookupObjId($this->requested_ref_id));
 
         $ilCtrl->redirectByClass(array("iladministrationgui", "ilobjskillmanagementgui", "ilexportgui"), "");
     }

@@ -33,6 +33,16 @@ abstract class ilHtmlPurifierAbstractLibWrapper implements ilHtmlPurifierInterfa
      */
     final public function purifyArray(array $htmlCollection) : array
     {
+        foreach ($htmlCollection as $key => $html) {
+            if (!is_string($html)) {
+                throw new InvalidArgumentException(sprintf(
+                    'The element on index %s is not of type string: %s',
+                    $key,
+                    print_r($html, true)
+                ));
+            }
+        }
+
         return $this->purifier->purifyArray($htmlCollection);
     }
 
@@ -79,9 +89,9 @@ abstract class ilHtmlPurifierAbstractLibWrapper implements ilHtmlPurifierInterfa
      */
     final protected function removeUnsupportedElements(array $elements) : array
     {
-        $supportedElements = array();
+        $supportedElements = [];
 
-        $notSupportedTags = array(
+        $notSupportedTags = [
             'rp',
             'rt',
             'rb',
@@ -92,7 +102,7 @@ abstract class ilHtmlPurifierAbstractLibWrapper implements ilHtmlPurifierInterfa
             'strike',
             'param',
             'object'
-        );
+        ];
 
         foreach ($elements as $element) {
             if (!in_array($element, $notSupportedTags)) {

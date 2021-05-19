@@ -2,10 +2,10 @@
 
 use ILIAS\GlobalScreen\Scope\Layout\Provider\PagePart\PagePartProvider;
 use ILIAS\UI\Component\Layout\Page\Page;
+use ILIAS\UI\Implementation\Component\Layout\Page\Standard;
 
 /**
  * Interface PageBuilder
- *
  * @author Fabian Schmid <fs@studer-raimann.ch>
  */
 class StandardPageBuilder implements PageBuilder
@@ -15,7 +15,10 @@ class StandardPageBuilder implements PageBuilder
      * @var \ILIAS\DI\UIServices
      */
     protected $ui;
-
+    /**
+     * @var \ILIAS\GlobalScreen\Scope\Layout\MetaContent\MetaContent
+     */
+    protected $meta;
 
     /**
      * StandardPageBuilder constructor.
@@ -24,26 +27,25 @@ class StandardPageBuilder implements PageBuilder
     {
         global $DIC;
         $this->ui = $DIC->ui();
+        $this->meta = $DIC->globalScreen()->layout()->meta();
     }
-
 
     /**
      * @param PagePartProvider $parts
-     *
      * @return Page
      */
     public function build(PagePartProvider $parts) : Page
     {
         $header_image = $parts->getLogo();
-        $main_bar = $parts->getMainBar();
-        $meta_bar = $parts->getMetaBar();
+        $main_bar     = $parts->getMainBar();
+        $meta_bar     = $parts->getMetaBar();
         $bread_crumbs = $parts->getBreadCrumbs();
-        $footer = $parts->getFooter();
-        $title = $parts->getTitle();
-        $short_title = $parts->getShortTitle();
-        $view_title = $parts->getViewTitle();
+        $footer       = $parts->getFooter();
+        $title        = $parts->getTitle();
+        $short_title  = $parts->getShortTitle();
+        $view_title   = $parts->getViewTitle();
 
-        return $this->ui->factory()->layout()->page()->standard(
+        $standard = $this->ui->factory()->layout()->page()->standard(
             [$parts->getContent()],
             $meta_bar,
             $main_bar,
@@ -54,5 +56,8 @@ class StandardPageBuilder implements PageBuilder
             $short_title,
             $view_title
         );
+
+        return $standard->withSystemInfos($parts->getSystemInfos())
+                        ->withTextDirection($this->meta->getTextDirection() ?? Standard::LTR);
     }
 }

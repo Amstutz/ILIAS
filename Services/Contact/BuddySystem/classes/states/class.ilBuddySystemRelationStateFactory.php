@@ -35,7 +35,7 @@ class ilBuddySystemRelationStateFactory
     public static function getInstance() : self
     {
         if (null === self::$instance) {
-            self::$instance = new self;
+            self::$instance = new self();
         }
 
         return self::$instance;
@@ -71,16 +71,16 @@ class ilBuddySystemRelationStateFactory
             }
         }
 
-        throw new ilBuddySystemException("Could not find an initial state class");
+        throw new ilBuddySystemException('Could not find an initial state class');
     }
 
     /**
      * @param bool $withInitialState
-     * @return string[]
+     * @return array<string, string>
      */
     public function getStatesAsOptionArray($withInitialState = false) : array
     {
-        if (null !== self::$stateOptions[$withInitialState]) {
+        if (isset(self::$stateOptions[$withInitialState]) && is_array(self::$stateOptions[$withInitialState])) {
             return self::$stateOptions[$withInitialState];
         }
 

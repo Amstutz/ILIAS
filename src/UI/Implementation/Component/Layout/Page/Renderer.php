@@ -13,7 +13,7 @@ use ILIAS\UI\Component\Image\Image;
 
 class Renderer extends AbstractComponentRenderer
 {
-    const COOKIE_NAME_SLATES_ENGAGED = 'il_mb_slates';
+    public const COOKIE_NAME_SLATES_ENGAGED = 'il_mb_slates';
     /**
      * @inheritdoc
      */
@@ -40,6 +40,9 @@ class Renderer extends AbstractComponentRenderer
         if ($component->hasModeInfo()) {
             $tpl->setVariable('MODEINFO', $default_renderer->render($component->getModeInfo()));
         }
+        if ($component->hasSystemInfos()) {
+            $tpl->setVariable('SYSTEMINFOS', $default_renderer->render($component->getSystemInfos()));
+        }
 
         $breadcrumbs = $component->getBreadcrumbs();
         if ($breadcrumbs && $breadcrumbs->getItems()) {
@@ -55,7 +58,7 @@ class Renderer extends AbstractComponentRenderer
             }
         }
 
-        $slates_cookie = $_COOKIE[self::COOKIE_NAME_SLATES_ENGAGED];
+        $slates_cookie = $_COOKIE[self::COOKIE_NAME_SLATES_ENGAGED] ?? '';
         if ($slates_cookie && json_decode($slates_cookie, true)['engaged']) {
             $tpl->touchBlock('slates_engaged');
         }
@@ -64,6 +67,7 @@ class Renderer extends AbstractComponentRenderer
         $tpl->setVariable("SHORT_TITLE", $component->getShortTitle());
         $tpl->setVariable("VIEW_TITLE", $component->getViewTitle());
         $tpl->setVariable("LANGUAGE", $this->getLangKey());
+        $tpl->setVariable("TEXT_DIRECTION", $component->getTextDirection());
         $tpl->setVariable('CONTENT', $default_renderer->render($component->getContent()));
 
         if ($component->hasFooter()) {
@@ -108,7 +112,7 @@ class Renderer extends AbstractComponentRenderer
     protected function setHeaderVars($tpl, bool $for_ui_demo = false)
     {
         global $DIC;
-        $il_tpl = $DIC["tpl"];
+        $il_tpl = $DIC["tpl"] ?? null;
 
         $js_files = [];
         $js_inline = [];
@@ -145,6 +149,7 @@ class Renderer extends AbstractComponentRenderer
             include_once("./Services/jQuery/classes/class.iljQueryUtil.php");
             array_unshift($js_files, './libs/bower/bower_components/jquery-migrate/jquery-migrate.min.js');
             array_unshift($js_files, \iljQueryUtil::getLocaljQueryPath());
+            $css_files[] = ['file' => './templates/default/delos.css'];
         }
 
         foreach ($js_files as $js_file) {

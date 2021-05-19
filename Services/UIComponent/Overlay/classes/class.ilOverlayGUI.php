@@ -1,10 +1,11 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
+
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* This is a utility class for the yui overlays.
-* this only works, if a parent has class="yui-skin-sam" attached.
-*/
+ * This is a utility class for the yui overlays.
+ * this only works, if a parent has class="yui-skin-sam" attached.
+ */
 class ilOverlayGUI
 {
     /**
@@ -21,6 +22,14 @@ class ilOverlayGUI
     protected $anchor_anch_corner = "";
     protected $auto_hide = false;
     protected $close_el = null;
+    /** @var string */
+    protected $trigger_el_id = '';
+    /** @var string */
+    protected $trigger_event = '';
+    /** @var string */
+    protected $trigger_anchor_el_id = '';
+    /** @var string */
+    protected $overlay_el_id = '';
     
     /**
      * Constructor
@@ -165,7 +174,6 @@ class ilOverlayGUI
         $cfg["auto_hide"] = $this->auto_hide;
         $cfg["close_el"] = $this->close_el;
 
-        include_once("./Services/JSON/classes/class.ilJsonUtil.php");
         //var_dump(ilJsonUtil::encode($cfg));
         return 'il.Overlay.add("' . $this->overlay_el_id . '", ' .
             ilJsonUtil::encode($cfg) . '); ';
@@ -177,8 +185,7 @@ class ilOverlayGUI
     public function add()
     {
         $tpl = $this->tpl;
-        include_once("./Services/YUI/classes/class.ilYuiUtil.php");
-        
+
         self::initJavascript();
         $tpl->addOnLoadCode($this->getOnLoadCode());
     }
@@ -195,7 +202,6 @@ class ilOverlayGUI
 
         $tpl = $GLOBALS["tpl"];
         
-        include_once("./Services/YUI/classes/class.ilYuiUtil.php");
         ilYuiUtil::initOverlay($tpl);
         $tpl->addJavascript("./Services/UIComponent/Overlay/js/ilOverlay.js");
     }
@@ -232,8 +238,7 @@ class ilOverlayGUI
         $a_anch_corner = "bl"
     ) {
         $tpl = $this->tpl;
-        include_once("./Services/YUI/classes/class.ilYuiUtil.php");
-        //echo "-".$a_tr_id."-".$a_tr_event."-".$a_anchor_el_id."-";
+
         self::initJavascript();
         $tpl->addOnLoadCode($this->getTriggerOnLoadCode(
             $a_tr_id,

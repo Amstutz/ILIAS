@@ -90,18 +90,6 @@ With ILIAS 7 or later versions, FileInput (or specific variants thereof) can hav
 - Preview of uploaded images
 - Crop functionality for images
 
-### Engaged Buttons (advanced, ~4h)
-
-The [Bulky Button](https://github.com/ILIAS-eLearning/ILIAS/blob/trunk/src/UI/Component/Button/Bulky.php)
-introduced the notion of an "engaged" button, i.e. a button that somehow indicates
-an active state. The general [Buttons](https://github.com/ILIAS-eLearning/ILIAS/blob/trunk/src/UI/Component/Button/Button.php)
-acquired a similar, but less explicit functionality via the `withAriaChecked` method
-due to the [observation that some users of button (i.e. view mode control) need to
-indicate which button is "checked"](https://github.com/ILIAS-eLearning/ILIAS/pull/567).
-These two functions should be deduplicated in favour of the "engaged"-naming. I.e. it
-should be possible to tag buttons `withEngagedState` in general, the aria label should then
-be set accordingly without an explicit `withAriaChecked`.
-
 ### PHP 7 Typehints (beginner, ~2h)
 
 ILIAS supported PHP 5.6 when the UI-Framework was first introduced. In the meantime
@@ -111,16 +99,6 @@ and return types. The types are already documented in the docstrings, these shou
 be transformed to type hints where possible. Also the docstrings should be deleted
 if they do not convey additional information, like some description, besides the
 type.
-
-### Smoke-Tests for Examples (advanced, ~4h)
-
-While building the UI-framework, a good coverage by unit tests is an important
-requirement. This works well in the general implementation of the UI-framework,
-but the examples also delivered with the UI-framework currently do not have any
-test coverage at all. We need a mechanism that automatically provides a smoke
-test for all existing examples, i.e. checks if the example can be executed at
-all and delivers a string to be included in the documentation of the UI frame-
-work.
 
 ### Examples on Main Page (beginner, ~4h)
 
@@ -239,15 +217,30 @@ entirely.
 * Section View Control Input
 * Sortation View Control Input
 
+### Enforce (Aria-)Labels for Icons and Glyphs (beginner)
+In src/GlobalScreen/Scope/MainMenu/Factory/hasSymbolTrait.php, e.g., as well as in
+other files in src/GlobalScreen/Scope, an exception is being thrown for icons/glyphs
+configured with an empty (Aria-)Label.
+The components themselves should take care of this.
+
 ### Get rid of < div > under < body > element in Standard Page template (beginner)
 In the template of the Standard Page, one level under the < body > element,
 a < div > element is used. This level seems redundant and not giving any advantages
 over just starting with < body >. We should remove the < div > element, but must
 keep the functionalities, which are coupled to the "class"-attribute of the element.
 
-#### Remove construction of RowFactory from Table/Data:
-Implementation of Table/Data has a public function "getRowFactory", which builds
-a new RowFactory. RowFactory should be properly injected.
+### Complete rendering-tests for Inputs (beginner):
+The UI Inputs do not all have a rendering test.
+Add, where missing, and refine existing.
+
+### Make date/time input accessible (advanced)
+Date/Time pickers are currently implemented using a third party library. The solution suffers from accessibility issues. Even native pickers seem not always to be easy accessible. See https://mantis.ilias.de/view.php?id=29816#bugnotes. We should evaluate different solutions to tackle this.
+
+### Remove wrapping DIVs in Mainbar
+Top items in the mainbar are wrapped in a <div class="il-mainbar-triggers">;
+We should get rid of this wrapper and have <ol>/<li> only for "menu-items",
+directly under the <nav>-tag.
+
 
 ## Long Term
 
@@ -340,20 +333,9 @@ We need patterns or even a framework for client-side code that gives clear
 guidelines how interactive components should be build for the UI-framework and
 that integrates with the mechanism we use on the server-side to compose GUIs.
 
-
-### Introduce Bootstrap 4 and Create a System for SASS-Variables
-
-Currently ILIAS (and hence the UI-Framework) uses Bootstrap 3 as CSS-framework.
-In the meantime, [Bootstrap 4](https://getbootstrap.com/docs/4.0/getting-started/introduction/)
-was published. It comes with a new language for writing stylesheets (SASS) and
-a new system for its SASS-variables.
-
-The UI-Framework should switch to using Bootstrap 4. In this process, a system
-to use Bootraps new set of variables together with a possible set of special
-variables should be designed, documented and implemented. The switch to Bootstrap 4
-needs to be coordinated with the components of ILIAS that currently do use features
-of Bootstrap but do not use the UI-Framework.
-
+### Introduce Redux-JS-Pattern from Mainbar into more UI Components
+We suspect the Redux-Pattern used in the mainbar to be of value for multiple UI Components. One such suspect
+is the keyboard navigation in the Tree Component. We aim to make a broader use of in upcoming developments.
 
 ### Page-Layout and ilTemplate, CSS/JS Header
 

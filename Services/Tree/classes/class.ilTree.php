@@ -26,6 +26,9 @@ class ilTree
     public const TREE_TYPE_MATERIALIZED_PATH = 'mp';
     public const TREE_TYPE_NESTED_SET = 'ns';
 
+    /** @var array<int, bool> */
+    protected $oc_preloaded = [];
+
     const POS_LAST_NODE = -2;
     const POS_FIRST_NODE = -1;
     
@@ -589,7 +592,7 @@ class ilTree
 
         // preload object translation information
         if ($this->__isMainTree() && $this->isCacheUsed() && is_object($ilObjDataCache) &&
-            is_object($ilUser) && $this->lang_code == $ilUser->getLanguage() && !$this->oc_preloaded[$a_node_id]) {
+            is_object($ilUser) && $this->lang_code == $ilUser->getLanguage() && !isset($this->oc_preloaded[$a_node_id])) {
             //			$ilObjDataCache->preloadTranslations($obj_ids, $this->lang_code);
             $ilObjDataCache->preloadObjectCache($obj_ids, $this->lang_code);
             $this->fetchTranslationFromObjectDataCache($obj_ids);
@@ -731,6 +734,8 @@ class ilTree
             $order_clause;
         
         $res = $ilDB->query($query);
+
+        $childs = [];
         while ($row = $ilDB->fetchAssoc($res)) {
             $childs[] = $this->fetchNodeData($row);
         }
@@ -825,7 +830,7 @@ class ilTree
 
         // reset deletion date
         if ($a_reset_deletion_date) {
-            ilObject::_resetDeletedDate($a_node_id);
+            ilObject::_resetDeletedDate((int) $a_node_id);
         }
         
         if (isset($GLOBALS['DIC']["ilAppEventHandler"]) && $this->__isMainTree()) {
@@ -1538,13 +1543,13 @@ class ilTree
 
         //$ilBench->start("Tree", "fetchNodeData_getRow");
         $data = $a_row;
-        $data["desc"] = $a_row["description"];  // for compability
+        $data["desc"] = $a_row["description"] ?? '';  // for compability
         //$ilBench->stop("Tree", "fetchNodeData_getRow");
 
         // multilingual support systemobjects (sys) & categories (db)
         //$ilBench->start("Tree", "fetchNodeData_readDefinition");
         if (is_object($objDefinition)) {
-            $translation_type = $objDefinition->getTranslationType($data["type"]);
+            $translation_type = $objDefinition->getTranslationType($data["type"] ?? '');
         }
         //$ilBench->stop("Tree", "fetchNodeData_readDefinition");
 
@@ -1563,6 +1568,7 @@ class ilTree
         } elseif ($translation_type == "db") {
 
             // Try to retrieve object translation from cache
+            $lang_code = ''; // This did never work, because it was undefined before
             if ($this->isCacheUsed() &&
                 array_key_exists($data["obj_id"] . '.' . $lang_code, $this->translation_cache)) {
                 $key = $data["obj_id"] . '.' . $lang_code;
@@ -1602,7 +1608,7 @@ class ilTree
         }
 
         // TODO: Handle this switch by module.xml definitions
-        if ($data['type'] == 'crsr' or $data['type'] == 'catr' or $data['type'] == 'grpr' or $data['type'] === 'prgr') {
+        if (isset($data['type']) && ($data['type'] == 'crsr' or $data['type'] == 'catr' or $data['type'] == 'grpr' or $data['type'] === 'prgr')) {
             include_once('./Services/ContainerReference/classes/class.ilContainerReference.php');
             $data['title'] = ilContainerReference::_lookupTitle($data['obj_id']);
         }
@@ -1852,17 +1858,22 @@ class ilTree
     }
     
     /**
-     * Wrapper for saveSubTree
+     * Move node to trash bin
      * @param int $a_node_id
      * @param bool $a_set_deleted
-     * @return integer
+     * @param int deleted_by user_id
+     * @return bool
      * @throws InvalidArgumentException
      */
-    public function moveToTrash($a_node_id, $a_set_deleted = false)
+    public function moveToTrash($a_node_id, $a_set_deleted = false, $a_deleted_by = 0)
     {
         global $DIC;
 
-        $ilDB = $DIC['ilDB'];
+        $ilDB = $DIC->database();
+        $user = $DIC->user();
+        if (!$a_deleted_by) {
+            $a_deleted_by = $user->getId();
+        }
 
         if (!$a_node_id) {
             $this->log->logStack(ilLogLevel::ERROR);
@@ -1875,7 +1886,7 @@ class ilTree
 
         $subnodes = array();
         while ($row = $res->fetchRow(ilDBConstants::FETCHMODE_ASSOC)) {
-            $subnodes[] = $row['child'];
+            $subnodes[] = (int) $row['child'];
         }
 
         if (!count($subnodes)) {
@@ -1884,29 +1895,13 @@ class ilTree
         }
 
         if ($a_set_deleted) {
-            include_once './Services/Object/classes/class.ilObject.php';
-            ilObject::setDeletedDates($subnodes);
+            ilObject::setDeletedDates($subnodes, (int) $a_deleted_by);
         }
 
         // netsted set <=> mp
         $this->getTreeImplementation()->moveToTrash($a_node_id);
 
         return true;
-    }
-
-    /**
-     * Use the wrapper moveToTrash
-     * save subtree: delete a subtree (defined by node_id) to a new tree
-     * with $this->tree_id -node_id. This is neccessary for undelete functionality
-     * @param	integer	node_id
-     * @return	integer
-     * @access	public
-     * @throws InvalidArgumentException
-     * @deprecated since 4.4.0
-     */
-    public function saveSubTree($a_node_id, $a_set_deleted = false)
-    {
-        return $this->moveToTrash($a_node_id, $a_set_deleted);
     }
 
     /**
@@ -2014,11 +2009,12 @@ class ilTree
             0,
             $a_parent_id));
 
+        $saved = [];
         while ($row = $ilDB->fetchAssoc($res)) {
             $saved[] = $this->fetchNodeData($row);
         }
 
-        return $saved ? $saved : array();
+        return $saved;
     }
     
     /**
@@ -2356,7 +2352,7 @@ class ilTree
 
         $ilDB = $DIC['ilDB'];
 
-        $renumber_callable = function (ilDBInterface $ilDB) use ($node_id,$i,&$return) {
+        $renumber_callable = function (ilDBInterface $ilDB) use ($node_id, $i, &$return) {
             $return = $this->__renumber($node_id, $i);
         };
 
@@ -2818,7 +2814,7 @@ class ilTree
                           'node_id' => $a_node_id,
                           'tree_id' => $a_tree_id
                     )
-                );
+        );
     }
 
     /**

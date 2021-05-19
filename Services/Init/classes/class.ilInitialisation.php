@@ -3,13 +3,22 @@
 
 // TODO:
 use ILIAS\BackgroundTasks\Dependencies\DependencyMap\BaseDependencyMap;
+use ILIAS\DI\Container;
 use ILIAS\Filesystem\Provider\FilesystemFactory;
 use ILIAS\Filesystem\Security\Sanitizing\FilenameSanitizerImpl;
+use ILIAS\FileUpload\Location;
 use ILIAS\FileUpload\Processor\BlacklistExtensionPreProcessor;
 use ILIAS\FileUpload\Processor\FilenameSanitizerPreProcessor;
 use ILIAS\FileUpload\Processor\PreProcessorManagerImpl;
 use ILIAS\FileUpload\Processor\VirusScannerPreProcessor;
 use ILIAS\GlobalScreen\Services;
+use ILIAS\ResourceStorage\Information\Repository\InformationARRepository;
+use ILIAS\ResourceStorage\Resource\Repository\ResourceARRepository;
+use ILIAS\ResourceStorage\Revision\Repository\RevisionARRepository;
+use ILIAS\ResourceStorage\StorageHandler\FileSystemStorageHandler;
+use ILIAS\ResourceStorage\Stakeholder\Repository\StakeholderARRepository;
+use ILIAS\ResourceStorage\Lock\LockHandlerilDB;
+use ILIAS\ResourceStorage\Policy\WhiteAndBlacklistedFileNamePolicy;
 
 require_once("libs/composer/vendor/autoload.php");
 
@@ -170,16 +179,42 @@ class ilInitialisation
                 define("IL_VIRUS_SCAN_COMMAND", $ilIliasIniFile->readVariable("tools", "scancommand"));
                 define("IL_VIRUS_CLEAN_COMMAND", $ilIliasIniFile->readVariable("tools", "cleancommand"));
                 break;
+            case "icap":
+                define("IL_VIRUS_SCANNER", "icap");
+                define("IL_ICAP_HOST", $ilIliasIniFile->readVariable("tools", "i_cap_host"));
+                define("IL_ICAP_PORT", $ilIliasIniFile->readVariable("tools", "i_cap_port"));
+                define("IL_ICAP_AV_COMMAND", $ilIliasIniFile->readVariable("tools", "i_cap_av_command"));
+                define("IL_ICAP_CLIENT", $ilIliasIniFile->readVariable("tools", "i_cap_client"));
+                break;
 
             default:
                 define("IL_VIRUS_SCANNER", "None");
                 break;
         }
+        define("IL_VIRUS_CLEAN_COMMAND", '');
 
         include_once './Services/Calendar/classes/class.ilTimeZone.php';
         $tz = ilTimeZone::initDefaultTimeZone($ilIliasIniFile);
         define("IL_TIMEZONE", $tz);
     }
+
+    protected static function initResourceStorage() : void
+    {
+        global $DIC;
+
+        $DIC['resource_storage'] = static function (Container $c) : \ILIAS\ResourceStorage\Services {
+            return new \ILIAS\ResourceStorage\Services(
+                new FileSystemStorageHandler($c['filesystem.storage'], Location::STORAGE),
+                new RevisionARRepository(),
+                new ResourceARRepository(),
+                new InformationARRepository(),
+                new StakeholderARRepository(),
+                new LockHandlerilDB($c->database()),
+                new WhiteAndBlacklistedFileNamePolicy([], [])
+            );
+        };
+    }
+
 
     /**
      * Bootstraps the ILIAS filesystem abstraction.
@@ -259,13 +294,25 @@ class ilInitialisation
             return $delegatingFactory->getLocal($customizingConfiguration, true);
         };
 
+        $DIC['filesystem.node_modules'] = function ($c) {
+            //customizing
+
+            /**
+             * @var FilesystemFactory $delegatingFactory
+             */
+            $delegatingFactory = $c['filesystem.factory'];
+            $customizingConfiguration = new \ILIAS\Filesystem\Provider\Configuration\LocalConfig(ILIAS_ABSOLUTE_PATH . '/' . 'node_modules');
+            return $delegatingFactory->getLocal($customizingConfiguration, true);
+        };
+
         $DIC['filesystem'] = function ($c) {
             return new \ILIAS\Filesystem\FilesystemsImpl(
                 $c['filesystem.storage'],
                 $c['filesystem.web'],
                 $c['filesystem.temp'],
                 $c['filesystem.customizing'],
-                $c['filesystem.libs']
+                $c['filesystem.libs'],
+                $c['filesystem.node_modules']
             );
         };
     }
@@ -287,7 +334,7 @@ class ilInitialisation
 
         $dic['upload'] = function (\ILIAS\DI\Container $c) {
             $fileUploadImpl = new \ILIAS\FileUpload\FileUploadImpl($c['upload.processor-manager'], $c['filesystem'], $c['http']);
-            if (IL_VIRUS_SCANNER != "None") {
+            if ((defined('IL_VIRUS_SCANNER') && IL_VIRUS_SCANNER != "None") || (defined('IL_SCANNER_TYPE') && IL_SCANNER_TYPE == "1")) {
                 $fileUploadImpl->register(new VirusScannerPreProcessor(ilVirusScannerFactory::_getInstance()));
             }
 
@@ -323,10 +370,10 @@ class ilInitialisation
 
         if (!defined('ILIAS_MODULE')) {
             $path = pathinfo($rq_uri);
-            if (!$path['extension']) {
-                $uri = $rq_uri;
-            } else {
+            if (isset($path['extension']) && $path['extension'] !== '') {
                 $uri = dirname($rq_uri);
+            } else {
+                $uri = $rq_uri;
             }
         } else {
             // if in module remove module name from HTTP_PATH
@@ -342,14 +389,7 @@ class ilInitialisation
             }
         }
 
-        $iliasHttpPath = implode('', [$protocol, $host, $uri]);
-        if (ilContext::getType() == ilContext::CONTEXT_APACHE_SSO) {
-            $iliasHttpPath = dirname($iliasHttpPath);
-        } elseif (ilContext::getType() === ilContext::CONTEXT_SAML) {
-            if (strpos($iliasHttpPath, '/Services/Saml/lib/') !== false && strpos($iliasHttpPath, '/metadata.php') === false) {
-                $iliasHttpPath = substr($iliasHttpPath, 0, strpos($iliasHttpPath, '/Services/Saml/lib/'));
-            }
-        }
+        $iliasHttpPath = ilContext::modifyHttpPath(implode('', [$protocol, $host, $uri]));
 
         $f = new \ILIAS\Data\Factory();
         $uri = $f->uri(ilUtil::removeTrailingPathSeparators($iliasHttpPath));
@@ -488,10 +528,12 @@ class ilInitialisation
         global $ilClientIniFile;
 
         if (!$ilClientIniFile->readVariable("client", "access")) {
-            $mess = array("en" => "The server is not available due to maintenance." .
+            $mess = array(
+                "en" => "The server is not available due to maintenance." .
                     " We apologise for any inconvenience.",
                 "de" => "Der Server ist aufgrund von Wartungsarbeiten nicht verfügbar." .
-                    " Wir bitten um Verständnis.");
+                    " Wir bitten um Verständnis."
+            );
             $mess_id = "init_error_maintenance";
 
             if (ilContext::hasHTML() && is_file("./maintenance.html")) {
@@ -551,7 +593,7 @@ class ilInitialisation
         include_once 'Services/Authentication/classes/class.ilAuthFactory.php';
         if (ilAuthFactory::getContext() == ilAuthFactory::CONTEXT_HTTP) {
             $cookie_path = '/';
-        } elseif ($GLOBALS['COOKIE_PATH']) {
+        } elseif (isset($GLOBALS['COOKIE_PATH'])) {
             // use a predefined cookie path from WebAccessChecker
             $cookie_path = $GLOBALS['COOKIE_PATH'];
         } else {
@@ -789,6 +831,7 @@ class ilInitialisation
             }
             // init console log handler
             ilLoggerFactory::getInstance()->initUser($DIC->user()->getLogin());
+            \ilOnlineTracking::updateAccess($DIC->user());
         } else {
             if (is_object($GLOBALS['ilLog'])) {
                 $GLOBALS['ilLog']->logStack();
@@ -859,7 +902,7 @@ class ilInitialisation
         self::initUserAccount();
 
         // if target given, try to go there
-        if (strlen($_GET["target"])) {
+        if (isset($_GET["target"]) && is_string($_GET["target"]) && strlen($_GET["target"])) {
             // when we are already "inside" goto.php no redirect is needed
             $current_script = substr(strrchr($_SERVER["PHP_SELF"], "/"), 1);
             if ($current_script == "goto.php") {
@@ -891,6 +934,7 @@ class ilInitialisation
      */
     protected static function goToLogin()
     {
+        $a_auth_stat = "";
         ilLoggerFactory::getLogger('init')->debug('Redirecting to login page.');
 
         if ($GLOBALS['DIC']['ilAuthSession']->isExpired()) {
@@ -900,7 +944,11 @@ class ilInitialisation
             ilSession::setClosingContext(ilSession::SESSION_CLOSE_LOGIN);
         }
 
-        $script = "login.php?target=" . $_GET["target"] . "&client_id=" . $_COOKIE["ilClientId"] .
+        $target = "";
+        if (isset($_GET["target"]) && is_string($_GET["target"]) && strlen($_GET["target"])) {
+            $target = "target=" . $_GET["target"] . "&";
+        }
+        $script = "login.php?" . $target . "client_id=" . $_COOKIE["ilClientId"] .
             "&auth_stat=" . $a_auth_stat;
 
         self::redirect(
@@ -934,7 +982,7 @@ class ilInitialisation
         } else {
             self::initGlobal('lng', ilLanguage::getFallbackInstance());
         }
-        if (is_object($rbacsystem)) {
+        if (is_object($rbacsystem) && $DIC->offsetExists('tree')) {
             $rbacsystem->initMemberView();
         }
     }
@@ -1024,12 +1072,8 @@ class ilInitialisation
      */
     protected static function handleDevMode()
     {
-        if (defined(SHOWNOTICES) && SHOWNOTICES) {
-            // no further differentiating of php version regarding to 5.4 neccessary
-            // when the error reporting is set to E_ALL anyway
-
-            // add notices to error reporting
-            error_reporting(E_ALL);
+        if ((defined(SHOWNOTICES) && SHOWNOTICES) || version_compare(PHP_VERSION, '8.0', '>=')) {
+            error_reporting(-1);
         }
 
         if (defined('DEBUGTOOLS') && DEBUGTOOLS) {
@@ -1145,15 +1189,6 @@ class ilInitialisation
         );
         $ilErr->setErrorHandling(PEAR_ERROR_CALLBACK, array($ilErr, 'errorHandler'));
 
-        // :TODO: obsolete?
-        // PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, array($ilErr, "errorHandler"));
-
-        // workaround: load old post variables if error handler 'message' was called
-        include_once "Services/Authentication/classes/class.ilSession.php";
-        if (ilSession::get("message")) {
-            $_POST = ilSession::get("post_vars");
-        }
-
         self::removeUnsafeCharacters();
 
         self::initIliasIniFile();
@@ -1176,6 +1211,8 @@ class ilInitialisation
         self::determineClient();
 
         self::bootstrapFilesystems();
+
+        self::initResourceStorage();
 
         self::initClientIniFile();
 
@@ -1375,30 +1412,9 @@ class ilInitialisation
      */
     protected static function initHTTPServices(\ILIAS\DI\Container $container)
     {
-        $container['http.request_factory'] = function ($c) {
-            return new \ILIAS\HTTP\Request\RequestFactoryImpl();
-        };
-
-        $container['http.response_factory'] = function ($c) {
-            return new \ILIAS\HTTP\Response\ResponseFactoryImpl();
-        };
-
-        $container['http.cookie_jar_factory'] = function ($c) {
-            return new \ILIAS\HTTP\Cookies\CookieJarFactoryImpl();
-        };
-
-        $container['http.response_sender_strategy'] = function ($c) {
-            return new \ILIAS\HTTP\Response\Sender\DefaultResponseSenderStrategy();
-        };
-
-        $container['http'] = function ($c) {
-            return new \ILIAS\DI\HTTPServices(
-                $c['http.response_sender_strategy'],
-                $c['http.cookie_jar_factory'],
-                $c['http.request_factory'],
-                $c['http.response_factory']
-            );
-        };
+        include_once "Services/Init/classes/Dependencies/InitHttpServices.php";
+        $init_http = new InitHttpServices();
+        $init_http->init($container);
     }
 
 
@@ -1420,231 +1436,9 @@ class ilInitialisation
      */
     public static function initUIFramework(\ILIAS\DI\Container $c)
     {
-        $c["ui.factory"] = function ($c) {
-            $c["lng"]->loadLanguageModule("ui");
-            return new ILIAS\UI\Implementation\Factory(
-                $c["ui.factory.counter"],
-                $c["ui.factory.button"],
-                $c["ui.factory.listing"],
-                $c["ui.factory.image"],
-                $c["ui.factory.panel"],
-                $c["ui.factory.modal"],
-                $c["ui.factory.dropzone"],
-                $c["ui.factory.popover"],
-                $c["ui.factory.divider"],
-                $c["ui.factory.link"],
-                $c["ui.factory.dropdown"],
-                $c["ui.factory.item"],
-                $c["ui.factory.viewcontrol"],
-                $c["ui.factory.chart"],
-                $c["ui.factory.input"],
-                $c["ui.factory.table"],
-                $c["ui.factory.messagebox"],
-                $c["ui.factory.card"],
-                $c["ui.factory.layout"],
-                $c["ui.factory.maincontrols"],
-                $c["ui.factory.tree"],
-                $c["ui.factory.menu"],
-                $c["ui.factory.symbol"],
-                $c["ui.factory.legacy"]
-            );
-        };
-        $c["ui.signal_generator"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\SignalGenerator;
-        };
-        $c["ui.factory.counter"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Counter\Factory();
-        };
-        $c["ui.factory.button"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Button\Factory();
-        };
-        $c["ui.factory.listing"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Listing\Factory();
-        };
-        $c["ui.factory.image"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Image\Factory();
-        };
-        $c["ui.factory.panel"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Panel\Factory($c["ui.factory.panel.listing"]);
-        };
-        $c["ui.factory.modal"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Modal\Factory($c["ui.signal_generator"]);
-        };
-        $c["ui.factory.dropzone"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Dropzone\Factory($c["ui.factory.dropzone.file"]);
-        };
-        $c["ui.factory.popover"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Popover\Factory($c["ui.signal_generator"]);
-        };
-        $c["ui.factory.divider"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Divider\Factory();
-        };
-        $c["ui.factory.link"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Link\Factory();
-        };
-        $c["ui.factory.dropdown"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Dropdown\Factory();
-        };
-        $c["ui.factory.item"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Item\Factory();
-        };
-        $c["ui.factory.viewcontrol"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\ViewControl\Factory(
-                $c["ui.signal_generator"],
-                $c["ui.factory.input"]
-            );
-        };
-        $c["ui.factory.chart"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Chart\Factory($c["ui.factory.progressmeter"]);
-        };
-        $c["ui.factory.input"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Input\Factory(
-                $c["ui.signal_generator"],
-                $c["ui.factory.input.field"],
-                $c["ui.factory.input.container"],
-                $c["ui.factory.input.viewcontrol"]
-            );
-        };
-        $c["ui.factory.table"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Table\Factory($c["ui.signal_generator"]);
-        };
-        $c["ui.factory.messagebox"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\MessageBox\Factory();
-        };
-        $c["ui.factory.card"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Card\Factory();
-        };
-        $c["ui.factory.layout"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Layout\Factory();
-        };
-        $c["ui.factory.maincontrols.slate"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\MainControls\Slate\Factory(
-                $c['ui.signal_generator'],
-                $c['ui.factory.counter'],
-                $c["ui.factory.symbol"]
-            );
-        };
-        $c["ui.factory.maincontrols"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\MainControls\Factory(
-                $c['ui.signal_generator'],
-                $c['ui.factory.maincontrols.slate']
-            );
-        };
-        $c["ui.factory.menu"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Menu\Factory();
-        };
-        $c["ui.factory.symbol.glyph"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Symbol\Glyph\Factory();
-        };
-        $c["ui.factory.symbol.icon"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Symbol\Icon\Factory();
-        };
-        $c["ui.factory.symbol.avatar"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Symbol\Avatar\Factory();
-        };
-        $c["ui.factory.symbol"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Symbol\Factory(
-                $c["ui.factory.symbol.icon"],
-                $c["ui.factory.symbol.glyph"],
-                $c["ui.factory.symbol.avatar"]
-            );
-        };
-        $c["ui.factory.progressmeter"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Chart\ProgressMeter\Factory();
-        };
-        $c["ui.factory.dropzone.file"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Dropzone\File\Factory();
-        };
-        $c["ui.factory.input.field"] = function ($c) {
-            $data_factory = new ILIAS\Data\Factory();
-            $refinery = new ILIAS\Refinery\Factory($data_factory, $c["lng"]);
-
-            return new ILIAS\UI\Implementation\Component\Input\Field\Factory(
-                $c["ui.signal_generator"],
-                $data_factory,
-                $refinery,
-                $c["lng"]
-            );
-        };
-        $c["ui.factory.input.container"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Input\Container\Factory(
-                $c["ui.factory.input.container.form"],
-                $c["ui.factory.input.container.filter"],
-                $c["ui.factory.input.container.viewcontrol"]
-            );
-        };
-        $c["ui.factory.input.container.form"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Input\Container\Form\Factory(
-                $c["ui.factory.input.field"]
-            );
-        };
-        $c["ui.factory.input.container.filter"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Input\Container\Filter\Factory(
-                $c["ui.signal_generator"],
-                $c["ui.factory.input.field"]
-            );
-        };
-        $c["ui.factory.input.container.viewcontrol"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Input\Container\ViewControl\Factory();
-        };
-        $c["ui.factory.input.viewcontrol"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Input\ViewControl\Factory();
-        };
-        $c["ui.factory.panel.listing"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Panel\Listing\Factory();
-        };
-        $c["ui.renderer"] = function ($c) {
-            return new ILIAS\UI\Implementation\DefaultRenderer(
-                $c["ui.component_renderer_loader"]
-            );
-        };
-        $c["ui.component_renderer_loader"] = function ($c) {
-            return new ILIAS\UI\Implementation\Render\LoaderCachingWrapper(
-                new ILIAS\UI\Implementation\Render\LoaderResourceRegistryWrapper(
-                    $c["ui.resource_registry"],
-                    new ILIAS\UI\Implementation\Render\FSLoader(
-                        new ILIAS\UI\Implementation\Render\DefaultRendererFactory(
-                            $c["ui.factory"],
-                            $c["ui.template_factory"],
-                            $c["lng"],
-                            $c["ui.javascript_binding"],
-                            $c["refinery"]
-                        ),
-                        new ILIAS\UI\Implementation\Component\Symbol\Glyph\GlyphRendererFactory(
-                            $c["ui.factory"],
-                            $c["ui.template_factory"],
-                            $c["lng"],
-                            $c["ui.javascript_binding"],
-                            $c["refinery"]
-                        ),
-                        new ILIAS\UI\Implementation\Component\Input\Field\FieldRendererFactory(
-                            $c["ui.factory"],
-                            $c["ui.template_factory"],
-                            $c["lng"],
-                            $c["ui.javascript_binding"],
-                            $c["refinery"]
-                        )
-                    )
-                )
-            );
-        };
-        $c["ui.template_factory"] = function ($c) {
-            return new ILIAS\UI\Implementation\Render\ilTemplateWrapperFactory($c["tpl"]);
-        };
-        $c["ui.resource_registry"] = function ($c) {
-            return new ILIAS\UI\Implementation\Render\ilResourceRegistry($c["tpl"]);
-        };
-        $c["ui.javascript_binding"] = function ($c) {
-            return new ILIAS\UI\Implementation\Render\ilJavaScriptBinding($c["tpl"]);
-        };
-
-        $c["ui.factory.tree"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Tree\Factory($c["ui.signal_generator"]);
-        };
-
-        $c["ui.factory.legacy"] = function ($c) {
-            return new ILIAS\UI\Implementation\Component\Legacy\Factory($c["ui.signal_generator"]);
-        };
+        include_once "Services/Init/classes/Dependencies/InitUIFramework.php";
+        $init_ui = new InitUIFramework();
+        $init_ui->init($c);
 
         $plugins = ilPluginAdmin::getActivePlugins();
         foreach ($plugins as $plugin_data) {
@@ -1774,7 +1568,9 @@ class ilInitialisation
     {
         $cmd = $_REQUEST["cmd"];
         if (is_array($cmd)) {
-            return array_shift(array_keys($cmd));
+            $keys = array_keys($cmd);
+
+            return array_shift($keys);
         } else {
             return $cmd;
         }
@@ -1823,7 +1619,8 @@ class ilInitialisation
             return true;
         }
 
-        if (strtolower((string) $_REQUEST["baseClass"]) == "ilstartupgui") {
+        $base_class = (string) ($_REQUEST["baseClass"] ?? '');
+        if (strtolower($base_class) == "ilstartupgui") {
             $cmd_class = $_REQUEST["cmdClass"];
 
             if ($cmd_class == "ilaccountregistrationgui" ||
@@ -1846,7 +1643,7 @@ class ilInitialisation
 
         // #12884
         if (($a_current_script == "goto.php" && $_GET["target"] == "impr_0") ||
-            $_GET["baseClass"] == "ilImprintGUI") {
+            $base_class == "ilImprintGUI") {
             ilLoggerFactory::getLogger('auth')->debug('Blocked authentication for baseClass: ' . $_GET['baseClass']);
             return true;
         }
@@ -1904,8 +1701,7 @@ class ilInitialisation
             }
             $message = $a_message_static[$lang];
         }
-
-        return utf8_decode($message);
+        return $message;
     }
 
     /**
@@ -1921,6 +1717,14 @@ class ilInitialisation
         if (defined("ILIAS_HTTP_PATH") &&
             !stristr($a_target, ILIAS_HTTP_PATH)) {
             $a_target = ILIAS_HTTP_PATH . "/" . $a_target;
+        }
+
+        foreach (['ext_uid', 'soap_pw'] as $param) {
+            if (false === strpos($a_target, $param . '=') && isset($GLOBALS['DIC']->http()->request()->getQueryParams()[$param])) {
+                $a_target = \ilUtil::appendUrlParameterString($a_target, $param . '=' . \ilUtil::stripSlashes(
+                    $GLOBALS['DIC']->http()->request()->getQueryParams()[$param]
+                ));
+            }
         }
 
         if (ilContext::supportsRedirects()) {
@@ -1975,7 +1779,7 @@ class ilInitialisation
 
         // for password change and incomplete profile
         // see ilDashboardGUI
-        if (!$_GET["target"]) {
+        if (!isset($_GET["target"])) {
             ilLoggerFactory::getLogger('init')->debug('Redirect to default starting page');
             // Redirect here to switch back to http if desired
             include_once './Services/User/classes/class.ilUserUtil.php';

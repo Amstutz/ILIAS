@@ -86,7 +86,18 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         
         $next_class = $this->ctrl->getNextClass($this);
         $cmd = $this->ctrl->getCmd("view");
-        
+
+        // we have to init the note js handling here, might go to
+        // a better place in the future
+        ilNoteGUI::initJavascript(
+            $this->ctrl->getLinkTargetByClass(
+                array("ilnotegui"),
+                "",
+                "",
+                true,
+                false
+            )
+        );
 
         // trigger assignment tool
         $this->triggerAssignmentTool();
@@ -114,8 +125,6 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                 if ($this->determinePageCall()) {
                     // only in edit mode
                     $this->addLocator();
-                                        
-                    ilFileInputGUI::setPersonalWorkspaceQuotaCheck(true);
                 }
                 $this->handlePageCall($cmd);
                 break;
@@ -127,6 +136,7 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             case "ilobjstylesheetgui":
                 $this->ctrl->setReturn($this, "editStyleProperties");
                 $style_gui = new ilObjStyleSheetGUI("", $this->object->getStyleSheetId(), false, false);
+                $style_gui->enableWrite(true);
                 $style_gui->omitLocator();
                 if ($cmd == "create" || $_GET["new_type"] == "sty") {
                     $style_gui->setCreationMode(true);
@@ -331,13 +341,13 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                 // #18147
                 $this->lng->loadLanguageModule('pd');
                 $url = $this->ctrl->getLinkTargetByClass("ilDashboardGUI", "jumpToWorkspace");
-                $text = $this->lng->txt("pd_personal_workspace");
+                $text = $this->lng->txt("mm_personal_and_shared_r");
 
                 $text = sprintf($this->lng->txt("prtf_no_blogs_info"), $text);
 
                 $mbox = $ui->factory()->messageBox()->info($text)
                     ->withLinks([$ui->factory()->link()->standard(
-                        $this->lng->txt("pd_personal_workspace"),
+                        $this->lng->txt("mm_personal_and_shared_r"),
                         $url
                     )]);
 
@@ -827,10 +837,7 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
         }
             
         $has_form_content = false;
-                
-        $check_quota = ilDiskQuotaActivationChecker::_isPersonalWorkspaceActive();
-        $quota_sum = 0;
-                            
+
         $pskills = array_keys(ilPersonalSkill::getSelectedUserSkills($ilUser->getId()));
         $skill_ids = array();
         
@@ -842,9 +849,6 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                     $source_page->buildDom(true);
                     $skill_ids = $this->getSkillsToPortfolioAssignment($pskills, $skill_ids, $source_page);
 
-                    if ($check_quota) {
-                        $quota_sum += $source_page->getPageDiskSize();
-                    }
                     if (sizeof($skill_ids)) {
                         $has_form_content = true;
                     }
@@ -894,14 +898,6 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
             }
             $form->addItem($skills);
         }
-        
-        if ($quota_sum) {
-            if (!ilDiskQuotaHandler::isUploadPossible($quota_sum)) {
-                ilUtil::sendFailure($this->lng->txt("prtf_template_import_quota_failure"), true);
-                $this->ctrl->redirect($this, "create");
-            }
-        }
-        
         // no dialog needed, go ahead
         if (!$has_form_content) {
             return;
@@ -1060,10 +1056,6 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                 }
             }
 
-            //quota manipulation
-            $check_quota = (int) ilDiskQuotaActivationChecker::_isPersonalWorkspaceActive();
-            $quota_sum = 0;
-
             //skills manipulation
             $pskills = array_keys(ilPersonalSkill::getSelectedUserSkills($ilUser->getId()));
             $skill_ids = array();
@@ -1079,18 +1071,8 @@ class ilObjPortfolioGUI extends ilObjPortfolioBaseGUI
                     case ilPortfolioTemplatePage::TYPE_PAGE:
                         $source_page = new ilPortfolioTemplatePage($page["id"]);
                         $source_page->buildDom(true);
-                        if ($check_quota) {
-                            $quota_sum += $source_page->getPageDiskSize();
-                        }
                         $skill_ids = $this->getSkillsToPortfolioAssignment($pskills, $skill_ids, $source_page);
                         break;
-                }
-            }
-
-            if ($quota_sum) {
-                if (!ilDiskQuotaHandler::isUploadPossible($quota_sum)) {
-                    ilUtil::sendFailure($this->lng->txt("prtf_template_import_quota_failure"), true);
-                    $this->ctrl->redirect($this, "create");
                 }
             }
 

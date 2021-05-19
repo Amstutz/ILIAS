@@ -1,19 +1,15 @@
 <?php
-/* Copyright (c) 1998-2009 ILIAS open source, Extended GPL, see docs/LICENSE */
-include_once("./Services/Object/classes/class.ilObjectGUI.php");
 
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* Accessibility Settings.
-*
-* @author Alex Killing <alex.killing@gmx.de>
-* @version $Id$
-*
-* @ilCtrl_Calls ilObjAccessibilitySettingsGUI: ilPermissionGUI, ilAccessibilityDocumentGUI
-* @ilCtrl_IsCalledBy ilObjAccessibilitySettingsGUI: ilAdministrationGUI
-*
-* @ingroup ServicesAccessibility
-*/
+ * Accessibility Settings.
+ *
+ * @author Alexander Killing <killing@leifos.de>
+ *
+ * @ilCtrl_Calls ilObjAccessibilitySettingsGUI: ilPermissionGUI, ilAccessibilityDocumentGUI
+ * @ilCtrl_IsCalledBy ilObjAccessibilitySettingsGUI: ilAdministrationGUI
+ */
 class ilObjAccessibilitySettingsGUI extends ilObjectGUI
 {
     /**
@@ -90,7 +86,6 @@ class ilObjAccessibilitySettingsGUI extends ilObjectGUI
         switch ($next_class) {
             case 'ilpermissiongui':
                 $this->tabs_gui->setTabActive('perm_settings');
-                include_once("Services/AccessControl/classes/class.ilPermissionGUI.php");
                 $perm_gui = new ilPermissionGUI($this);
                 $ret = $this->ctrl->forwardCommand($perm_gui);
                 break;
@@ -140,9 +135,14 @@ class ilObjAccessibilitySettingsGUI extends ilObjectGUI
      */
     protected function getSettingsForm()
     {
-        require_once 'Services/Form/classes/class.ilPropertyFormGUI.php';
         $this->form = new ilPropertyFormGUI();
         $this->form->setTitle($this->lng->txt('settings'));
+
+        $cb = new ilCheckboxInputGUI($this->lng->txt('adm_acc_ctrl_cpt_enable'), 'acc_ctrl_cpt_status');
+        $cb->setValue(1);
+        $cb->setChecked(ilObjAccessibilitySettings::getControlConceptStatus());
+        $cb->setInfo($this->lng->txt('adm_acc_ctrl_cpt_desc'));
+        $this->form->addItem($cb);
 
         $ti = new ilTextInputGUI($this->lng->txt("adm_accessibility_contacts"), "accessibility_support_contacts");
         $ti->setMaxLength(500);
@@ -154,7 +154,6 @@ class ilObjAccessibilitySettingsGUI extends ilObjectGUI
         $se ->setTitle($this->lng->txt('obj_accs_captcha'));
         $this->form->addItem($se);
 
-        require_once 'Services/Administration/classes/class.ilAdministrationSettingsFormHandler.php';
         ilAdministrationSettingsFormHandler::addFieldsToForm(
             ilAdministrationSettingsFormHandler::FORM_ACCESSIBILITY,
             $this->form,
@@ -184,6 +183,8 @@ class ilObjAccessibilitySettingsGUI extends ilObjectGUI
 
         $this->getSettingsForm();
         if ($this->form->checkInput()) {
+            // Accessibility Control Concept status
+            ilObjAccessibilitySettings::saveControlConceptStatus((bool) $this->form->getInput('acc_ctrl_cpt_status'));
             // Accessibility support contacts
             ilAccessibilitySupportContacts::setList($_POST["accessibility_support_contacts"]);
 
@@ -259,7 +260,6 @@ class ilObjAccessibilitySettingsGUI extends ilObjectGUI
 
         $this->tabs_gui->setTabActive('acc_access_keys');
         
-        include_once("./Services/Accessibility/classes/class.ilAccessKeyTableGUI.php");
         $table = new ilAccessKeyTableGUI($this, "editAccessKeys");
         
         $tpl->setContent($table->getHTML());
@@ -275,7 +275,6 @@ class ilObjAccessibilitySettingsGUI extends ilObjectGUI
         $ilAccess = $this->access;
         
         if ($ilAccess->checkAccess("write", "", $_GET["ref_id"])) {
-            include_once("./Services/Accessibility/classes/class.ilAccessKey.php");
             ilAccessKey::writeKeys(ilUtil::stripSlashesArray($_POST["acckey"]));
             ilUtil::sendSuccess($lng->txt("msg_obj_modified"), true);
         }

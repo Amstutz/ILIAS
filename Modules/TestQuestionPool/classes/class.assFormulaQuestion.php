@@ -1268,7 +1268,12 @@ class assFormulaQuestion extends assQuestion implements iQuestionCondition
                     $unit_factor = assFormulaQuestionUnit::lookupUnitFactor($user_solution[$result_name]['unit']);
                 }
 
-                $user_solution[$result->getResult()]["value"] = round(ilMath::_div($resVal, $unit_factor), 55);
+                try {
+                    $user_solution[$result->getResult()]["value"] = ilMath::_div($resVal, $unit_factor, 55);
+                } catch (ilMathDivisionByZeroException $ex) {
+                    $user_solution[$result->getResult()]["value"] = 0;
+                    ilUtil::sendFailure( $ex->getMessage(), true );
+                }
             }
             if ($result->getResultType() == assFormulaQuestionResult::RESULT_CO_FRAC
                 || $result->getResultType() == assFormulaQuestionResult::RESULT_FRAC) {
@@ -1280,14 +1285,11 @@ class assFormulaQuestion extends assQuestion implements iQuestionCondition
                     $user_solution[$result->getResult()]["value"] = $value;
                     $user_solution[$result->getResult()]["frac_helper"] = null;
                 }
-            } elseif ($result->getPrecision() > 0) {
-                $user_solution[$result->getResult()]["value"] = round(
-                    $user_solution[$result->getResult()]["value"],
-                    $result->getPrecision()
-                );
             } else {
-                $user_solution[$result->getResult()]["value"] = round(
-                    $user_solution[$result->getResult()]["value"]
+                $user_solution[$result->getResult()]["value"] = ilMath::_div(
+                    $user_solution[$result->getResult()]["value"],
+                    1,
+                    $result->getPrecision()
                 );
             }
         }

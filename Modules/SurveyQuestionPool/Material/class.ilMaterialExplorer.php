@@ -1,35 +1,12 @@
 <?php
-/*
-    +-----------------------------------------------------------------------------+
-    | ILIAS open source                                                           |
-    +-----------------------------------------------------------------------------+
-    | Copyright (c) 1998-2001 ILIAS open source, University of Cologne            |
-    |                                                                             |
-    | This program is free software; you can redistribute it and/or               |
-    | modify it under the terms of the GNU General Public License                 |
-    | as published by the Free Software Foundation; either version 2              |
-    | of the License, or (at your option) any later version.                      |
-    |                                                                             |
-    | This program is distributed in the hope that it will be useful,             |
-    | but WITHOUT ANY WARRANTY; without even the implied warranty of              |
-    | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the               |
-    | GNU General Public License for more details.                                |
-    |                                                                             |
-    | You should have received a copy of the GNU General Public License           |
-    | along with this program; if not, write to the Free Software                 |
-    | Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA. |
-    +-----------------------------------------------------------------------------+
-*/
 
-/*
-* Material Explorer for survey question pools
-*
-* @author Helmut Schottmüller <helmut.schottmueller@mac.com>
-* @version $Id$
-*
-* @ingroup ModulesSurveyQuestionPool
-*/
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
+/**
+ * Material Explorer for survey question pools
+ *
+ * @author Helmut Schottmüller <helmut.schottmueller@mac.com>
+ */
 class ilMaterialExplorer extends ilTreeExplorerGUI
 {
     protected $current_type; // [string]
@@ -42,7 +19,7 @@ class ilMaterialExplorer extends ilTreeExplorerGUI
         $this->ctrl = $DIC->ctrl();
         $tree = $DIC->repositoryTree();
                 
-        parent::__construct("rep_exp", $a_parent_obj, $a_parent_cmd, $tree);
+        parent::__construct("mat_rep_exp", $a_parent_obj, $a_parent_cmd, $tree);
         
         $this->current_type = $a_selectable_type;
         

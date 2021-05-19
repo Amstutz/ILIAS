@@ -1,17 +1,12 @@
 <?php
 
-/* Copyright (c) 1998-2012 ILIAS open source, Extended GPL, see docs/LICENSE */
-
-include_once("./Services/Object/classes/class.ilObjectAccess.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* Class ilObjFileAccess
-*
-*
-* @author 	Stefan Meyer <meyer@leifos.com>
-* @version $Id$
-*
-*/
+ * Class ilObjFileAccess
+ *
+ * @author 	Stefan Meyer <meyer@leifos.com>
+ */
 class ilObjFolderAccess extends ilObjectAccess
 {
     private static $folderSettings;
@@ -42,16 +37,6 @@ class ilObjFolderAccess extends ilObjectAccess
         $commands = array();
         $commands[] = array("permission" => "read", "cmd" => "view", "lang_var" => "show", "default" => true);
 
-        include_once './Services/WebServices/FileManager/classes/class.ilFMSettings.php';
-        if (ilFMSettings::getInstance()->isEnabled()) {
-            $commands[] = array(
-                'permission' => 'read',
-                'cmd' => 'fileManagerLaunch',
-                'lang_var' => 'fm_start',
-                'enable_anonymous' => false
-            );
-        }
-
         // why here, why read permission? it just needs info_screen_enabled = true in ilObjCategoryListGUI (alex, 30.7.2008)
         // this is not consistent, with all other objects...
         //$commands[] = array("permission" => "read", "cmd" => "showSummary", "lang_var" => "info_short", "enable_anonymous" => "false");
@@ -59,9 +44,7 @@ class ilObjFolderAccess extends ilObjectAccess
             $commands[] = array("permission" => "read", "cmd" => "download", "lang_var" => "download"); // #18805
         }
         // BEGIN WebDAV: Mount Webfolder.
-        include_once('Services/WebDAV/classes/class.ilDAVActivationChecker.php');
         if (ilDAVActivationChecker::_isActive()) {
-            include_once './Services/WebDAV/classes/class.ilWebDAVUtil.php';
             if (ilWebDAVUtil::getInstance()->isLocalPasswordInstructionRequired()) {
                 $commands[] = array('permission' => 'read', 'cmd' => 'showPasswordInstruction', 'lang_var' => 'mount_webfolder', 'enable_anonymous' => 'false');
             } else {

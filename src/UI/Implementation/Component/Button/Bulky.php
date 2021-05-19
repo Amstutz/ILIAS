@@ -13,10 +13,8 @@ use ILIAS\UI\Component\Symbol\Symbol;
  */
 class Bulky extends Button implements C\Button\Bulky
 {
-    use Engageable;
-
     // allowed ARIA roles
-    const MENUITEM = 'menuitem';
+    public const MENUITEM = 'menuitem';
 
     /**
      * @var Symbol
@@ -52,9 +50,6 @@ class Bulky extends Button implements C\Button\Bulky
 
     /**
      * Get a button like this, but with an additional ARIA role.
-     *
-     * @param string $aria_role
-     * @return Button
      */
     public function withAriaRole(string $aria_role) : Button
     {
@@ -71,8 +66,6 @@ class Bulky extends Button implements C\Button\Bulky
 
     /**
      * Get the ARIA role on the button.
-     *
-     * @return string|null
      */
     public function getAriaRole() : ?string
     {

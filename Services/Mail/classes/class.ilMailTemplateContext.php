@@ -92,7 +92,7 @@ abstract class ilMailTemplateContext
     /**
      * @return array
      */
-    final private function getGenericPlaceholders() : array
+    private function getGenericPlaceholders() : array
     {
         return [
             'mail_salutation' => [
@@ -229,7 +229,7 @@ abstract class ilMailTemplateContext
                 foreach ($ouUsers as $ouUser) {
                     $superiors = $ouUser->getSuperiors();
 
-                    $superiorUsrIds = array_map(function (ilOrgUnitUser $ouUser) {
+                    $superiorUsrIds = array_map(static function (ilOrgUnitUser $ouUser) : int {
                         return $ouUser->getUserId();
                     }, $superiors);
 

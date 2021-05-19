@@ -19,6 +19,13 @@ interface Tree extends Component
     public function withEnvironment($environment) : Tree;
 
     /**
+     * Get the (aria-)label
+     *
+     * @return string
+     */
+    public function getLabel() : string;
+
+    /**
      * Apply data to the Tree.
      */
     public function withData($data) : Tree;
@@ -47,4 +54,14 @@ interface Tree extends Component
      * Is the tree configured to highlight a clicked node?
      */
     public function getHighlightOnNodeClick() : bool;
+
+    /**
+     * Is this only a part of a tree? Needed if parts are loaded async
+     */
+    public function isSubTree() : bool;
+
+    /**
+     * Set this tree to be a part of a tree. Needed if parts are loaded async.
+     */
+    public function withIsSubTree(bool $is_sub) : Tree;
 }

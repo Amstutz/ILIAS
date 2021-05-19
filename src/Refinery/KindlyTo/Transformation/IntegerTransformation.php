@@ -5,6 +5,7 @@
 namespace ILIAS\Refinery\KindlyTo\Transformation;
 
 use ILIAS\Refinery\DeriveApplyToFromTransform;
+use ILIAS\Refinery\DeriveInvokeFromTransform;
 use ILIAS\Refinery\Transformation;
 use ILIAS\Refinery\ConstraintViolationException;
 
@@ -13,6 +14,7 @@ class IntegerTransformation implements Transformation
     const REG_INT = '/^\s*(0|(-?[1-9]\d*))\s*$/';
 
     use DeriveApplyToFromTransform;
+    use DeriveInvokeFromTransform;
 
     /**
      * @inheritdoc
@@ -44,17 +46,9 @@ class IntegerTransformation implements Transformation
         }
 
         throw new ConstraintViolationException(
-            sprintf('The value "%s" can not be transformed into an integer', $from),
+            sprintf('The value "%s" can not be transformed into an integer', var_export($from, true)),
             'not_integer',
             $from
         );
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function __invoke($from)
-    {
-        return $this->transform($from);
     }
 }

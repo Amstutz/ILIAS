@@ -1,37 +1,16 @@
 <?php
- /*
-   +----------------------------------------------------------------------------+
-   | ILIAS open source                                                          |
-   +----------------------------------------------------------------------------+
-   | Copyright (c) 1998-2001 ILIAS open source, University of Cologne           |
-   |                                                                            |
-   | This program is free software; you can redistribute it and/or              |
-   | modify it under the terms of the GNU General Public License                |
-   | as published by the Free Software Foundation; either version 2             |
-   | of the License, or (at your option) any later version.                     |
-   |                                                                            |
-   | This program is distributed in the hope that it will be useful,            |
-   | but WITHOUT ANY WARRANTY; without even the implied warranty of             |
-   | MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              |
-   | GNU General Public License for more details.                               |
-   |                                                                            |
-   | You should have received a copy of the GNU General Public License          |
-   | along with this program; if not, write to the Free Software                |
-   | Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. |
-   +----------------------------------------------------------------------------+
-*/
+
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* Survey phrases GUI class
-*
-* The ilSurveyPhrases GUI class creates the GUI output for
-* survey phrases (collections of survey categories)
-* of ordinal survey question types.
-*
-* @author		Helmut Schottmüller <ilias@aurealis.de>
-* @version	$Id$
-* @ingroup ModulesSurveyQuestionPool
-*/
+ * Survey phrases GUI class
+ *
+ * The ilSurveyPhrases GUI class creates the GUI output for
+ * survey phrases (collections of survey categories)
+ * of ordinal survey question types.
+ *
+ * @author		Helmut Schottmüller <ilias@aurealis.de>
+ */
 class ilSurveyPhrasesGUI
 {
     /**
@@ -150,7 +129,7 @@ class ilSurveyPhrasesGUI
             $data = array();
             foreach ($phrases as $phrase_id => $phrase_array) {
                 $categories = &ilSurveyPhrases::_getCategoriesForPhrase($phrase_id);
-                array_push($data, array('phrase_id' => $phrase_id, 'phrase' => $phrase_array["title"], 'answers' => join($categories, ", ")));
+                array_push($data, array('phrase_id' => $phrase_id, 'phrase' => $phrase_array["title"], 'answers' => join(", ", $categories)));
             }
             $table_gui->setData($data);
             $this->tpl->setContent($table_gui->getHTML());
@@ -225,7 +204,7 @@ class ilSurveyPhrasesGUI
         foreach ($checked_phrases as $phrase_id) {
             $phrase_array = $phrases[$phrase_id];
             $categories = &ilSurveyPhrases::_getCategoriesForPhrase($phrase_id);
-            array_push($data, array('phrase_id' => $phrase_id, 'phrase' => $phrase_array["title"], 'answers' => join($categories, ", ")));
+            array_push($data, array('phrase_id' => $phrase_id, 'phrase' => $phrase_array["title"], 'answers' => join(", ", $categories)));
         }
         $table_gui->setData($data);
         $this->tpl->setVariable('ADM_CONTENT', $table_gui->getHTML());

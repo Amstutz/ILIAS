@@ -1,20 +1,21 @@
 <?php
-/* Copyright (c) 1998-2011 ILIAS open source, Extended GPL, see docs/LICENSE */
 
-include_once("Services/Block/classes/class.ilBlockGUI.php");
+/* Copyright (c) 1998-2021 ILIAS open source, GPLv3, see LICENSE */
 
 /**
-* BlockGUI class for wiki functions block
-*
-* @author Alex Killing <alex.killing@gmx.de>
-* @version $Id$
-*
-* @ingroup ModulesWiki
-*/
+ * BlockGUI class for wiki functions block
+ *
+ * @author Alex Killing <alex.killing@gmx.de>
+ */
 class ilWikiFunctionsBlockGUI extends ilBlockGUI
 {
     public static $block_type = "wikiside";
     public static $st_data;
+
+    /**
+     * @var ilObjWiki
+     */
+    protected $wiki;
     
     /**
     * Constructor
@@ -38,6 +39,8 @@ class ilWikiFunctionsBlockGUI extends ilBlockGUI
         $this->allow_moving = false;
 
         $this->ref_id = (int) $_GET["ref_id"];
+
+        $this->wiki = new ilObjWiki($this->ref_id);
 
         $this->setPresentation(self::PRES_SEC_LEG);
     }
@@ -192,7 +195,6 @@ class ilWikiFunctionsBlockGUI extends ilBlockGUI
 
 
         // page lists
-        include_once("./Services/UIComponent/AdvancedSelectionList/classes/class.ilAdvancedSelectionListGUI.php");
         $list = new ilAdvancedSelectionListGUI();
         $list->setListTitle($lng->txt("wiki_page_lists"));
         $list->setStyle(ilAdvancedSelectionListGUI::STYLE_LINK);
@@ -239,7 +241,6 @@ class ilWikiFunctionsBlockGUI extends ilBlockGUI
         if ($ilAccess->checkAccess("write", "", $this->ref_id) ||
             $ilAccess->checkAccess("edit_page_meta", "", $this->ref_id)) {
             // unhide advmd?
-            include_once 'Services/AdvancedMetaData/classes/class.ilAdvancedMDRecord.php';
             if ((bool) sizeof(ilAdvancedMDRecord::_getSelectedRecordsByObject("wiki", $this->ref_id, "wpg")) &&
                 ilWikiPage::lookupAdvancedMetadataHidden($this->getPageObject()->getId())) {
                 $list->addItem(
@@ -260,7 +261,6 @@ class ilWikiFunctionsBlockGUI extends ilBlockGUI
             );
         }
 
-        include_once("./Modules/Wiki/classes/class.ilWikiPerm.php");
         if (ilWikiPerm::check("activate_wiki_protection", $this->ref_id)) {
             // block/unblock
             if ($this->getPageObject()->getBlocked()) {
@@ -278,7 +278,6 @@ class ilWikiFunctionsBlockGUI extends ilBlockGUI
             }
         }
 
-        include_once("./Modules/Wiki/classes/class.ilWikiPerm.php");
         if (ilWikiPerm::check("delete_wiki_pages", $this->ref_id)) {
             // delete page
             $st_page = ilObjWiki::_lookupStartPage($this->getPageObject()->getParentId());
@@ -292,7 +291,6 @@ class ilWikiFunctionsBlockGUI extends ilBlockGUI
         }
         
         if ($ilAccess->checkAccess("write", "", $this->ref_id)) {
-            include_once "Modules/Wiki/classes/class.ilWikiPageTemplate.php";
             $wpt = new ilWikiPageTemplate($this->getPageObject()->getParentId());
             if (!$wpt->isPageTemplate($this->getPageObject()->getId())) {
                 $list->addItem(
@@ -338,11 +336,27 @@ class ilWikiFunctionsBlockGUI extends ilBlockGUI
 
         // manage
         if (ilWikiPerm::check("wiki_html_export", $this->ref_id)) {
-            $actions[] = array(
-                "txt" => $lng->txt("wiki_html_export"),
-                "id" => "il_wiki_user_export",
-                "href" => $ilCtrl->getLinkTargetByClass("ilobjwikigui", "initUserHTMLExport")
-            );
+            if (!$this->wiki->isCommentsExportPossible()) {
+                $actions[] = array(
+                    "txt" => $lng->txt("wiki_html_export"),
+                    "id" => "il_wiki_user_export",
+                    "href" => $ilCtrl->getLinkTargetByClass("ilobjwikigui", "initUserHTMLExport")
+                );
+            } else {
+                $this->lng->loadLanguageModule("note");
+                $comments_helper = new \ILIAS\Notes\Export\ExportHelperGUI();
+                $comments_modal = $comments_helper->getCommentIncludeModalDialog(
+                    $this->lng->txt("wiki_html_export"),
+                    $this->lng->txt("note_html_export_include_comments"),
+                    "il.Wiki.Pres.performHTMLExport();",
+                    "il.Wiki.Pres.performHTMLExportWithComments();",
+                    true
+                );
+                $actions[] = array(
+                    "txt" => $lng->txt("wiki_html_export"),
+                    "modal" => $comments_modal
+                );
+            }
         }
 
         // manage
@@ -358,9 +372,18 @@ class ilWikiFunctionsBlockGUI extends ilBlockGUI
                 );
         }
 
+        $modal_html = "";
         foreach ($actions as $a) {
             $tpl->setCurrentBlock("action");
-            $tpl->setVariable("HREF", $a["href"]);
+            if ($a["modal"] != "") {
+                $signal = $a["modal"]->getShowSignal();
+                $onclick = "$(document).trigger('" . $signal . "', {'id': '" . $signal . "','triggerer':$(this), 'options': JSON.parse('[]')}); return false;";
+                $tpl->setVariable("ONCLICK", ' onclick="' . $onclick . '" ');
+                $tpl->setVariable("HREF", "#");
+                $modal_html .= $this->ui->renderer()->render($a["modal"]);
+            } else {
+                $tpl->setVariable("HREF", $a["href"]);
+            }
             $tpl->setVariable("TXT", $a["txt"]);
             if ($a["id"] != "") {
                 $tpl->setVariable("ACT_ID", "id='" . $a["id"] . "'");
@@ -370,6 +393,6 @@ class ilWikiFunctionsBlockGUI extends ilBlockGUI
             $tpl->touchBlock("item");
         }
 
-        return $tpl->get();
+        return $tpl->get() . $modal_html;
     }
 }

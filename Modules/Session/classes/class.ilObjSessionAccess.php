@@ -97,9 +97,6 @@ class ilObjSessionAccess extends ilObjectAccess
                 if ($ilUser->isAnonymous()) {
                     return false;
                 }
-                if (self::_lookupRegistered($a_user_id, $a_obj_id)) {
-                    return false;
-                }
                 //UNIBE-Patch
 
                 include_once './Modules/Session/classes/class.ilSessionParticipants.php';

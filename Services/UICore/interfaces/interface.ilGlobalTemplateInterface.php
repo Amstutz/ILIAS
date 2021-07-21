@@ -161,6 +161,11 @@ interface ilGlobalTemplateInterface
      */
     public function setContent($a_html);
 
+    /**
+     * Gets content for standard template.
+     * @return string
+     */
+    public function getContent();
 
     /**
      * Sets content of left column.

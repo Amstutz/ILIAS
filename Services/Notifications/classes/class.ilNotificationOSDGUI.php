@@ -41,6 +41,13 @@ class ilNotificationOSDGUI
         $notificationSettings = new \ilSetting('notifications');
         $chatSettings = new \ilSetting('chatroom');
 
+        // Unibe-Patch
+        if(! $chatSettings->get("chat_enabled"))
+        {
+            return;
+        }
+        // End Unibe-Patch
+
         $osdTemplate = new \ilTemplate('tpl.osd_notifications.js', true, true, 'Services/Notifications');
 
         $notifications = \ilNotificationOSDHandler::getNotificationsForUser($this->user->getId());

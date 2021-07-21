@@ -1040,6 +1040,16 @@ class ilRTEGlobalTemplate implements ilGlobalTemplateInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getContent() : ?string
+    {
+        return $this->main_content;
+    }
+
+
+
+    /**
      * Sets content of left column.
      */
     public function setLeftContent($a_html)

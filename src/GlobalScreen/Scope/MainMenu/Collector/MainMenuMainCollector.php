@@ -152,9 +152,11 @@ class MainMenuMainCollector extends AbstractBaseCollector implements ItemCollect
                 $parent = $this->map->getSingleItemFromFilter($this->information->getParent($item));
                 if ($parent instanceof isParent) {
                     $parent->appendChild($item);
-                    if ($parent instanceof Lost && $parent->getProviderIdentification()->serialize() === '') {
+			//UNIBE-Patch, remove when this(https://mantis.ilias.de/view.php?id=30796) is fixed
+                    //if ($parent instanceof Lost && $parent->getProviderIdentification()->serialize() === '') {
                         $item->overrideParent($parent->getProviderIdentification());
-                    }
+                   // }
+		//End of PATCH
                 }
             }
 

@@ -820,6 +820,7 @@ class ilWikiPageGUI extends ilPageObjectGUI
         $this->form->addItem($radg);
 
         $this->form->addCommandButton("printViewOrder", $lng->txt("wiki_show_print_view"));
+        $this->form->addCommandButton("pdfExportOrder", $lng->txt("wiki_show_pdf_export"));
         //$this->form->setOpenTag(false);
         //$this->form->setCloseTag(false);
 

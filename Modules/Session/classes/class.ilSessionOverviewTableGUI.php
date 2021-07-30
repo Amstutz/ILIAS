@@ -95,7 +95,6 @@ class ilSessionOverviewTableGUI extends ilTable2GUI
                 'name' => $name['lastname'] . ', ' . $name['firstname'],
                 'login' => $name['login']
             );
-}
             include_once 'Modules/Session/classes/class.ilEventParticipants.php';
             foreach ($a_events as $event_obj) {
                 $users_of_event = ilEventParticipants::_getParticipated($event_obj->getID());
@@ -107,7 +106,7 @@ class ilSessionOverviewTableGUI extends ilTable2GUI
                     }
                 }
             }
-        
+        }
         $this->setData($data);
     }
         

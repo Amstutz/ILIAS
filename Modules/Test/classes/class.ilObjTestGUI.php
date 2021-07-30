@@ -2395,6 +2395,13 @@ class ilObjTestGUI extends ilObjectGUI
         $template = new ilTemplate("tpl.il_as_tst_print_test_confirm.html", true, true, "Modules/Test");
 
         if (!$isPdfDeliveryRequest) { // #15243
+            $this->ctrl->setParameter($this, "pdf", "1");
+            $template->setCurrentBlock("pdf_export");
+            $template->setVariable("PDF_URL", $this->ctrl->getLinkTarget($this, "print"));
+            $this->ctrl->setParameter($this, "pdf", "");
+            $template->setVariable("PDF_TEXT", $this->lng->txt("pdf_export"));
+            $template->parseCurrentBlock();
+
             $template->setCurrentBlock("navigation_buttons");
             $template->setVariable("BUTTON_PRINT", $this->lng->txt("print"));
             $template->parseCurrentBlock();

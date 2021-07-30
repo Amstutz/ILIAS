@@ -149,6 +149,9 @@ class ilWkhtmlToPdfRenderer implements ilRendererConfig, ilPDFRenderer
     {
         global $DIC;
         $log = $DIC['ilLog'];
+        //UNIBE-Patch
+        echo file_get_contents($a_path_to_file)." <script>window.print();</script>";
+        exit;
         $config = new ilWkhtmlToPdfConfig($config);
         $temp_file = $this->getPdfTempName();
         $args = $config->getCommandLineConfig() . ' ' . $a_path_to_file . ' ' . $temp_file . $this->redirectLog();

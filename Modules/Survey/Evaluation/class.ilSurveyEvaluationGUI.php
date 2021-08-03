@@ -848,7 +848,8 @@ class ilSurveyEvaluationGUI
                 $button->setCaption("svy_export_pdf");
                 $button->setUrl($url);
                 $button->setOmitPreventDoubleSubmission(true);
-                $ilToolbar->addButtonInstance($button);
+                //Patch, remove Print PDF Button, see: 2021
+                //$ilToolbar->addButtonInstance($button);
             }
 
             $finished_ids = null;

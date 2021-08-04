@@ -115,12 +115,17 @@ class ilUserAvatarResolver
 
         $image_dir = $webspace_dir . '/usr_images';
         $this->uploaded_file = $image_dir . '/usr_' . $this->user_id . '.jpg';
-
+        
+        //Unibe Patch see #1757
         if ($this->has_public_profile) {
-            $this->abbreviation = ilStr::subStr($this->firstname, 0, 1) . ilStr::subStr($this->lastname, 0, 1);
+            $this->abbreviation = strtoupper(ilStr::subStr($this->firstname, 0, 1) . ilStr::subStr($this->lastname, 0, 1));
         } else {
-            $this->abbreviation = ilStr::subStr($this->login, 0, 2);
+            $no_dots = str_replace(".","", $this->login);
+            $abb = substr($no_dots, 0, 2);
+            $abb_upper = strtoupper($abb);
+            $this->abbreviation = ilStr::subStr($abb_upper, 0, 2);
         }
+        //End Patch
     }
 
     private function useUploadedFile() : bool

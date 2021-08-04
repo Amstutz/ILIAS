@@ -23,6 +23,7 @@ class ImplementationOfInterfaceFinder
         '.*/test/',
         '.*/tests/',
         '.*/setup/',
+	'.*/Customizing/',
         // Classes using removed Auth-class from PEAR
         '.*ilSOAPAuth.*',
         // Classes using unknown

@@ -75,7 +75,6 @@
 			"ILIAS\\" : "./src"
 		},
 		"classmap": [
-			"./Customizing/global/plugins",
 			"./Services/",
 			"./Modules",
 			"./libs/ilias",

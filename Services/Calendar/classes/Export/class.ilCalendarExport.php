@@ -342,9 +342,9 @@ class ilCalendarExport
         global $DIC;
 
         $query = "SELECT val.value
-           FROM adv_md_values_text as val
+           FROM adv_md_values_ltext as val
            INNER JOIN adv_mdf_definition as def ON  val.field_id = def.field_id
-           WHERE def.title = '$title' AND val.obj_id = $obj_id";
+           WHERE def.title = '$title' AND val.obj_id = $obj_id AND value_index = 'de'";
         $res = $DIC->database()->query($query)->fetchRow();
         return $res ? $res['value']: "";
     }

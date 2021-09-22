@@ -1160,7 +1160,9 @@ class ilSurveyEvaluationGUI
 
                 $a_tpl->setVariable("CHART", $chart);
                 $a_tpl->setVariable("CHART_DL_URL", $url);
-                $a_tpl->setVariable("CHART_DL_TXT", $this->lng->txt("svy_chart_download"));
+                //UNIBE-PATCH fix for 2055: removes "download chart" button
+                //$a_tpl->setVariable("CHART_DL_TXT", $this->lng->txt("svy_chart_download"));
+                //End of Patch
             }
         }
 

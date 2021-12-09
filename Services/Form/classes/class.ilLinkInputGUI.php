@@ -503,8 +503,8 @@ class ilLinkInputGUI extends ilFormPropertyGUI
             if (sizeof($parts) == 2 || sizeof($parts) == 3) {
                 // numeric id
                 if (is_numeric($parts[1])) {
-                    // simple type
-                    if (preg_match("/^[a-zA-Z_]+$/", $parts[0], $matches)) {
+                    // simple type UnibePatch 1930
+                    if (preg_match("/^[a-zA-Z2_]+$/", $parts[0], $matches)) {
                         return true;
                     }
                 }

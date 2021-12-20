@@ -9,14 +9,10 @@ use ILIAS\ResourceStorage\Identification\ResourceIdentification;
  * Interface StakeholderARRepository
  * @author Fabian Schmid <fs@studer-raimann.ch>
  * @internal
+ * @deprecated
  */
 class StakeholderARRepository implements StakeholderRepository
 {
-
-    public function getNameForLocking() : string
-    {
-        return (new ARStakeholder())->getConnectorContainerName();
-    }
 
     public function register(ResourceIdentification $i, ResourceStakeholder $s) : bool
     {
@@ -70,17 +66,20 @@ class StakeholderARRepository implements StakeholderRepository
         return $r->serialize() . '_' . $s->getId();
     }
 
-    public function getNamesForLocking() : array {
-        return [];
+    public function getNamesForLocking() : array
+    {
+        return [
+            (new ARStakeholder())->getConnectorContainerName()
+        ];
     }
 
     public function preload(array $identification_strings) : void
     {
-
+        // noting to to
     }
 
     public function populateFromArray(array $data) : void
     {
-
+        // noting to to
     }
 }

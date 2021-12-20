@@ -111,4 +111,18 @@ class ResourceARRepository implements ResourceRepository
 
         return $r;
     }
+
+    public function getNamesForLocking() : array {
+        return [];
+    }
+
+    public function preload(array $identification_strings) : void
+    {
+
+    }
+
+    public function populateFromArray(array $data) : void
+    {
+
+    }
 }

@@ -74,7 +74,6 @@ class ilTestScoringByQuestionsGUI extends ilTestScoringGUI
         $tpl->addJavaScript("./Services/JavaScript/js/Basic.js");
         $tpl->addJavaScript("./Services/Form/js/Form.js");
         $tpl->addJavascript('./Services/UIComponent/Modal/js/Modal.js');
-        $tpl->addCss($this->object->getTestStyleLocation("output"), "screen");
         $this->lng->toJSMap(['answer' => $this->lng->txt('answer')]);
 
         $table = new ilTestManScoringParticipantsBySelectedQuestionAndPassTableGUI($this);
@@ -132,9 +131,8 @@ class ilTestScoringByQuestionsGUI extends ilTestScoringGUI
                             'qst_id' => $questionData['qid'],
                             'reached_points' => assQuestion::_getReachedPoints($active_id, $questionData['qid'], $passNr - 1),
                             'maximum_points' => assQuestion::_getMaximumPoints($questionData['qid']),
-                            'participant' => $participant,
-                            'feedback' => $feedback,
-                        ];
+			    'name' => $participant->getName()
+                        ] + $feedback;
                     }
                 }
             }
@@ -192,7 +190,6 @@ class ilTestScoringByQuestionsGUI extends ilTestScoringGUI
         $pass = key($_POST['scoring']);
         $activeData = current($_POST['scoring']);
         $participantData = new ilTestParticipantData($DIC->database(), $DIC->language());
-        $oneExceededMaxPoints = false;
         $manPointsPost = [];
         $skipParticipant = [];
         $maxPointsByQuestionId = [];
@@ -217,8 +214,6 @@ class ilTestScoringByQuestionsGUI extends ilTestScoringGUI
             }
             
             foreach ((array) $questions as $qst_id => $reached_points) {
-                $this->saveFeedback($active_id, $qst_id, $pass, $ajax);
-
                 if (false == isset($manPointsPost[$pass])) {
                     $manPointsPost[$pass] = [];
                 }
@@ -228,15 +223,11 @@ class ilTestScoringByQuestionsGUI extends ilTestScoringGUI
                 $maxPointsByQuestionId[$qst_id] = assQuestion::_getMaximumPoints($qst_id);
                 $manPointsPost[$pass][$active_id][$qst_id] = $reached_points;
                 if ($reached_points > $maxPointsByQuestionId[$qst_id]) {
-                    $oneExceededMaxPoints = true;
+                    ilUtil::sendFailure(sprintf($this->lng->txt('tst_save_manscoring_failed'), $pass + 1));
+                    $this->showManScoringByQuestionParticipantsTable($manPointsPost);
+                    return;
                 }
             }
-        }
-        
-        if ($oneExceededMaxPoints) {
-            ilUtil::sendFailure(sprintf($this->lng->txt('tst_save_manscoring_failed'), $pass + 1));
-            $this->showManScoringByQuestionParticipantsTable($manPointsPost);
-            return;
         }
         
         $changed_one = false;

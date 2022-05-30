@@ -82,6 +82,7 @@ class ilTestScoringByQuestionsGUI extends ilTestScoringGUI
         $qst_id = $table->getFilterItemByPostVar('question')->getValue();
         $passNr = $table->getFilterItemByPostVar('pass')->getValue();
         $finalized_filter = $table->getFilterItemByPostVar('finalize_evaluation')->getValue();
+        $answered_filter = $table->getFilterItemByPostVar('only_answered')->getChecked();
         $table_data = [];
         $selected_questionData = null;
         $complete_feedback = $this->object->getCompleteManualFeedback($qst_id);
@@ -120,10 +121,13 @@ class ilTestScoringByQuestionsGUI extends ilTestScoringGUI
                         ($finalized_filter != self::ONLY_FINALIZED || $feedback['finalized_evaluation'] == 1) &&
                         ($finalized_filter != self::EXCEPT_FINALIZED || $feedback['finalized_evaluation'] != 1);
 
+                    $check_answered = ($answered_filter == false || $questionData['answered']);
+
                     if (
                         isset($questionData['qid']) &&
                         $questionData['qid'] == $selected_questionData['question_id'] &&
-                        $check_filter
+                        $check_filter &&
+                        $check_answered
                     ) {
                         $table_data[] = [
                             'pass_id' => $passNr - 1,
@@ -300,7 +304,7 @@ class ilTestScoringByQuestionsGUI extends ilTestScoringGUI
             if (!$correction_feedback['feedback']) {
                 $correction_feedback['feedback'] = [];
             }
-            if($correction_feedback['finalized_evaluation'] == 1) {
+            if ($correction_feedback['finalized_evaluation'] == 1) {
                 $correction_feedback['finalized_evaluation'] = $this->lng->txt('yes');
             } else {
                 $correction_feedback['finalized_evaluation'] = $this->lng->txt('no');
@@ -511,6 +515,7 @@ class ilTestScoringByQuestionsGUI extends ilTestScoringGUI
         $reached_points_form->setMinValue(0);
         $reached_points_form->setDisabled($disable);
         $reached_points_form->setValue($reached_points);
+        $reached_points_form->setClientSideValidation(true);
         $form->addItem($reached_points_form);
 
         $hidden_points = new ilHiddenInputGUI('qst_max_points');

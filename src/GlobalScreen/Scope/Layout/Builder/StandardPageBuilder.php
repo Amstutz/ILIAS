@@ -57,6 +57,10 @@ class StandardPageBuilder implements PageBuilder
             $short_title,
             $view_title
         );
+        
+        foreach ($this->meta->getMetaData()->getItems() as $meta_datum) {
+            $page = $page->withAdditionalMetaDatum($meta_datum->getKey(), $meta_datum->getValue());
+        }
 
         $page = $page->withSystemInfos($parts->getSystemInfos())
                         ->withTextDirection($this->meta->getTextDirection() ?? Standard::LTR);

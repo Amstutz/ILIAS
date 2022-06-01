@@ -74,6 +74,10 @@ class ilExerciseMailNotification extends ilMailNotification
                     $this->appendBody(
                         $this->getLanguageText('exc_msg_new_feedback_file_uploaded2')
                     );
+                    //PATCH UNIBE
+                    $this->appendBody("\n");
+                    $this->appendBody($this->getCourseTitle());
+                    //END PATCH UNIBE
                     $this->appendBody("\n");
                     $this->appendBody(
                         $this->getLanguageText('obj_exc') . ": " . $this->getObjectTitle(true)
@@ -176,6 +180,10 @@ class ilExerciseMailNotification extends ilMailNotification
                     $this->appendBody(
                         $this->getLanguageText('exc_msg_new_feedback_text_uploaded2')
                     );
+                    //PATCH UNIBE
+                    $this->appendBody("\n");
+                    $this->appendBody($this->getCourseTitle());
+                    //end PATCH UNIBE
                     $this->appendBody("\n");
                     $this->appendBody(
                         $this->getLanguageText('obj_exc') . ": " . $this->getObjectTitle(true)

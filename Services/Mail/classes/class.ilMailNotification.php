@@ -40,6 +40,7 @@ abstract class ilMailNotification
     protected $is_in_wsp;
     protected $wsp_tree;
     protected $wsp_access_handler;
+    protected $tree;
 
     /**
      * @param bool|false $a_is_personal_workspace
@@ -48,6 +49,7 @@ abstract class ilMailNotification
     {
         global $DIC;
 
+        $this->tree = $DIC->repositoryTree();
         $this->is_in_wsp = (bool) $a_is_personal_workspace;
 
         $this->setSender(ANONYMOUS_USER_ID);
@@ -336,6 +338,27 @@ abstract class ilMailNotification
         }
         return $txt;
     }
+    
+    //PATCH-UNIBE
+    /**
+     * @return string
+     */
+    protected function getCourseTitle()
+    {
+        $temp_ref_id = $this->getRefId();
+        if (!$temp_ref_id) {
+            return '';
+        }
+        while (ilObject::_lookupType($temp_ref_id, true) != "crs") {
+            if ($temp_ref_id == 1) {
+                return '';
+            }
+            $temp_ref_id = $this->tree->getParentId($temp_ref_id);
+        }
+        $obj_id = ilObject::_lookupObjectId($temp_ref_id);
+        return  (string) ilObject::_lookupTitle($obj_id);
+    }
+    //End PATCH-UNIBE
 
     /**
      * @param array $a_rcp

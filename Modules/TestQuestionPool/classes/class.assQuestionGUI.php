@@ -125,6 +125,7 @@ abstract class assQuestionGUI
         $this->lng = &$lng;
         $this->tpl = &$tpl;
         $this->ctrl = &$ilCtrl;
+
         $this->ctrl->saveParameter($this, "q_id");
         $this->ctrl->saveParameter($this, "prev_qid");
         $this->ctrl->saveParameter($this, "calling_test");
@@ -137,13 +138,10 @@ abstract class assQuestionGUI
         $this->ctrl->saveParameterByClass('ilobjquestionpoolgui', 'calling_consumer');
         $this->ctrl->saveParameterByClass('ilobjquestionpoolgui', 'consumer_context');
 
-        include_once "./Modules/TestQuestionPool/classes/class.assQuestion.php";
         $this->errormessage = $this->lng->txt("fill_out_all_required_fields");
-        
         $this->selfassessmenteditingmode = false;
         $this->new_id_listeners = array();
         $this->new_id_listener_cnt = 0;
-        
         $this->navigationGUI = null;
     }
     
@@ -165,7 +163,7 @@ abstract class assQuestionGUI
             "HEAD_ACTION",
             $this->getHeaderAction()
         );
-        
+
         $notesUrl = $this->ctrl->getLinkTargetByClass(
             array("ilcommonactiondispatchergui", "ilnotegui"),
             "",
@@ -173,9 +171,9 @@ abstract class assQuestionGUI
             true,
             false
         );
-        
+
         ilNoteGUI::initJavascript($notesUrl, IL_NOTE_PUBLIC, $DIC->ui()->mainTemplate());
-        
+
         $redrawActionsUrl = $DIC->ctrl()->getLinkTarget($this, 'redrawHeaderAction', '', true);
         $DIC->ui()->mainTemplate()->addOnLoadCode("il.Object.setRedrawAHUrl('$redrawActionsUrl');");
 */
@@ -226,14 +224,12 @@ abstract class assQuestionGUI
     */
     public function executeCommand()
     {
-        global $DIC; /* @var \ILIAS\DI\Container $DIC */
-        $ilHelp = $DIC['ilHelp']; /* @var ilHelpGUI $ilHelp */
-        $ilHelp->setScreenIdComponent('qpl');
+        global $DIC;
+        $DIC['ilHelp']->setScreenIdComponent('qpl');
 
         $cmd = $this->ctrl->getCmd("editQuestion");
-        $next_class = $this->ctrl->getNextClass($this);
 
-        $cmd = $this->getCommand($cmd);
+        $next_class = $this->ctrl->getNextClass($this);
 
         switch ($next_class) {
             case 'ilformpropertydispatchgui':
@@ -1443,7 +1439,6 @@ abstract class assQuestionGUI
     {
         global $DIC;
         $ilUser = $DIC['ilUser'];
-        global $DIC;
         $ilAccess = $DIC['ilAccess'];
 
         $save = (is_array($_POST["cmd"]) && array_key_exists("suggestedsolution", $_POST["cmd"])) ? true : false;
@@ -2080,9 +2075,14 @@ abstract class assQuestionGUI
             'edit_question',
             $this->ctrl->getLinkTargetByClass(
                 array('ilrepositorygui','ilobjquestionpoolgui', get_class($this)),
-                'editQuestion'),'editQuestion','','',false
+                'editQuestion'
+            ),
+            'editQuestion',
+            '',
+            '',
+            false
         );
-   }
+    }
 
     abstract public function getSolutionOutput(
         $active_id,

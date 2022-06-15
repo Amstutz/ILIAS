@@ -77,7 +77,7 @@ export default class PageUI {
   constructor(client, dispatcher, actionFactory, model, toolSlate
     , pageModifier) {
 
-    this.debug = true;
+    this.debug = false;
     this.droparea = "<div class='il_droparea'></div>";
     this.add = "<span class='glyphicon glyphicon-plus-sign'></span>";
     this.first_add = "<span class='il-copg-add-text'> " +
@@ -115,6 +115,7 @@ export default class PageUI {
     this.uiModel = uiModel;
     this.initComponentClick();
     this.initAddButtons();
+    this.initListButtons();
     this.initDragDrop();
     this.initMultiSelection();
     this.initComponentEditing();
@@ -127,6 +128,7 @@ export default class PageUI {
   reInit() {
     this.initComponentClick();
     this.initAddButtons();
+    this.initListButtons();
     this.initDragDrop();
     this.initMultiSelection();
     this.initComponentEditing();
@@ -215,6 +217,81 @@ export default class PageUI {
                   hier_id,
                   pluginName,
                   false));
+            });
+            ul.appendChild(li);
+          }
+        });
+      });
+    });
+    this.refreshAddButtonText();
+  }
+
+  /**
+   * Init add buttons
+   */
+  initListButtons(selector) {
+    const dispatch = this.dispatcher;
+    const action = this.actionFactory;
+
+    if (!selector) {
+      selector = "[data-copg-ed-type='edit-list-item']"
+    }
+
+    // init add buttons
+    document.querySelectorAll(selector).forEach(area => {
+
+      const uiModel = this.uiModel;
+      let li, li_templ, ul;
+
+      const originalHTML = area.innerHTML;
+      area.innerHTML = uiModel.dropdown;
+
+      console.log(uiModel.dropdown);
+
+      const model = this.model;
+
+      // edit dropdown
+      const addButtons = area.querySelectorAll("div.dropdown > button");
+      addButtons.forEach(b => {     // the "one" toggle button in the dropdown
+        b.classList.add("il-copg-edit-list-button");
+        b.innerHTML = originalHTML;
+        b.addEventListener("click", (event) => {
+
+          // we need that to "filter" out these events on the single clicks
+          // on editareas
+          event.isDropDownToggleEvent = true;
+
+          ul = b.parentNode.querySelector("ul");
+          li_templ = ul.querySelector("li").cloneNode(true);
+          ul.innerHTML = "";
+
+          this.log("add dropdown: click");
+          this.log(model);
+
+          const list_commands = {
+            "newItemAfter": il.Language.txt("cont_ed_new_item_after"),
+            "newItemBefore": il.Language.txt("cont_ed_new_item_before")
+          };
+          const li1 = b.closest("li.ilc_list_item_StandardListItem");
+          if (li1.previousSibling || li1.nextSibling) {
+            list_commands.deleteItem = il.Language.txt("cont_ed_delete_item");
+          }
+          if (li1.previousSibling) {
+            list_commands.moveItemUp = il.Language.txt("cont_ed_item_up");
+          }
+          if (li1.nextSibling) {
+            list_commands.moveItemDown = il.Language.txt("cont_ed_item_down");
+          }
+
+          // add each components
+          for (const [listCommand, txt] of Object.entries(list_commands)) {
+            let cname;
+            li = li_templ.cloneNode(true);
+            li.querySelector("a").innerHTML = txt;
+            li.querySelector("a").addEventListener("click", (event) => {
+              event.isDropDownSelectionEvent = true;
+              console.log(area.dataset);
+              dispatch.dispatch(action.page().editor().editListItem(listCommand, area.dataset.pcid));
             });
             ul.appendChild(li);
           }
@@ -484,6 +561,44 @@ export default class PageUI {
       });
     });
     this.refreshModeSelector();
+    this.refreshTopDropdown();
+    this.refreshFinishEditingButton();
+    this.refreshTopLoader();
+  }
+
+  refreshTopLoader() {
+    const model = this.model;
+    const tl = document.querySelector("[data-copg-ed-type='top-loader']");
+    if (tl) {
+      tl.style.display = 'none';
+      if (model.getState() === model.STATE_SERVER_CMD) {
+        tl.style.display = '';
+      }
+    }
+  }
+
+  refreshFinishEditingButton() {
+    const model = this.model;
+    // dropdown
+    const b = document.querySelector("#copg-top-actions .ilFloatLeft .btn-default");
+    if (b) {
+      b.disabled = false;
+      if (model.getState() === model.STATE_SERVER_CMD) {
+        b.disabled = true;
+      }
+    }
+  }
+
+  refreshTopDropdown() {
+    const model = this.model;
+    // dropdown
+    const dd = document.querySelector("#copg-top-actions .dropdown-toggle");
+    if (dd) {
+      dd.style.display = '';
+      if (model.getState() === model.STATE_SERVER_CMD) {
+        dd.style.display = 'none';
+      }
+    }
   }
 
   refreshModeSelector() {
@@ -492,6 +607,8 @@ export default class PageUI {
     const single = document.querySelector("[data-copg-ed-type='view-control'][data-copg-ed-action='switch.single']");
     multi.classList.remove("engaged");
     single.classList.remove("engaged");
+    multi.disabled = false;
+    single.disabled = false;
     if (model.getState() === model.STATE_PAGE) {
       //multi.disabled = false;
       //single.disabled = true;
@@ -500,6 +617,10 @@ export default class PageUI {
       //multi.disabled = true;
       //single.disabled = false;
       multi.classList.add("engaged");
+    }
+    if (model.getState() === model.STATE_SERVER_CMD) {
+      multi.disabled = true;
+      single.disabled = true;
     }
   }
 
@@ -659,6 +780,12 @@ export default class PageUI {
     });
   }
 
+  disableListButtons() {
+    document.querySelectorAll("button.il-copg-edit-list-button").forEach(el => {
+      el.disabled = true;
+    });
+  }
+
   showDropareas() {
     document.querySelectorAll("#il_EditPage .il_droparea").forEach(el => {
       el.style.display = "";
@@ -694,8 +821,14 @@ export default class PageUI {
         this.initMultiButtons();
         break;
     }
+  }
 
-
+  displayServerWaiting() {
+    this.showEditPage();
+    this.hideAddButtons();
+    this.hideDropareas();
+    this.disableDragDrop();
+    this.disableListButtons();
   }
 
   /**
@@ -737,8 +870,9 @@ export default class PageUI {
     {
       $('#il_center_col').html(pl.renderedContent);
 
-      console.log("PCMODEL---");
-      console.log(pl.pcModel);
+      this.log("PCMODEL---");
+      this.log(pl.pcModel);
+      il.COPagePres.initAudioVideo();
 
       for (const [key, value] of Object.entries(pl.pcModel)) {
         this.model.addPCModelIfNotExists(key, value);

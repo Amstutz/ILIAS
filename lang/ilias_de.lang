@@ -10662,7 +10662,7 @@ common#:#qpl_copy#:#Fragenpool für Tests kopieren
 mathjax#:#mathjax_enable_mathjax_info#:#Aktiviert die LaTeX-Unterstützung mit MathJax, um mathematische Formeln ausgeben zu können.
 mathjax#:#mathjax_enable_mathjax#:#MathJax aktivieren
 mathjax#:#mathjax_mathjax#:#MathJax
-mathjax#:#mathjax_path_to_mathjax_desc#:#Zum Beispiel: https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML oder eine URL zu Ihrer lokalen Installation.
+mathjax#:#mathjax_path_to_mathjax_desc#:#Zum Beispiel: https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML oder eine URL zu Ihrer lokalen Installation. ILIAS 6 und 7 unterstützt MathJax 2.7, noch nicht MathJax 3.
 mathjax#:#mathjax_path_to_mathjax#:#URL zu MathJax
 mathjax#:#mathjax_settings#:#MathJax-Einstellungen
 mathjax#:#mathjax_limiter#:#Trennzeichen
@@ -14002,6 +14002,7 @@ glo#:#glo_referenced_term#:#Verlinkte Begriffe
 glo#:#glo_term_reference#:#Begriffslink
 glo#:#glo_reference#:#Link
 glo#:#glo_selected_terms_have_been_copied#:#Die ausgewählten Begriffe wurden in die Zwischenablage kopiert. Bitte öffnen Sie das Zielglossar und klicken dann auf "Einfügen".
+glo#:#glo_please_select_other_glo#:#Bitte wählen Sie ein anderes Glossar aus.
 prg#:#prg_assign_date#:#Hinzugefügt am
 prg#:#prg_assigned_by#:#Hinzugefügt von
 survey#:#svy_mail_context_reminder_title#:#Umfrage: Teilnahme-Erinnerung
@@ -16664,3 +16665,4 @@ rep#:#rep_favourites#:#Favoriten
 rep#:#rep_favourites_info#:#Benutzer können einzelne Magazinobjekte als Favorit markieren. Favoritenlisten können in der Dashboard- und Hauptmenükonfiguration aktiviert werden.
 prtf#:#prtf_copy_pg#:#Seite kopieren
 prtf#:#prtf_copy_blog_pg#:#Blogseite kopieren
+assessment#:#question_is_part_of_running_test#:#Die Frage ist Teil eines laufenden Tests und darf nicht geändert werden.

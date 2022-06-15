@@ -200,6 +200,10 @@ export default class PageUIActionHandler {
       case "multi.activate":
         this.sendActivateCommand(params);
         break;
+
+      case "list.edit":
+        this.sendListEditCommand(params);
+        break;
     }
 
 
@@ -243,6 +247,10 @@ export default class PageUIActionHandler {
           this.ui.hideAddButtons();
           this.ui.hideDropareas();
           this.ui.disableDragDrop();
+          break;
+
+        case model.STATE_SERVER_CMD:
+          this.ui.displayServerWaiting();
           break;
       }
       this.ui.markCurrent();
@@ -289,6 +297,7 @@ export default class PageUIActionHandler {
   sendPasteCommand(model, params) {
     let paste_action;
     const af = this.actionFactory;
+    const dispatch = this.dispatcher;
 
     paste_action = af.page().command().paste(
       params.pcid,
@@ -296,6 +305,7 @@ export default class PageUIActionHandler {
 
     this.client.sendCommand(paste_action).then(result => {
       this.ui.handlePageReloadResponse(result);
+      dispatch.dispatch(af.page().editor().enablePageEditing());
     });
 
   }
@@ -303,6 +313,7 @@ export default class PageUIActionHandler {
   sendDropCommand(params) {
     let drop_action;
     const af = this.actionFactory;
+    const dispatch = this.dispatcher;
 
     drop_action = af.page().command().dragDrop(
       params.target,
@@ -311,6 +322,7 @@ export default class PageUIActionHandler {
 
     this.client.sendCommand(drop_action).then(result => {
       this.ui.handlePageReloadResponse(result);
+      dispatch.dispatch(af.page().editor().enablePageEditing());
     });
   }
 
@@ -336,6 +348,7 @@ export default class PageUIActionHandler {
   sendDeleteCommand(params) {
     let delete_action;
     const af = this.actionFactory;
+    const dispatch = this.dispatcher;
     const pcids = Array.from(
       params.pcids).map(x => (x.split(":")[1])
     );
@@ -346,12 +359,14 @@ export default class PageUIActionHandler {
 
     this.client.sendCommand(delete_action).then(result => {
       this.ui.handlePageReloadResponse(result);
+      dispatch.dispatch(af.page().editor().enablePageEditing());
     });
   }
 
   sendActivateCommand(params) {
     let activate_action;
     const af = this.actionFactory;
+    const dispatch = this.dispatcher;
     const pcids = Array.from(
       params.pcids).map(x => (x.split(":")[1])
     );
@@ -362,6 +377,7 @@ export default class PageUIActionHandler {
 
     this.client.sendCommand(activate_action).then(result => {
       this.ui.handlePageReloadResponse(result);
+      dispatch.dispatch(af.page().editor().enablePageEditing());
     });
   }
 
@@ -409,6 +425,25 @@ export default class PageUIActionHandler {
 
     this.client.sendCommand(update_action).then(result => {
       this.ui.handlePageReloadResponse(result);
+    });
+  }
+
+  sendListEditCommand(params) {
+    let list_action;
+    const af = this.actionFactory;
+    const pcid = params.pcid;
+    const listCmd = params.listCmd;
+    const dispatch = this.dispatcher;
+
+    list_action = af.page().command().editListItem(
+      listCmd,
+      "Page",
+      pcid
+    );
+
+    this.client.sendCommand(list_action).then(result => {
+      this.ui.handlePageReloadResponse(result);
+      dispatch.dispatch(af.page().editor().enablePageEditing());
     });
   }
 

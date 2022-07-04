@@ -841,6 +841,11 @@ abstract class ilPageObject
                 $mob_id = 0;
             }
 
+            // see also #32331
+            if (ilObject::_lookupType($mob_id) !== "mob") {
+                $mob_id = 0;
+            }
+
             //$mob = new ilObjMediaObject($mob_id);
             $mob = new ilPCMediaObject($this);
             $mob->readMediaObject($mob_id);
@@ -3619,7 +3624,6 @@ abstract class ilPageObject
         // count the parent children
         $parent_childs = $parent_node->child_nodes();
         $cnt_parent_childs = count($parent_childs);
-
         switch ($a_mode) {
             // insert new node after sibling at $a_pos
             case IL_INSERT_AFTER:

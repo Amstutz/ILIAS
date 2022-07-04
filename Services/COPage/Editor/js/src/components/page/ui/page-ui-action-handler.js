@@ -146,6 +146,24 @@ export default class PageUIActionHandler {
         this.sendDropCommand(params);
         break;
 
+      case "dnd.stopped":
+        // note: stopped is being called after drop
+        // in this case we do not want remove the STATE_SERVER_CMD state
+        if (model.getState() === model.STATE_DRAG_DROP) {
+          //console.log("**** SETTING PAGE STATE");
+          //console.log(this.model.getState());
+          // we set a timeout to prevent click events
+          // on "drop", that would open the component edit views
+          const af = this.actionFactory;
+          const dispatch = this.dispatcher;
+          window.setTimeout(function() {
+            model.setState(model.STATE_PAGE);
+            dispatch.dispatch(af.page().editor().enablePageEditing());
+          },500);
+        }
+        break;
+
+
       case "multi.action":
         let type = params.type;
 
@@ -217,42 +235,8 @@ export default class PageUIActionHandler {
 
       this.log("page-ui-action-handler.handle state " + model.getState());
 
-      switch (model.getState()) {
-        case model.STATE_PAGE:
-          this.ui.showEditPage();
-          this.ui.showAddButtons();
-          this.ui.hideDropareas();
-          this.ui.enableDragDrop();
-          break;
+      this.ui.refreshUIFromModelState(model);
 
-        case model.STATE_MULTI_ACTION:
-          if ([model.STATE_MULTI_CUT, model.STATE_MULTI_COPY].includes(model.getMultiState())) {
-            this.ui.showAddButtons();
-          } else {
-            this.ui.hideAddButtons();
-          }
-          this.ui.showMultiButtons();
-          this.ui.hideDropareas();
-          this.ui.disableDragDrop();
-          break;
-
-        case model.STATE_DRAG_DROP:
-          this.ui.showEditPage();
-          this.ui.hideAddButtons();
-          this.ui.showDropareas();
-          break;
-
-        case model.STATE_COMPONENT:
-          //this.ui.showPageHelp();
-          this.ui.hideAddButtons();
-          this.ui.hideDropareas();
-          this.ui.disableDragDrop();
-          break;
-
-        case model.STATE_SERVER_CMD:
-          this.ui.displayServerWaiting();
-          break;
-      }
       this.ui.markCurrent();
     }
   }
@@ -416,15 +400,17 @@ export default class PageUIActionHandler {
   sendUpdateCommand(params) {
     let update_action;
     const af = this.actionFactory;
+    const dispatch = this.dispatcher;
 
     update_action = af.page().command().update(
       params.pcid,
       params.component,
       params.data
-  );
+    );
 
     this.client.sendCommand(update_action).then(result => {
       this.ui.handlePageReloadResponse(result);
+      dispatch.dispatch(af.page().editor().enablePageEditing());
     });
   }
 

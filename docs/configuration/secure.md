@@ -455,8 +455,8 @@ It is recommended to suppress these header informations to prevent detection and
 
 ```
 <IfModule mod_headers.c>
-    Headers unset Server
-    Headers always unset Server
+    Header unset Server
+    Header always unset Server
 </IfModule>
 ```
 
@@ -610,8 +610,8 @@ This is a NGINX recommended configuration. (note: inside the `%DOCROOT%/data` no
 ```
     server {
         [...]
+        set $root $document_root;
         location ~ /data/ {
-            set $root $document_root;
             rewrite ^/data/(.*)/(.*)/(.*)$ /Services/WebAccessChecker/wac.php last;
 
             location ~ [^/]\.php(/|$) { access_log off; log_not_found off; deny all; }

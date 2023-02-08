@@ -390,9 +390,17 @@ class ilForumMailNotification extends ilMailNotification
     {
         $this->initMail();
 
+        $container_text = '';
+        if ($this->provider->providesClosestContainer()) {
+            $container_text = " (" .
+                $this->getLanguageText('obj_' . $this->provider->closestContainer()->getType()) .
+                " \"" . $this->provider->closestContainer()->getTitle() . "\")";
+        }
+
         $this->setSubject(sprintf(
             $this->getLanguageText($subject),
             $this->provider->getForumTitle(),
+            $container_text,
             $this->provider->getThreadTitle()
         ));
     }

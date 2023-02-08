@@ -198,15 +198,7 @@ class ilUtil
         if (strlen($filename) == 0 || !file_exists($filename)) {
             $filename = "./" . $a_css_location . "templates/default/" . $stylesheet_name;
         }
-        $vers = "";
-        if ($mode != "filesystem") {
-            $vers = str_replace(" ", "-", $ilSetting->get("ilias_version"));
-            $vers = "?vers=" . str_replace(".", "-", $vers);
-            // use version from template xml to force reload on changes
-            $skin = ilStyleDefinition::getSkins()[ilStyleDefinition::getCurrentSkin()];
-            $vers .= ($skin->getVersion() != '' ? str_replace(".", "-", '-' . $skin->getVersion()) : '');
-        }
-        return $filename . $vers;
+        return $filename;
     }
 
     /**
@@ -750,7 +742,6 @@ class ilUtil
     {
         // New code, uses MediaWiki Sanitizer
         $ret = $a_text;
-
         // www-URL ohne ://-Angabe
         $ret = preg_replace(
             "/(^|[\s]+)(www\.)([A-Za-z0-9#&=?.\/\-]+)/i",
@@ -773,6 +764,8 @@ class ilUtil
         $ret = str_replace('src="http://', '"***masked_im_start***', $ret);
 
         include_once("./Services/Utilities/classes/class.ilMWParserAdapter.php");
+        $global_wgContLang = $GLOBALS["wgContLang"];
+        $GLOBALS["wgContLang"] = new ilMWFakery();
         $parser = new ilMWParserAdapter();
         $ret = $parser->replaceFreeExternalLinks($ret);
 
@@ -800,7 +793,7 @@ class ilUtil
                 $ret
             );
         }
-
+        $GLOBALS["wgContLang"] = $global_wgContLang;
         return($ret);
     }
 
@@ -3594,6 +3587,12 @@ class ilUtil
         while ($file = readdir($dir)) {
             if ($file != "." and
             $file != "..") {
+                // triple dot is not allowed in filenames
+                if ($file === '...') {
+                    unlink($a_dir . "/" . $file);
+                    continue;
+                }
+
                 // directories
                 if (@is_dir($a_dir . "/" . $file)) {
                     ilUtil::rRenameSuffix($a_dir . "/" . $file, $a_old_suffix, $a_new_suffix);
@@ -3603,7 +3602,14 @@ class ilUtil
                 if (@is_file($a_dir . "/" . $file)) {
                     // first check for files with trailing dot
                     if (strrpos($file, '.') == (strlen($file) - 1)) {
-                        rename($a_dir . '/' . $file, substr($a_dir . '/' . $file, 0, -1));
+                        try {
+                            rename($a_dir . '/' . $file, substr($a_dir . '/' . $file, 0, -1));
+                        } catch (Throwable $t) {
+                            // to avoid exploits we do delete this file and continue renaming
+                            unlink($a_dir . '/' . $file);
+                            continue;
+                        }
+
                         $file = substr($file, 0, -1);
                     }
 

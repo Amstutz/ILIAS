@@ -410,7 +410,29 @@ class ilUserUtil
                 $current = self::START_PD_OVERVIEW;
                 // fallthrough
 
-                // no break
+            /**
+             * Patch for Studmed Integration in ILIAS see:
+             *  - http://ilublx3.unibe.ch:8080/mantis/view.php?id=1313
+             *  - http://ilublx3.unibe.ch:8080/mantis/view.php?id=1367
+             */
+            // no break
+            case self::START_PD_CALENDAR:
+                /**
+                 * @var $DIC \ILIAS\DI\Container
+                 */
+                global $DIC;
+                $dozent_role_id = $DIC->rbac()->review()->roleExists("Dozent Humanmedizin");
+                if ($dozent_role_id && $DIC->rbac()->review()->isAssigned($ilUser->getId(), $dozent_role_id)) {
+                    $DIC->ctrl()->setParameterByClass("ilcalendarpresentationgui", "cal_agenda_per", ilCalendarAgendaListGUI::PERIOD_HALF_YEAR);
+                    $list_link = $DIC->ctrl()->getLinkTargetByClass(["ilPersonalDesktopGUI", "ilCalendarPresentationGUI", "ilCalendarInboxGUI", "ilcalendaragendalistgui"], "", "", false, false);
+                    return $list_link;
+                } else {
+                    $week_link = $DIC->ctrl()->getLinkTargetByClass(["ilPersonalDesktopGUI", "ilCalendarPresentationGUI", "ilcalendarweekgui"], "", "", false, false);
+                    return $week_link;
+                }
+
+
+            // no break
             default:
                 $map = array(
                     self::START_PD_OVERVIEW => 'ilias.php?baseClass=ilDashboardGUI&cmd=jumpToSelectedItems',

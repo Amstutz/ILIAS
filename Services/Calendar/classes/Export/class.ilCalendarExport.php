@@ -252,17 +252,92 @@ class ilCalendarExport
         // end-patch aptar
 
         $this->createRecurrences($app);
+        //UNIBE-Patch
+        $obj_id = $this->getCategoryFromCalendarEntry($app)->getObjId();
 
-        $this->writer->addLine('SUMMARY:' . ilICalWriter::escapeText($app->getPresentationTitle(false)));
-        if (strlen($app->getDescription())) {
-            $this->writer->addLine('DESCRIPTION:' . ilICalWriter::escapeText($app->getDescription()));
+        $this->writer->addLine('SUMMARY:' . ilICalWriter::escapeText(htmlspecialchars_decode($app->getPresentationTitle(false), ENT_QUOTES)));
+
+        $description = $app->getDescription();
+        $description .= $this->getDescriptionByMetaData($obj_id);
+        if (strlen($description)) {
+            $this->writer->addLine('DESCRIPTION:' . ilICalWriter::escapeText($description));
         }
-        if (strlen($app->getLocation())) {
-            $this->writer->addLine('LOCATION:' . ilICalWriter::escapeText($app->getLocation()));
+        $location = $this->getLocationByMetaData($obj_id);
+        $location = $location ? ilICalWriter::escapeText($location) : ilICalWriter::escapeText($app->getLocation());
+        if (strlen($location)) {
+            $this->writer->addLine('LOCATION:' . $location);
         }
+        //END UNIBE-Patch
         $this->buildAppointmentUrl($app);
         $this->writer->addLine('END:VEVENT');
     }
+
+
+    //UNIBE-Patch
+    /**
+     * @return \ilCalendarCategory
+     */
+    private function getCategoryFromCalendarEntry(ilCalendarEntry $app) : \ilCalendarCategory
+    {
+        $entry_id = $app->getEntryId();
+        $cat_id = ilCalendarCategoryAssignments::_lookupCategory($entry_id);
+        return ilCalendarCategory::getInstanceByCategoryId($cat_id);
+    }
+
+    /**
+     * @param int $obj_id
+     * @return string
+     * @throws ilDatabaseException
+     */
+    protected function getDescriptionByMetaData(int $obj_id) : string
+    {
+        $description = "";
+
+        $thema = $this->getMetaDataValueByObjIdAndTitle($obj_id, "Thema");
+        if ($thema) {
+            $description .= " Thema: " . $thema . "; ";
+        }
+        $jahr = $this->getMetaDataValueByObjIdAndTitle($obj_id, "Studienjahr");
+        if ($jahr) {
+            $description .= " Studienjahr: " . $jahr . "; ";
+        }
+        $typ = $this->getMetaDataValueByObjIdAndTitle($obj_id, "Veranstaltungstyp");
+        if ($typ) {
+            $description .= " Veranstaltungstyp: " . $typ . "; ";
+        }
+        return $description;
+    }
+
+    /**
+     * @param int $obj_id
+     * @return string
+     * @throws ilDatabaseException
+     */
+    protected function getLocationByMetaData(int $obj_id) : string
+    {
+        return $this->getMetaDataValueByObjIdAndTitle($obj_id, "Ort");
+    }
+
+
+    /**
+     * @param int $obj_id
+     * @param string $title
+     * @return string
+     * @throws ilDatabaseException
+     */
+    protected function getMetaDataValueByObjIdAndTitle(int $obj_id, string $title) : string
+    {
+        global $DIC;
+
+        $query = "SELECT val.value
+           FROM adv_md_values_text as val
+           INNER JOIN adv_mdf_definition as def ON  val.field_id = def.field_id
+           WHERE def.title = '$title' AND val.obj_id = $obj_id";
+        $res = $DIC->database()->query($query)->fetchRow();
+        return $res ? $res['value']: "";
+    }
+    //End UNIBE-Patch
+
 
     protected function createRecurrences(ilCalendarEntry $app): void
     {

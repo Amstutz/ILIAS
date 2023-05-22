@@ -427,21 +427,17 @@ class ilForumMailEventNotificationSender extends ilMailNotification
         $body .= "\n\n";
         $body .= $customText;
         $body .= "\n\n";
-        $body .= $this->getLanguageText('forum') . ": " . $this->provider->getForumTitle();
-        $body .= "\n\n";
         if ($this->provider->providesClosestContainer()) {
             $body .= $this->getLanguageText('obj_' . $this->provider->closestContainer()->getType()) . ": " . $this->provider->closestContainer()->getTitle();
             $body .= "\n\n";
         }
         $body .= $this->getLanguageText('thread') . ": " . $this->provider->getThreadTitle();
-        $body .= "\n\n";
-        $body .= $this->getLanguageText($action) . ": \n------------------------------------------------------------\n";
+        $body .= "\n";
+        $body .=  ": \n------------------------------------------------------------\n";
 
         $body .= $this->getLanguageText('author') . ": " . $this->provider->getPostUserName($this->getLanguage());
         $body .= "\n";
         $body .= $this->getLanguageText('date') . ": " . $date;
-        $body .= "\n";
-        $body .= $this->getLanguageText('subject') . ": " . $this->provider->getPostTitle();
         $body .= "\n";
         $body .= $this->getLanguageText('frm_noti_message');
         $body .= "\n";

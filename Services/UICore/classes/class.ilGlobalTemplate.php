@@ -874,6 +874,18 @@ class ilGlobalTemplate implements ilGlobalTemplateInterface
         }
     }
 
+
+    /**
+     * Gets content for standard template.
+     * UNIBE-PATCH
+     * @return string
+     */
+    public function getContent() : string
+    {
+        return $this->main_content;
+    }
+
+
     public function setLeftContent(string $a_html): void
     {
         if ($a_html !== "") {

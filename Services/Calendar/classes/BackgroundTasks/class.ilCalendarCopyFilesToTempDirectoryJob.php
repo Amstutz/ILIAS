@@ -79,7 +79,9 @@ class ilCalendarCopyFilesToTempDirectoryJob extends AbstractJob
 
         // copy files from source to temp directory
         //$this->copyFiles($targetdir, $input[0]);
-        $this->copyFiles($targetdir, $cal_copy_def);
+        //UNIBE-Patch
+        $this->copyFiles($targetdir, $cal_copy_def, $observer);
+        //END UNIBE-Patch
 
         // zip
 
@@ -117,9 +119,16 @@ class ilCalendarCopyFilesToTempDirectoryJob extends AbstractJob
      * @param string                   $tmpdir
      * @param ilCalendarCopyDefinition $definition
      */
-    protected function copyFiles(string $tmpdir, ilCalendarCopyDefinition $definition): void
+    protected function copyFiles(string $tmpdir, ilCalendarCopyDefinition $definition, Observer $observer): void
     {
+        // UNIBE-Patch
+        $definitions = $definition->getCopyDefinitions();
+        $amount = count($definitions);
+        $percentage = 0;
         foreach ($definition->getCopyDefinitions() as $copy_task) {
+            $percentage += 100 / $amount;
+            $observer->notifyPercentage($this, $percentage);
+            // End UNIBE-Patch
             if (!file_exists($copy_task[ilCalendarCopyDefinition::COPY_SOURCE_DIR])) {
                 $this->logger->notice('Cannot find file: ' . $copy_task[ilCalendarCopyDefinition::COPY_SOURCE_DIR]);
                 continue;

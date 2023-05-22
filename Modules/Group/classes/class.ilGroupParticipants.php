@@ -141,11 +141,12 @@ class ilGroupParticipants extends ilParticipants
                 break;
 
             case ilGroupMembershipMailNotification::TYPE_DISMISS_MEMBER:
-
+                /* UNIBE-PATCH OK: don't send e-mails when Patrticipant is thrown out of group
                 $mail->setType(ilGroupMembershipMailNotification::TYPE_DISMISS_MEMBER);
                 $mail->setRefId($this->ref_id);
                 $mail->setRecipients(array($a_usr_id));
                 $mail->send();
+                */
                 break;
 
             case ilGroupMembershipMailNotification::TYPE_NOTIFICATION_REGISTRATION:

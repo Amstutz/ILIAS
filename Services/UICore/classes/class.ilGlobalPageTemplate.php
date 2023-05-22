@@ -175,6 +175,17 @@ class ilGlobalPageTemplate implements ilGlobalTemplateInterface
         $this->legacy_content_template->setMainContent($a_html);
     }
 
+    //UNIBE-PATCH: add getter for iLubMods-Plugin
+    /**
+     * @inheritDoc
+     */
+    public function getContent() : string
+    {
+        return $this->legacy_content_template->getMainContent();
+    }
+
+
+
     public function setLeftContent(string $a_html): void
     {
         $this->legacy_content_template->setLeftContent($a_html);

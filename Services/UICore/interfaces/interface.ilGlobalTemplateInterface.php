@@ -144,6 +144,13 @@ interface ilGlobalTemplateInterface
      */
     public function setContent(string $a_html): void;
 
+
+    /**
+     * Gets content for standard template.
+     * UNIBE-PATCH
+     * @return string
+     */
+    public function getContent();
     /**
      * Sets content of left column.
      */

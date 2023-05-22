@@ -262,7 +262,7 @@ class ilForumMailNotification extends ilMailNotification
         $posting_link = sprintf(
             $language_text,
             ilUtil::_getHttpPath() . "/goto.php?target=frm_" . $forum_parameters . '&client_id=' . CLIENT_ID
-        ) . "\n\n";
+        ) . "\n\n\n\n";
 
         $posting_link .= sprintf(
             $this->getLanguageText("forums_notification_intro"),
@@ -337,8 +337,6 @@ class ilForumMailNotification extends ilMailNotification
         $this->appendBody("\n\n");
         $this->appendBody($customText);
         $this->appendBody("\n\n");
-        $this->appendBody($this->getLanguageText('forum') . ": " . $this->provider->getForumTitle());
-        $this->appendBody("\n\n");
         if ($this->provider->providesClosestContainer()) {
             $this->appendBody(
                 $this->getLanguageText('frm_noti_obj_' . $this->provider->closestContainer()->getType()) . ": " .
@@ -356,8 +354,6 @@ class ilForumMailNotification extends ilMailNotification
             $this->appendBody($this->getLanguageText('date') . ": " . $date);
             $this->appendBody("\n");
         }
-        $this->appendBody($this->getLanguageText('subject') . ": " . $this->provider->getPostTitle());
-        $this->appendBody("\n");
         $this->appendBody($this->getLanguageText('frm_noti_message'));
         $this->appendBody("\n");
 

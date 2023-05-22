@@ -133,6 +133,14 @@ class PageContentGUI
         }
     }
 
+    //UNIBE-PATCH: add getter for iLubMods-Plugin
+    public function getMainContent() : string
+    {
+        return $this->main_content;
+    }
+
+
+
     public function addLightbox(string $lightbox_html, string $id): void
     {
         if (!empty($lightbox_html)) {

@@ -203,10 +203,12 @@ class ilCourseParticipants extends ilParticipants
                 break;
 
             case ilCourseMembershipMailNotification::TYPE_DISMISS_MEMBER:
+                 /* UNIBE-PATCH OK: don't send e-mails when Patrticipant is thrown out of course
                 $mail->setType(ilCourseMembershipMailNotification::TYPE_DISMISS_MEMBER);
                 $mail->setRefId($this->ref_id);
                 $mail->setRecipients(array($a_usr_id));
                 $mail->send();
+                 */
                 break;
 
             case ilCourseMembershipMailNotification::TYPE_BLOCKED_MEMBER:

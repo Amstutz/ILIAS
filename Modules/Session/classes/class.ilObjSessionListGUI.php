@@ -110,9 +110,11 @@ class ilObjSessionListGUI extends ilObjectListGUI
 
         $props = [];
         $session_data = new ilObjSession($this->obj_id, false);
-        $part = ilSessionParticipants::getInstance($this->ref_id);
+        //UNIBE PATCH
 
         if ($session_data->isRegistrationUserLimitEnabled()) {
+            $part = ilSessionParticipants::getInstance($this->ref_id);
+            //END UNIBE PATCH
             if ($part->getCountMembers() <= $session_data->getRegistrationMaxUsers()) {
                 $props[] = array(
                     'alert' => false,

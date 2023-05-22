@@ -204,6 +204,16 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
         $this->determineObjectiveOrientedContainer();
 
+
+        if($cmd == "learning_analytics_store_async") {
+            include_once("Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/iLubMods/classes/class.iliLubModsConfigGUI.php");
+            include_once("Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/iLubMods/classes/class.iliLubModsPlugin.php");
+
+            $mods_config = new iliLubModsConfigGUI();
+            $mods_config->setPluginObject(new iliLubModsPlugin());
+            $mods_config->performCommand($cmd);
+        }
+
         switch ($next_class) {
             case 'illtiproviderobjectsettinggui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {

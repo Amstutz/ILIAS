@@ -73,12 +73,20 @@ class ilObjSessionAccess extends ilObjectAccess
                 if ($ilUser->isAnonymous()) {
                     return false;
                 }
+                /* UNIBE Patch
                 if (self::_lookupRegistered($a_user_id, $a_obj_id)) {
                     return false;
                 }
-                if (\ilSessionParticipants::_isSubscriber($a_obj_id, $a_user_id)) {
+                */
+                //UNIBE-Patch
+                include_once './Modules/Session/classes/class.ilSessionParticipants.php';
+                if (ilSessionParticipants::_isParticipant($a_ref_id, $a_user_id)) {
                     return false;
                 }
+                if (ilSessionParticipants::_isSubscriber($a_obj_id, $a_user_id)) {
+                    return false;
+                }
+                //END PATCH
                 if (ilSessionWaitingList::_isOnList($a_user_id, $a_obj_id)) {
                     return false;
                 }

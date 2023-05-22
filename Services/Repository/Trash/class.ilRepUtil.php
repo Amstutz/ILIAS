@@ -381,7 +381,7 @@ class ilRepUtil
             }
         }
 
-        if (count($no_create)) {
+        if (is_array($no_create) && count($no_create)) { //UNIBE-Patch
             throw new ilRepositoryException($lng->txt("msg_no_perm_paste") . " " . implode(',', $no_create));
         }
 

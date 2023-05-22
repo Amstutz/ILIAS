@@ -1219,6 +1219,8 @@ class ilObjMediaObject extends ilObject
 
             // Media Pool
             case "mep":
+            // UNIBE-Patch for Plugin InteractiveVideo
+            case "xvid":
                 $obj_id = $id;
                 break;
 

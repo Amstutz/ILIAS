@@ -871,6 +871,17 @@ class ilDataCollectionGlobalTemplate implements ilGlobalTemplateInterface
     }
 
     /**
+     * @inheritDoc
+     *    PATCH-UNIBE needed for iLubMods
+     */
+    public function getContent() : ?string
+    {
+        return $this->main_content;
+    }
+
+
+
+    /**
      * Sets content of left column.
      */
     public function setLeftContent(string $a_html): void

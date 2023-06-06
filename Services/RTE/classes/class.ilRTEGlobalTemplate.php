@@ -376,4 +376,9 @@ class ilRTEGlobalTemplate implements ilGlobalTemplateInterface
     {
         return $this->template->blockExists($block_name);
     }
+
+    public function getContent()
+    {
+        // TODO: Implement getContent() method.
+    }
 }

@@ -87,7 +87,7 @@
 			"ILIAS\\CI\\" : "./CI"
 		},
 		"classmap": [
-			"./Customizing/global/plugins",
+			"./Customizing/global/plugins/Modules/TestQuestionPool/Questions/assStackQuestion/",
 			"./Services/",
 			"./Modules",
 			"./libs/ilias",

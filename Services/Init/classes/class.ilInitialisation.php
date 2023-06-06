@@ -39,6 +39,7 @@ use ILIAS\ResourceStorage\Stakeholder\Repository\StakeholderDBRepository;
 use ILIAS\ResourceStorage\Preloader\DBRepositoryPreloader;
 use ILIAS\Filesystem\Definitions\SuffixDefinitions;
 use ILIAS\FileUpload\Processor\InsecureFilenameSanitizerPreProcessor;
+use ILIAS\FileUpload\Processor\SVGBlacklistPreProcessor;
 
 require_once("libs/composer/vendor/autoload.php");
 
@@ -356,6 +357,7 @@ class ilInitialisation
                 )
             );
             $fileUploadImpl->register(new InsecureFilenameSanitizerPreProcessor());
+            $fileUploadImpl->register(new SVGBlacklistPreProcessor());
 
             return $fileUploadImpl;
         };
@@ -404,12 +406,17 @@ class ilInitialisation
             }
         }
 
-        $iliasHttpPath = ilContext::modifyHttpPath(implode('', [$protocol, $host, $uri]));
+        $ilias_http_path = ilContext::modifyHttpPath(implode('', [$protocol, $host, $uri]));
+
+        // remove everything after the first .php in the path
+        $ilias_http_path = preg_replace('/(http|https)(:\/\/)(.*?\/.*?\.php).*/', '$1$2$3', $ilias_http_path);
 
         $f = new \ILIAS\Data\Factory();
-        $uri = $f->uri(ilFileUtils::removeTrailingPathSeparators($iliasHttpPath));
+        $uri = $f->uri(ilFileUtils::removeTrailingPathSeparators($ilias_http_path));
 
-        return define('ILIAS_HTTP_PATH', $uri->getBaseURI());
+        $base_URI = $uri->getBaseURI();
+
+        return define('ILIAS_HTTP_PATH', $base_URI);
     }
 
     /**

@@ -155,7 +155,6 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
         $ilAccess = $DIC['ilAccess'];
         $ilNavigationHistory = $DIC['ilNavigationHistory'];
         $ilCtrl = $DIC['ilCtrl'];
-        $ilErr = $DIC['ilErr'];
         $tpl = $DIC['tpl'];
         $lng = $DIC['lng'];
         $ilTabs = $DIC['ilTabs'];
@@ -217,7 +216,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
         switch ($next_class) {
             case 'illtiproviderobjectsettinggui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -233,7 +232,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'iltestexportgui':
                 if (!$ilAccess->checkAccess('write', '', $this->ref_id)) {
-                    $ilErr->raiseError($this->lng->txt('permission_denied'), $ilErr->WARNING);
+                    $this->redirectAfterMissingWrite();
                 }
 
                 $this->prepareOutput();
@@ -244,7 +243,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case "ilinfoscreengui":
                 if (!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()) && !$ilAccess->checkAccess("visible", "", $this->testrequest->getRefId())) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -252,7 +251,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
                 break;
             case 'ilobjectmetadatagui':
                 if (!$ilAccess->checkAccess('write', '', $this->object->getRefId())) {
-                    $ilErr->raiseError($this->lng->txt('permission_denied'), $ilErr->WARNING);
+                    $this->redirectAfterMissingWrite();
                 }
 
                 $this->prepareOutput();
@@ -264,7 +263,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'iltestdashboardgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -283,7 +282,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'iltestresultsgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -303,7 +302,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case "iltestplayerfixedquestionsetgui":
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->trackTestObjectReadEvent();
                 if (!$this->object->getKioskMode()) {
@@ -316,7 +315,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case "iltestplayerrandomquestionsetgui":
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->trackTestObjectReadEvent();
                 if (!$this->object->getKioskMode()) {
@@ -329,14 +328,14 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case "iltestevaluationgui":
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->forwardToEvaluationGUI();
                 break;
 
             case "iltestevalobjectiveorientedgui":
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 // @PHP8-CR I believe this is an indicator for an incomplete feature. I wish to leave it in place
                 // "as is"for further analysis.
@@ -345,7 +344,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case "iltestservicegui":
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -355,7 +354,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'ilpermissiongui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -366,7 +365,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case "illearningprogressgui":
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -378,7 +377,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case "ilcertificategui":
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -393,7 +392,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case "iltestscoringgui":
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -404,7 +403,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'ilmarkschemagui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 if (!$ilAccess->checkAccess('write', '', $this->object->getRefId())) {
                     $this->tpl->setOnScreenMessage('info', $this->lng->txt('cannot_edit_test'), true);
@@ -418,7 +417,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'iltestscoringbyquestionsgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -429,7 +428,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'ilobjtestsettingsgeneralgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -448,7 +447,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'ilobjtestsettingsscoringresultsgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -472,7 +471,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'ilobjtestfixedquestionsetconfiggui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -482,7 +481,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'iltestrandomquestionsetconfiggui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -506,7 +505,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'ilobjtestdynamicquestionsetconfiggui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -516,7 +515,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'iltestquestionbrowsertablegui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -540,7 +539,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'iltestskilladministrationgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -550,7 +549,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'ilobjectcopygui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -562,7 +561,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
             case 'ilpageeditorgui':
             case 'iltestexpresspageobjectgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->getTabsManager()->getQuestionsSubTabs();
                 $this->getTabsManager()->activateSubTab(ilTestTabsManager::SUBTAB_ID_QST_PAGE_VIEW);
@@ -691,7 +690,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
                     break;
                 }
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 if ($cmd === 'edit' && !$ilAccess->checkAccess('write', '', $this->testrequest->getRefId())) {
                     $this->redirectAfterMissingWrite();
@@ -704,7 +703,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'ilassspecfeedbackpagegui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $pg_gui = new ilAssSpecFeedbackPageGUI((int) $this->testrequest->raw("feedback_id"));
                 $this->ctrl->forwardCommand($pg_gui);
@@ -712,7 +711,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'ilassgenfeedbackpagegui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $pg_gui = new ilAssGenFeedbackPageGUI($this->testrequest->int("feedback_id"));
                 $this->ctrl->forwardCommand($pg_gui);
@@ -720,7 +719,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'illocalunitconfigurationgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareSubGuiOutput();
 
@@ -737,7 +736,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case "ilcommonactiondispatchergui":
                 if (!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()) && !$ilAccess->checkAccess("visible", "", $this->testrequest->getRefId())) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $gui = ilCommonActionDispatcherGUI::getInstanceFromAjaxCall();
@@ -793,7 +792,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             case 'iltestcorrectionsgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $gui = new ilTestCorrectionsGUI($DIC, $this->getTestObject());
@@ -803,7 +802,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
             case '':
             case 'ilobjtestgui':
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()) && !$ilAccess->checkAccess("visible", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 $this->prepareOutput();
                 $this->addHeaderAction();
@@ -820,7 +819,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
                 break;
             default:
                 if ((!$ilAccess->checkAccess("read", "", $this->testrequest->getRefId()))) {
-                    $ilias->raiseError($this->lng->txt("permission_denied"), $ilias->error_obj->MESSAGE);
+                    $this->redirectAfterMissingRead();
                 }
                 if (in_array($cmd, ['editQuestion', 'save', 'suggestedsolution']) && !$ilAccess->checkAccess('write', '', $this->object->getRefId())) {
                     $this->redirectAfterMissingWrite();
@@ -886,6 +885,16 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
         $target_class = get_class($this->object) . "GUI";
         $this->ctrl->setParameterByClass($target_class, 'ref_id', $this->ref_id);
         $this->ctrl->redirectByClass($target_class);
+    }
+
+    protected function redirectAfterMissingRead(): void
+    {
+        $this->tpl->setOnScreenMessage('failure', sprintf(
+            $this->lng->txt("msg_no_perm_read_item"),
+            $this->object->getTitle()
+        ), true);
+        $this->ctrl->setParameterByClass('ilrepositorygui', 'ref_id', ROOT_FOLDER_ID);
+        $this->ctrl->redirectByClass('ilrepositorygui');
     }
 
     protected function trackTestObjectReadEvent()
@@ -2334,7 +2343,6 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
     {
         global $DIC;
         $ilAccess = $DIC['ilAccess'];
-        $ilias = $DIC['ilias'];
         if (!$ilAccess->checkAccess("write", "", $this->ref_id)) {
             // allow only write access
             $this->tpl->setOnScreenMessage('info', $this->lng->txt("cannot_edit_test"), true);
@@ -2708,7 +2716,8 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
         $ilToolbar = $DIC['ilToolbar'];
 
         if (!$ilAccess->checkAccess("visible", "", $this->ref_id) && !$ilAccess->checkAccess("read", "", $_GET["ref_id"])) {
-            $this->ilias->raiseError($this->lng->txt("msg_no_perm_read"), $this->ilias->error_obj->MESSAGE);
+            $this->redirectAfterMissingRead();
+            return '';
         }
 
         $DIC->tabs()->activateTab(ilTestTabsManager::TAB_ID_INFOSCREEN);

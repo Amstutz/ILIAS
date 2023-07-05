@@ -119,12 +119,12 @@ administration#:#adm_pub_section_domain_filter_info#:#Domänen-Filter für anony
 administration#:#adm_rep_shorten_description#:#Maximale Länge für Beschreibungen
 administration#:#adm_rep_shorten_description_info#:#Wenn aktiviert, werden alle Beschreibungen in Objektlisten nur bis zu einer definierten Länge angezeigt.
 administration#:#adm_rep_shorten_description_length#:#Maximale Anzahl an Zeichen
-administration#:#adm_rep_tree_all_types#:#Alle Objekte
-administration#:#adm_rep_tree_all_types_info#:#Alle Objekttypen werden im Baum dargestellt.
-administration#:#adm_rep_tree_limit_grp_crs#:#Alle Objekte auf Anzeige in Kursen und Gruppen beschränken
-administration#:#adm_rep_tree_limit_grp_crs_info#:#Diese Ansicht beruht und aktiviert automatisch die synchronisierte Baumansicht.
-administration#:#adm_rep_tree_only_cntr#:#Nur Container
-administration#:#adm_rep_tree_only_cntr_info#:#Es werden nur Kategorien, Kurse und Gruppen aufgeführt.
+administration#:#adm_rep_tree_all_types#:#Alle Objekttypen
+administration#:#adm_rep_tree_all_types_info#:#In der Baumansicht werden alle Objekttypen angezeigt.
+administration#:#adm_rep_tree_limit_grp_crs#:#Auf Kurse und Gruppen beschränken
+administration#:#adm_rep_tree_limit_grp_crs_info#:#Nur in Kursen und Gruppen werden alle Objekttypen in der Baumansicht angezeigt. Außerhalb zeigt die Baumansicht nur Container-Objekte.
+administration#:#adm_rep_tree_only_cntr#:#Nur Container-Objekte
+administration#:#adm_rep_tree_only_cntr_info#:#Die Baumansicht zeigt nur Studienprogramme, Kategorien, Kurse, Gruppen und Lernsequenzen an.
 administration#:#adm_rep_tree_presentation#:#Präsentation der Baumansicht
 administration#:#adm_repository_and_objects#:#Magazin und Objekte
 administration#:#adm_search_and_find#:#Suchen und finden
@@ -2564,7 +2564,7 @@ book#:#book_reservation_failed_overbooked#:#Die Buchung ist fehlgeschlagen, da d
 book#:#book_reservation_filter_period#:#Voreinstellung für den Filter „Datumsbereich“
 book#:#book_reservation_filter_period_info#:#Im Reiter „Reservierungen“ wird der Filter „Datumsbereich“ auf diesen Wert ab dem aktuellen Datum voreingestellt.
 book#:#book_reservation_fix_info#:#Die Reservierung kann nur für festgelegte Zeiten durchgeführt werden.
-book#:#book_reservation_overview#:#Reservierungen anderer Benutzer
+book#:#book_reservation_overview#:#Reservierungen aller Benutzer
 book#:#book_reservation_status_5#:#Storniert
 book#:#book_reservation_title#:#Buchungsanfrage für
 book#:#book_reservations_list#:#Reservierungen
@@ -3960,7 +3960,7 @@ common#:#enable_sahs_protocol_data#:#Protokolldaten aktivieren
 common#:#enable_sahs_protocol_data_desc#:#Anzeige der Protokolldaten (SCORM)
 common#:#enable_search_engine#:#Öffentlichen Bereich für Suchmaschinen (z.B. Google) freigeben.<br />Bitte beachten Sie, dass für diese Einstellung das Apache-Modul "rewrite" benötigt wird, und dass .htaccess-Konfigurationen genutzt werden müssen.
 common#:#enable_trash#:#Papierkorb verwenden
-common#:#enable_trash_info#:#Wenn aktiviert, werden gelöschte Objekte in den Papierkorb verschoben und können später wieder hergestellt werden. Ist der Papierkorb deaktiviert, werden gelöschte Objekte unwiderruflich aus dem System entfernt!
+common#:#enable_trash_info#:#Gelöschte Objekte werden in den Papierkorb verschoben und können später wieder hergestellt werden. Ist der Papierkorb deaktiviert, werden Objekte beim Löschen direkt und unwiderruflich aus dem System entfernt!
 common#:#enable_webdav#:#WebDAV Zugriff aktivieren
 common#:#enable_webdav_info#:#Erlaubt WebDAV Clients den Zugriff auf das Magazin über einen Webordner. Benutzer können Webordner öffnen, indem Sie im Magazin die Aktion "Als Webordner öffnen" ausführen, oder in einem WebDAV Client folgende Adresse eingeben: <a href="%1$s" folder="%1$s">%1$s</a>
 common#:#enabled#:#Eingeschaltet
@@ -4342,7 +4342,7 @@ common#:#info_available_roles#:#Verfügbare Rollen
 common#:#info_change_user_view#:#Rechte dieses Benutzers anzeigen
 common#:#info_deactivate_sure#:#Sind Sie sicher, dass Sie die folgenden Benutzer deaktivieren wollen?
 common#:#info_delete_sure#:#Sind Sie sicher, dass folgende Objekte gelöscht werden sollen?
-common#:#info_delete_warning_no_trash#:#(WARNUNG: Die ausgewählten Objekte werden unwiderruflich aus dem System entfernt und können nicht wiederhergestellt werden!)
+common#:#info_delete_warning_no_trash#:#<b>Achtung</b>: Die ausgewählten Objekte werden direkt und unwiderruflich aus dem System entfernt! Sie können nicht wiederhergestellt werden!
 common#:#info_deleted#:#Objekt(e) gelöscht
 common#:#info_err_user_not_exist#:#Es wurde keine Person mit diesem Anmeldenamen gefunden.###Modified as part of gender mainstreaming activities for ILIAS 8
 common#:#info_from_role#:#Gewährt durch Rollenmitgliedschaft/Besitz
@@ -6179,7 +6179,7 @@ content#:#cont_cach_mode_manual_info#:#Es werden nur die Sprechstundentermine ve
 content#:#cont_cant_copy_folders#:#Ordner können nicht in die Zwischenablage kopiert werden
 content#:#cont_cant_del_full#:#Löschen der Datei für die Vollansicht nicht möglich.
 content#:#cont_cant_del_std#:#Löschen der Datei für die Standardansicht nicht möglich.
-content#:#cont_caption#:#Bildunterschrift
+content#:#cont_caption#:#Beschriftung
 content#:#cont_caption_style#:#Caption Style
 content#:#cont_cc_emp#:#Betont
 content#:#cont_cc_imp#:#Wichtig
@@ -6300,7 +6300,7 @@ content#:#cont_dir_deleted#:#Das Verzeichnis wurde gelöscht.
 content#:#cont_dir_file#:#Verzeichnis/Datei
 content#:#cont_dir_renamed#:#Das Verzeichnis wurde umbenannt.
 content#:#cont_disable_def_feedback#:#Standard-Feedback deaktivieren
-content#:#cont_disable_def_feedback_info#:#Deaktiviert das Standard-Feedback nach der Beantwortung von Fragen.
+content#:#cont_disable_def_feedback_info#:#Das Standard-Feedback zu einer Frage wird nach Beantwortung einer Frage nicht angezeigt.
 content#:#cont_download#:#Download
 content#:#cont_download_no_download#:#Die Download-Funktion ist zur Zeit deaktiviert. Daher wird die Datei den Lernenden nicht angeboten.
 content#:#cont_download_no_menu#:#Das Lernmodulmenü ist zur Zeit deaktiviert. Daher wird die Datei den Lernenden nicht angeboten.
@@ -6538,7 +6538,7 @@ content#:#cont_insert_mob#:#Medienobjekt
 content#:#cont_insert_my_courses#:#Meine Kurse einfügen
 content#:#cont_insert_page#:#Seite einfügen
 content#:#cont_insert_page_from_clip#:#Seite aus Zwischenablage einfügen
-content#:#cont_insert_pagelayout#:#Seitenvorlage einfügen
+content#:#cont_insert_pagelayout#:#Seite aus Vorlage einfügen
 content#:#cont_insert_par#:#Text einfügen
 content#:#cont_insert_profile#:#Persönliche Daten veröffentlichen
 content#:#cont_insert_resources#:#Materialienliste einfügen
@@ -6619,7 +6619,7 @@ content#:#cont_lk_page_faq#:#Seite in FAQ Tool
 content#:#cont_lk_page_new#:#Seite in neuem Tab
 content#:#cont_lk_term#:#Glossarbegriff
 content#:#cont_lk_term_new#:#Glossarbegriff in neuem Tab
-content#:#cont_lm_comments_desc#:#Erlaubt es Benutzern öffentliche Kommentare auf allen Lernmodulseiten hinzuzufügen.
+content#:#cont_lm_comments_desc#:#Erlaubt es Benutzern, öffentliche Kommentare auf allen Lernmodulseiten hinzuzufügen.
 content#:#cont_lm_default_layout#:#Standardlayout des Lernmoduls
 content#:#cont_lm_mail_permanent_link#:#Klicken Sie auf den folgenden Link um das Lernmodul aufzurufen:
 content#:#cont_lm_menu#:#Menü
@@ -6830,7 +6830,7 @@ content#:#cont_profile_mode_manual#:#Manuell
 content#:#cont_profile_mode_manual_info#:#Verwendet die folgenden Daten:
 content#:#cont_profile_mode_template_inherit_info#:#Verwendet die Daten des Profils
 content#:#cont_progress_icons#:#Fortschritts-Icons
-content#:#cont_progress_icons_info#:#Zeigt Fortschritts-Icons anstatt der Kapitel- und Seiten-Icons im Inhaltsverzeichnis an.
+content#:#cont_progress_icons_info#:#Im Inhaltsverzeichnis werden Fortschritt-Icons anstelle der Kapitel- und Seiten-Icons angezeigt.
 content#:#cont_prtf_page#:#Portfolioseite
 content#:#cont_prtt_page#:#Portfoliovorlagenseite
 content#:#cont_public_access#:#Öffentlicher Zugriff
@@ -6867,7 +6867,7 @@ content#:#cont_resource_type#:#Typ
 content#:#cont_resources#:#Ressourcen
 content#:#cont_resources_of_type#:#Inhalte vom Typ
 content#:#cont_restrict_forw_nav#:#Vorwärtsblättern im Lernmodul reglementieren
-content#:#cont_restrict_forw_nav_info#:#Benutzer können eine nachfolgende Seite erst dann aufrufen, wenn sie zuvor alle vorherigen Testfragen korrekt beantwortet haben.
+content#:#cont_restrict_forw_nav_info#:#Eine nachfolgende Seite kann erst dann aufgerufen werden, wenn auf der aktuellen Lernmodulseite alle Testfragen korrekt beantwortet wurden. Diese Funktion erfordert bei der Einstellung „Antwortversuche“ die Option „Speichere Antwortversuche“.
 content#:#cont_revision#:#Änderung
 content#:#cont_right#:#Rechts
 content#:#cont_right_float#:#Rechts, Text umfließt
@@ -7078,9 +7078,9 @@ content#:#cont_tree_fixed#:#Die Lernmodulstruktur wurde repariert.
 content#:#cont_tries#:#Antwortversuche
 content#:#cont_tries_remaining#:#Verbleibende Versuche
 content#:#cont_tries_reset_on_visit#:#Zurücksetzen bei Aufruf der Seite
-content#:#cont_tries_reset_on_visit_info#:#Benutzer haben bei jedem Aufruf einer Seite mit einer Testfrage die maximale Anzahl an Antwortversuchen. Die Testfragen müssen jedesmal beantwortet werden.
+content#:#cont_tries_reset_on_visit_info#:#Bei jedem Aufruf einer Seite mit eingebetteter Testfrage ist die maximale Anzahl an Antwortversuchen möglich. Die Testfragen können jedes Mal erneut beantwortet werden.
 content#:#cont_tries_store#:#Speichere Antwortversuche
-content#:#cont_tries_store_info#:#Die Zahl der Antwortversuche wird festgehalten und gespeichert. Korrekt beantwortete Fragen müssen nicht mehr beantwortet werden. Benutzer können Fragen nach Erreichen der maximalen Versuche nicht erneut beantworten.
+content#:#cont_tries_store_info#:#Die Zahl der Antwortversuche wird festgehalten und gespeichert. Korrekt beantwortete Fragen können nicht mehr beantwortet werden. Nach Erreichen der maximalen Anzahl an Versuchen ist ein weiterer Antwortversuch nicht mehr möglich.
 content#:#cont_trigger_area#:#Bereich für Auslöser
 content#:#cont_type#:#Typ
 content#:#cont_type_not_allowed#:#Dieses Element ist an dieser Stelle nicht erlaubt
@@ -7582,11 +7582,13 @@ crs#:#crs_member#:#Mitglied
 crs#:#crs_member_administration#:#Teilnehmerverwaltung
 crs#:#crs_member_passed_status_changed#:#Update-Status
 crs#:#crs_members#:#Mitglieder
-crs#:#crs_members_deleted#:#Das/die Mitglied(er) wurde(n) aus dem Kurs ausgetragen
+crs#:#crs_members_deleted#:#Die ausgewählten Mitglieder sind aus dem Kurs ausgetragen worden.
 crs#:#crs_members_groups#:#Gruppenmitgliedschaften
 crs#:#crs_members_map#:#Karte Kursmitglieder
 crs#:#crs_members_print_title#:#Kursmitglieder
 crs#:#crs_min_one_admin#:#Diesem Kurs muss mindestens ein Administrator zugeordnet bleiben.
+crs#:#crs_my_courses_groups_enabled#:#Meine Kurse und Gruppen
+crs#:#crs_my_courses_groups_enabled_info#:#Wenn Sie diese Option aktivieren, wird die Option 'Meine Kurse und Gruppen' im Magazin angezeigt.
 crs#:#crs_new_status#:#Ihr Status:
 crs#:#crs_new_subscription#:#Beitritt zum Kurs "%s"
 crs#:#crs_new_subscription_body#:#%1$s ist dem Kurs %2$s beigetreten.
@@ -8258,6 +8260,7 @@ dateplaner#:#cal_on_the#:#Am:
 dateplaner#:#cal_open_calendar#:#Kalender öffnen
 dateplaner#:#cal_origin#:#Herkunft
 dateplaner#:#cal_owner#:#Im Besitz von###Modified as part of gender mainstreaming activities for ILIAS 8
+dateplaner#:#cal_period#:#Zeitraum
 dateplaner#:#cal_rec_err_limit#:#Bitte geben Sie eine Anzahl von Terminen ein.
 dateplaner#:#cal_recurrence_confirm_deletion#:#Bitte wählen Sie aus, ob Sie einzelne Termine oder aber die gesamte Terminserie löschen möchten.
 dateplaner#:#cal_recurrences#:#Wiederholungen
@@ -9499,7 +9502,6 @@ file#:#general_upload_error_occured#:#Beim Verarbeiten der Datei ist ein unerwar
 file#:#generate_sanitize_report#:#Report über nicht erreichbare Dateien
 file#:#migrated#:#Status
 file#:#msg_unzip_success#:#Archiv wurde erfolreich entpackt.
-file#:#not_yet_migrated#:#Dieses Datei-Objekt wurde noch nicht migriert und es können keine neue Versionen angelegt werden. Wenden Sie sich an die Administratoren der Plattform.
 file#:#replace_file_info#:#Alle Dateiversionen werden gelöscht.
 file#:#resource_id#:#Ressourcen ID
 file#:#storage_id#:#Storage ID
@@ -9915,7 +9917,7 @@ grp#:#grp_mem_contacts#:#Tutorielle Betreuung
 grp#:#grp_mem_tbl_header#:#Gruppenteilnehmer
 grp#:#grp_member_administration#:#Teilnehmerverwaltung
 grp#:#grp_members#:#Mitglieder
-grp#:#grp_members_deleted#:#Das/die Mitglied(er) wurde(n) aus der Gruppe ausgetragen
+grp#:#grp_members_deleted#:#Die ausgewählten Mitglieder sind aus der Gruppe ausgetragen worden.
 grp#:#grp_members_map#:#Karte Gruppenmitglieder
 grp#:#grp_members_print_title#:#Gruppenmitglieder
 grp#:#grp_missing_grp_type#:#Bitte wählen Sie die Art der Gruppe aus.
@@ -10435,7 +10437,7 @@ lso#:#lso_mainbar_button_label_curriculum#:#Lernsequenz
 lso#:#lso_mainbar_button_label_toc#:#Inhalte
 lso#:#lso_mem_tbl_header#:#Lernsequenz Teilnehmer
 lso#:#lso_member_administration#:#Teilnehmerverwaltung
-lso#:#lso_members_deleted#:#Das/die Mitglied(er) wurde(n) aus der Lernsequenz ausgetragen
+lso#:#lso_members_deleted#:#Die ausgewählten Mitglieder sind aus der Lernsequenz ausgetragen worden.
 lso#:#lso_members_gallery#:#Mitgliedergalerie
 lso#:#lso_members_print_title#:#Lernsequenzmitglieder
 lso#:#lso_min_one_admin#:#Dieser Lernsequenz muß mindestens ein Administrator zugeordnet bleiben.
@@ -10665,6 +10667,7 @@ lti#:#lti_con_tool_url#:#Login URL
 lti#:#lti_con_version#:#LTI Version
 lti#:#lti_con_version_1.1#:#Version 1.1
 lti#:#lti_con_version_1.3#:#Version 1.3
+lti#:#lti_con_version_1.3_before_id#:#Wenn keine dynamische Registrierung genutzt wird, erscheinen nach Eingabe der vom Tool bereitgestellten Daten weitere Daten, die beim Tool einzutragen sind.
 lti#:#lti_confirm_delete_providers#:#Sind Sie sicher, dass Sie die folgenden Provider bzw. Tools löschen möchten?
 lti#:#lti_consumer#:#Freigegeben für
 lti#:#lti_consumer_created#:#Konsument hinzugefügt
@@ -11035,7 +11038,7 @@ mail#:#send_mail_members#:#Alle Mitglieder
 mail#:#send_mail_to#:#Mail an
 mail#:#send_mail_tutors#:#Alle Tutoren
 mail#:#show_mail_settings#:#Einstellungen anzeigen
-mail#:#show_mail_settings_info#:#Benutzer können ihre Mail-Einstellungen im Bereich „Einstellungen“ oder „Mail“ selbst vornehmen.
+mail#:#show_mail_settings_info#:#Aktiviert die Anzeige der Mail-Einstellungen im Bereich 'Einstellungen' oder 'Mail'. Benutzer können die Mail-Einstellungen nur ändern, wenn die Konfiguration des Benutzer-Profils dies erlaubt. Wenn Benutzer nicht berechtigt sind, die Mail-Einstellung ihrer Profils zu ändern, dann gelten die globalen Einstellungen. Dies gilt auch dann, wenn Benutzer in der Vergangenheit die Berechtigung zum Ändern der Mail-Einstellungen hatten und persönliche Einstellungen vorgenommen haben.
 mail#:#system_notification_installation_changed_by#:#Geändert durch
 mail#:#usrFieldChange_second_mail_visible_in_personal_data#:#Sie haben das Attribut "%s" im Feld "%s" verändert.<br>Dies führt dazu, dass, für alle bestehenden und künftig angelegten Konten,<br>die bei den Benutzern gewählte Empfangsart und der Standard für neue Anmeldekonten bei externer Zustellung auf die primäre E-Mail-Adresse geändert wird,<br>unter Inkaufnahme der Rücksetzung von bestehenden Benutzer-Einstellungen.
 maps#:#configure_geolocation#:#Um nach Adressen suchen zu können, schließen Sie bitte die Konfiguration für die Geolocation im Administrationsmenü „Software von Drittanbietern“ ab.
@@ -12260,13 +12263,13 @@ obj#:#obj_tool_setting_booking#:#Ressourcen
 obj#:#obj_tool_setting_filter#:#Filter
 obj#:#obj_tool_setting_filter_empty#:#Anzeige bei leerem Filter
 obj#:#obj_tool_setting_filter_empty_info#:#Zeigt alle Elemente, wenn der Filter leer ist.
-obj#:#obj_tool_setting_filter_info#:#Ein Filter wird im Reiter "Inhalte" angezeigt.
+obj#:#obj_tool_setting_filter_info#:#Ein Filter wird im Reiter „Inhalte“ angezeigt.
 obj#:#obj_tool_setting_info_tab#:#Info-Reiter
-obj#:#obj_tool_setting_info_tab_info#:#Der Reiter "Info" wird angezeigt.
+obj#:#obj_tool_setting_info_tab_info#:#Der Reiter „Info“ wird angezeigt.
 obj#:#obj_tool_setting_skills#:#Kompetenzen
 obj#:#obj_tool_setting_skills_info#:#Die Funktion ermöglicht es Kompetenzen auszuwählen und Mitgliedern Kompetenzstufen zuzuweisen.
 obj#:#obj_tool_setting_tag_cloud#:#Tag Cloud
-obj#:#obj_tool_setting_tag_cloud_info#:#Es wird eine Tag Cloud im Block "Auswahl nach Themen" im Reiter "Inhalt" angezeigt.
+obj#:#obj_tool_setting_tag_cloud_info#:#Es wird eine Tag Cloud im Block „Auswahl nach Themen“ im Reiter „Inhalt“ angezeigt.
 obj#:#obj_tool_setting_taxonomies#:#Taxonomien
 obj#:#obj_tool_setting_use_news#:#Neuigkeiten
 obj#:#obj_tool_setting_use_news_info#:#Nutzung des Blocks „Neuigkeiten“ oder der Timeline für Neuigkeiten. Benutzer können Benachrichtigungen für Neuigkeiten aktivieren, sobald der Block oder die Timeline aktiv sind.
@@ -12296,8 +12299,6 @@ orgu#:#employee#:#Mitarbeiter
 orgu#:#ext_id#:#Externe ID
 orgu#:#ext_id_updated#:#Die externe ID wurde erfolgreich bearbeitet.n, da die Daten anonymisiert gespeichert werden.
 orgu#:#form_title_org_default_permissions_update#:#Standardrechte
-orgu#:#il_orgu_employee#:#Mitarbeiter
-orgu#:#il_orgu_superior#:#Vorgesetzte
 orgu#:#import_failed#:#Der Import ist fehlgeschlagen. Stellen Sie sicher, dass die Datei im XML-Format geschrieben ist und eine valide Struktur aufweist.
 orgu#:#import_successful#:#Der Import wurde erfolgreich durchgeführt. Neu erstellt: %s, Bearbeitet/Verschoben: %s, Gelöscht: %s.
 orgu#:#import_terminated_with_errors#:#Der Import hat Fehler erkannt.
@@ -16610,8 +16611,8 @@ user#:#clipboard_user_added#:#Die ausgewählten Benutzer wurden der Zwischenabla
 user#:#confirm_delete_starting_point#:#Sind Sie sich sicher, dass diese Regel gelöscht werden soll?
 user#:#create_starting_point#:#Regel erstellen
 user#:#criteria#:#Kriterium
-user#:#del_mail_body#:#Hallo %1$s, %2$sSie haben sich seit längerer Zeit nicht mehr auf der Lernplattform %3$s angemeldet. Ihr ILIAS-Konto wird daher voraussichtlich am %4$s gelöscht. Bitte melden Sie sich erneut an, damit Ihr ILIAS-Konto erhalten bleibt.
-user#:#del_mail_subject#:#[ILIAS] – Ihr ILIAS-Konto wird bald gelöscht
+user#:#del_mail_body#:#Hallo %1$s, %2$s Sie haben sich seit längerer Zeit nicht mehr auf %3$s angemeldet. Daher wird ihr ILIAS-Konto voraussichtlich am %4$s gelöscht. Um Ihr ILIAS-Konto zu behalten, müssen Sie sich vor dem genannten Tag erneut einloggen.
+user#:#del_mail_subject#:#Ihr ILIAS-Konto wird bald gelöscht
 user#:#delete_inactive_user_accounts_frequency#:#Intervall
 user#:#delete_inactive_user_accounts_frequency_desc#:#Intervall, mit welchem auf Löschung sowie auf E-Mail-Versand getestet wird.
 user#:#editing_this_role#:#Regel editieren

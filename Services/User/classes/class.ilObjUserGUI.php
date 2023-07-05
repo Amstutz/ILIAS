@@ -410,13 +410,7 @@ class ilObjUserGUI extends ilObjectGUI
             $userObj->setTitle($userObj->getFullname());
             $userObj->setDescription($userObj->getEmail());
 
-            $udf = array();
-            foreach ($this->request->getParsedBody() as $k => $v) {
-                if (strpos($k, "udf_") === 0) {
-                    $udf[substr($k, 4)] = $v;
-                }
-            }
-            $userObj->setUserDefinedData($udf);
+            $this->loadUserDefinedDataFromForm($userObj);
 
             $userObj->create();
 
@@ -755,6 +749,29 @@ class ilObjUserGUI extends ilObjectGUI
         return $user;
     }
 
+    protected function loadUserDefinedDataFromForm(?ilObjUser $user = null): void
+    {
+        if (!$user) {
+            $user = $this->object;
+        }
+
+        $user_defined_fields = ilUserDefinedFields::_getInstance();
+        if ($this->usrf_ref_id == USER_FOLDER_ID) {
+            $all_defs = $user_defined_fields->getDefinitions();
+        } else {
+            $all_defs = $user_defined_fields->getChangeableLocalUserAdministrationDefinitions();
+        }
+        $udf = [];
+        foreach ($all_defs as $definition) {
+            $f = "udf_" . $definition['field_id'];
+            $item = $this->form_gui->getItemByPostVar($f);
+            if ($item && !$item->getDisabled()) {
+                $udf[$definition['field_id']] = $this->form_gui->getInput($f);
+            }
+        }
+        $user->setUserDefinedData($udf);
+    }
+
     public function updateObject(): void
     {
         global $DIC;
@@ -822,13 +839,7 @@ class ilObjUserGUI extends ilObjectGUI
             #$this->object->assignData($_POST);
             $this->loadValuesFromForm('update');
 
-            $udf = array();
-            foreach ($this->request->getParsedBody() as $k => $v) {
-                if (strpos($k, "udf_") === 0) {
-                    $udf[substr($k, 4)] = $v;
-                }
-            }
-            $this->object->setUserDefinedData($udf);
+            $this->loadUserDefinedDataFromForm();
 
             try {
                 $this->object->updateLogin($this->form_gui->getInput("login"));
@@ -2008,14 +2019,15 @@ class ilObjUserGUI extends ilObjectGUI
         $subject = $usr_lang->txt("profile_changed");
 
         // mail body
-        $body = ($usr_lang->txt("reg_mail_body_salutation") . " " . $this->object->getFullname() . ",\n\n");
+        $body = $usr_lang->txt("reg_mail_body_salutation")
+            . " " . $this->object->getFullname() . ",\n\n";
 
         $date = $this->object->getApproveDate();
         // Approve
         if ((time() - strtotime($date)) < 10) {
-            $body .= ($usr_lang->txt('reg_mail_body_approve') . "\n\n");
+            $body .= $usr_lang->txt('reg_mail_body_approve') . "\n\n";
         } else {
-            $body .= ($usr_lang->txt('reg_mail_body_profile_changed') . "\n\n");
+            $body .= $usr_lang->txt('reg_mail_body_profile_changed') . "\n\n";
         }
 
         // Append login info only if password has been changed
@@ -2025,8 +2037,10 @@ class ilObjUserGUI extends ilObjectGUI
                 $usr_lang->txt("login") . ": " . $this->object->getLogin() . "\n" .
                 $usr_lang->txt("passwd") . ": " . $this->user_request->getPassword() . "\n\n";
         }
-        $body .= ($usr_lang->txt("reg_mail_body_text3") . "\n");
+        $body .= $usr_lang->txt("reg_mail_body_text3") . "\n";
         $body .= $this->object->getProfileAsString($usr_lang);
+        $body .= ilMail::_getInstallationSignature();
+
 
         $mmail->Subject($subject, true);
         $mmail->Body($body);

@@ -27,11 +27,11 @@ use ILIAS\HTTP\Wrapper\ArrayBasedRequestWrapper as ArrayBasedRequestWrapper;
 */
 class ilSingleChoiceWizardInputGUI extends ilTextInputGUI
 {
-    protected $values = array();
+    protected $values = [];
     protected $allowMove = false;
     protected $singleline = true;
     protected $qstObject = null;
-    protected $suffixes = array();
+    protected $suffixes = [];
     protected $showPoints = true;
     protected $hideImages = false;
     protected ArrayBasedRequestWrapper $post_wrapper;
@@ -58,13 +58,17 @@ class ilSingleChoiceWizardInputGUI extends ilTextInputGUI
         if (is_array($a_value)) {
             if (is_array($a_value['answer'])) {
                 foreach ($a_value['answer'] as $index => $value) {
-                    include_once "./Modules/TestQuestionPool/classes/class.assAnswerBinaryStateImage.php";
                     $points = (float) str_replace(",", ".", $a_value['points'][$index]);
-                    $answer = new ASS_AnswerBinaryStateImage((string) $value, $points, (int) $index, 1, "", -1);
+                    $answer = new ASS_AnswerBinaryStateImage(
+                        (string) $value,
+                        $points,
+                        (int) $index,
+                        1,
+                        "",
+                        (int) $a_value['answer_id'][$index]
+                    );
                     if (isset($a_value['imagename'][$index])) {
                         $answer->setImage($a_value['imagename'][$index]);
-                    } else {
-                        $answer->setImage('');
                     }
                     $this->values[] = $answer;
                 }
@@ -200,6 +204,16 @@ class ilSingleChoiceWizardInputGUI extends ilTextInputGUI
         return $this->allowMove;
     }
 
+
+    // Set pending filename value
+    public function setPending(string $val): void
+    {
+        /**
+         * 2023-07-05 sk: This is not how it should be, but there is no got way
+         * around it right now. We need KS-Forms. Now!
+         */
+    }
+
     /**
     * Check input, strip slashes etc. set alert, if input is not ok.
     * @return	boolean		Input ok, true/false
@@ -223,7 +237,7 @@ class ilSingleChoiceWizardInputGUI extends ilTextInputGUI
             // check answers
             if (is_array($foundvalues['answer'])) {
                 foreach ($foundvalues['answer'] as $aidx => $answervalue) {
-                    if (((strlen($answervalue)) == 0) && (isset($foundvalues['imagename'])) && (!isset($foundvalues['imagename'][$aidx]) || strlen($foundvalues['imagename'][$aidx]) == 0)) {
+                    if (((strlen($answervalue)) == 0) && (!isset($foundvalues['imagename'][$aidx]) || strlen($foundvalues['imagename'][$aidx]) == 0)) {
                         $this->setAlert($lng->txt("msg_input_is_required"));
                         return false;
                     }
@@ -401,6 +415,9 @@ class ilSingleChoiceWizardInputGUI extends ilTextInputGUI
                         );
                         $tpl->parseCurrentBlock();
                     }
+                    $tpl->setCurrentBlock("prop_answer_id_propval");
+                    $tpl->setVariable("PROPERTY_VALUE", ilLegacyFormElementsUtil::prepareFormOutput($value->getId()));
+                    $tpl->parseCurrentBlock();
                 }
                 $tpl->setCurrentBlock('singleline');
                 $tpl->setVariable("SIZE", $this->getSize());

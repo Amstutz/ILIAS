@@ -543,6 +543,7 @@ class ilAttendanceList
     public function getFullscreenHTML(): void
     {
         $this->tpl->setContent($this->getHTML());
+        $this->tpl->addOnLoadCode("il.Util.print();");
     }
 
     /**
@@ -627,7 +628,6 @@ class ilAttendanceList
                 $filters[$sub_id] = (bool) ($sub_item[2] ?? false);
             }
         }
-
         $valid_user_ids = ilUtil::_sortIds(array_unique($valid_user_ids), 'usr_data', 'lastname', 'usr_id');
         foreach ($valid_user_ids as $user_id) {
             if ($this->callback) {

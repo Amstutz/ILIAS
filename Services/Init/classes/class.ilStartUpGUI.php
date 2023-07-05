@@ -362,18 +362,14 @@ class ilStartUpGUI implements ilCtrlBaseClassInterface, ilCtrlSecurityInterface
 
     protected function showCodeForm($a_username = null, $a_form = null): void
     {
-        global $tpl;
-
         $this->help->setSubScreenId('code_input');
 
-        self::initStartUpTemplate("tpl.login_reactivate_code.html");
         $this->mainTemplate->setOnScreenMessage('failure', $this->lng->txt("time_limit_reached"));
-        if (!$a_form) {
-            $a_form = $this->initCodeForm($a_username);
-        }
 
-        $tpl->setVariable("FORM", $a_form->getHTML());
-        $tpl->printToStdout("DEFAULT", false);
+        $tpl = self::initStartUpTemplate("tpl.login_reactivate_code.html");
+        $tpl->setVariable("FORM", ($a_form ?? $this->initCodeForm($a_username))->getHTML());
+
+        self::printToGlobalTemplate($tpl);
     }
 
     protected function initCodeForm(string $a_username): ilPropertyFormGUI
@@ -1051,13 +1047,6 @@ class ilStartUpGUI implements ilCtrlBaseClassInterface, ilCtrlSecurityInterface
             $rtpl->parseCurrentBlock();
         }
 
-        if ($ilIliasIniFile->readVariable("clients", "list")) {
-            $rtpl->setCurrentBlock("client_list");
-            $rtpl->setVariable("TXT_CLIENT_LIST", $this->lng->txt("to_client_list"));
-            $rtpl->setVariable("CMD_CLIENT_LIST", $this->ctrl->getLinkTarget($this, "showClientList"));
-            $rtpl->parseCurrentBlock();
-        }
-
         return $this->substituteLoginPageElements(
             $tpl,
             $page_editor_html,
@@ -1352,18 +1341,6 @@ class ilStartUpGUI implements ilCtrlBaseClassInterface, ilCtrlSecurityInterface
             $tpl->setVariable("CLIENT_ID", "?client_id=" . $client_id . "&lang=" . $this->lng->getLangKey());
             $tpl->setVariable("TXT_HOME", $this->lng->txt("home"));
             $tpl->parseCurrentBlock();
-        }
-
-        if ($ilIliasIniFile->readVariable("clients", "list")) {
-            $tpl->setCurrentBlock("client_list");
-            $tpl->setVariable("TXT_CLIENT_LIST", $this->lng->txt("to_client_list"));
-            $this->ctrl->setParameter($this, "client_id", $client_id);
-            $tpl->setVariable(
-                "CMD_CLIENT_LIST",
-                $this->ctrl->getLinkTarget($this, "showClientList")
-            );
-            $tpl->parseCurrentBlock();
-            $this->ctrl->setParameter($this, "client_id", "");
         }
 
         $tosWithdrawalGui = new ilTermsOfServiceWithdrawalGUIHelper($this->user);

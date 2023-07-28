@@ -46,7 +46,8 @@ class ilMyStaffAccess extends ilObjectAccess
     public const EMPLOYEE_TALK_CONTEXT = ilOrgUnitOperationContext::CONTEXT_ETAL;
 
     protected static ?self $instance = null;
-    protected static array $orgu_users_of_current_user_show_staff_permission;
+
+    protected array $users_for_user = [];
 
     public static function getInstance(): self
     {
@@ -82,10 +83,6 @@ class ilMyStaffAccess extends ilObjectAccess
             return false;
         }
 
-        if ($this->hasCurrentUserAccessToUser()) {
-            return true;
-        }
-
         if ($this->hasCurrentUserAccessToCourseMemberships()) {
             return true;
         }
@@ -102,6 +99,10 @@ class ilMyStaffAccess extends ilObjectAccess
             return true;
         }
 
+        if ($this->hasCurrentUserAccessToUser()) {
+            return true;
+        }
+
         return false;
     }
 
@@ -110,6 +111,11 @@ class ilMyStaffAccess extends ilObjectAccess
         global $DIC;
 
         if (!$DIC->settings()->get("enable_my_staff")) {
+            return false;
+        }
+
+        $cert_set = new \ilSetting("certificate");
+        if (!$cert_set->get("active")) {
             return false;
         }
 
@@ -192,6 +198,11 @@ class ilMyStaffAccess extends ilObjectAccess
         global $DIC;
 
         if (!$DIC->settings()->get("enable_my_staff")) {
+            return false;
+        }
+
+        $skmg_set = new \ilSkillManagementSettings();
+        if (!$skmg_set->isActivated()) {
             return false;
         }
 
@@ -291,8 +302,7 @@ class ilMyStaffAccess extends ilObjectAccess
         global $DIC;
 
         $arr_usr_id = $this->getUsersForUserOperationAndContext(
-            $DIC->user()
-                                                                    ->getId(),
+            $DIC->user()->getId(),
             ilOrgUnitOperation::OP_READ_LEARNING_PROGRESS,
             self::COURSE_CONTEXT
         );
@@ -398,6 +408,10 @@ class ilMyStaffAccess extends ilObjectAccess
     {
         global $DIC;
 
+        if (isset($this->users_for_user[$user_id]) && $position_id === null) {
+            return $this->users_for_user[$user_id];
+        }
+
         $tmp_orgu_members = $this->buildTempTableOrguMemberships(
             self::TMP_DEFAULT_TABLE_NAME_PREFIX_ORGU_MEMBERS,
             array()
@@ -458,6 +472,10 @@ class ilMyStaffAccess extends ilObjectAccess
 
         while ($rec = $DIC->database()->fetchAssoc($user_set)) {
             $arr_users[$rec['usr_id']] = $rec['usr_id'];
+        }
+
+        if ($position_id === null) {
+            $this->users_for_user[$user_id] = $arr_users;
         }
 
         return $arr_users;

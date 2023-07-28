@@ -577,6 +577,9 @@ class ilPersonalSkillsGUI
                     $found = true;
                 }
             }
+            if (empty($title)) {
+                $title = $lng->txt("skmg_skill_overview");
+            }
 
             //  skill description
             $panel_comps[] = $this->ui_fac->legacy($this->getBasicSkillDescription((string) $description));
@@ -957,16 +960,18 @@ class ilPersonalSkillsGUI
 
         $ilCtrl->setParameter($this, "basic_skill_id", $cur_basic_skill_id);
 
-        $si = new ilSelectInputGUI($lng->txt("skmg_skill"), "basic_skill_id");
-        $si->setOptions($options);
-        $si->setValue($cur_basic_skill_id);
-        $ilToolbar->addInputItem($si, true);
-        $ilToolbar->addFormButton(
-            $lng->txt("select"),
-            "assignMaterials"
-        );
+        if (count($options) > 1) {
+            $si = new ilSelectInputGUI($lng->txt("skmg_skill"), "basic_skill_id");
+            $si->setOptions($options);
+            $si->setValue($cur_basic_skill_id);
+            $ilToolbar->addInputItem($si, true);
+            $ilToolbar->addFormButton(
+                $lng->txt("select"),
+                "assignMaterials"
+            );
 
-        $ilToolbar->setFormAction($ilCtrl->getFormAction($this));
+            $ilToolbar->setFormAction($ilCtrl->getFormAction($this));
+        }
 
         // table
         $tab = new ilSkillAssignMaterialsTableGUI(
@@ -1143,16 +1148,18 @@ class ilPersonalSkillsGUI
 
         $ilCtrl->setParameter($this, "basic_skill_id", $cur_basic_skill_id);
 
-        $si = new ilSelectInputGUI($lng->txt("skmg_skill"), "basic_skill_id");
-        $si->setOptions($options);
-        $si->setValue($cur_basic_skill_id);
-        $ilToolbar->addInputItem($si, true);
-        $ilToolbar->addFormButton(
-            $lng->txt("select"),
-            "selfEvaluation"
-        );
+        if (count($options) > 1) {
+            $si = new ilSelectInputGUI($lng->txt("skmg_skill"), "basic_skill_id");
+            $si->setOptions($options);
+            $si->setValue($cur_basic_skill_id);
+            $ilToolbar->addInputItem($si, true);
+            $ilToolbar->addFormButton(
+                $lng->txt("select"),
+                "selfEvaluation"
+            );
 
-        $ilToolbar->setFormAction($ilCtrl->getFormAction($this));
+            $ilToolbar->setFormAction($ilCtrl->getFormAction($this));
+        }
 
         // table
         $tab = new ilSelfEvaluationSimpleTableGUI(
@@ -1440,7 +1447,7 @@ class ilPersonalSkillsGUI
                 $labels[] = $lv["title"];
                 if ($this->getProfileId() > 0) {
                     if ($l["level_id"] == $lv["id"]) {
-                        $points[$target_dim] = [$cnt - 0.01, $cnt + 0.01];
+                        $points[$target_dim] = [$cnt - 0.01, $cnt];
                         $tooltips[$target_dim] = $lv["title"];
                     } else {
                         $points[$target_dim] = $points[$target_dim] ?? null;
@@ -2027,7 +2034,7 @@ class ilPersonalSkillsGUI
             $tpl->parseCurrentBlock();
         } else {
             if ($this->getProfileId() > 0) {
-                $tpl->setVariable("HEADING", $this->lng->txt("skmg_skill_profile_comparison"));
+                $tpl->setVariable("HEADING", $this->lng->txt("skmg_skill_profile_records"));
             }
         }
 
@@ -2097,7 +2104,8 @@ class ilPersonalSkillsGUI
 
         $res_manager = new ilSkillResourcesManager($a_base_skill, $a_tref_id);
 
-        if ($gap_mode_obj_id > 0 && !$this->obj_definition->isContainer(\ilObject::_lookupType($gap_mode_obj_id))) {
+        $gap_mode_obj_type = ilObject::_lookupType($gap_mode_obj_id);
+        if ($gap_mode_obj_id > 0 && !$this->obj_definition->isContainer($gap_mode_obj_type)) {
             return null;
         }
 
@@ -2118,7 +2126,7 @@ class ilPersonalSkillsGUI
 
             $sub_objects = [];
             $is_container = false;
-            if ($gap_mode_obj_id > 0 && $this->obj_definition->isContainer(\ilObject::_lookupType($gap_mode_obj_id))) {
+            if ($gap_mode_obj_id > 0 && $this->obj_definition->isContainer($gap_mode_obj_type)) {
                 $is_container = true;
                 $sub_objects = $this->tree->getSubTree(
                     $this->tree->getNodeData((int) current(\ilObject::_getAllReferences($gap_mode_obj_id))),
@@ -2143,9 +2151,20 @@ class ilPersonalSkillsGUI
                 $items[] = $this->ui_fac->item()->standard($link)->withLeadIcon($icon);
             }
             if (count($items) > 0) {
+                switch ($gap_mode_obj_type) {
+                    case "crs":
+                        $sec_panel_title = $lng->txt("skmg_recommended_learning_material_crs");
+                        break;
+                    case "grp":
+                        $sec_panel_title = $lng->txt("skmg_recommended_learning_material_grp");
+                        break;
+                    default:
+                        $sec_panel_title = $lng->txt("skmg_recommended_learning_material_global");
+                }
+
                 $item_group = $this->ui_fac->item()->group("", $items);
                 $sec_panel = $this->ui_fac->panel()->secondary()->listing(
-                    $lng->txt("skmg_recommended_learning_material"),
+                    $sec_panel_title,
                     [$info_group, $item_group]
                 );
             } else {

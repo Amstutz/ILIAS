@@ -40,7 +40,9 @@ use ilMyStaffGUI;
  */
 class ilMStListUsersTableGUI extends ilTable2GUI
 {
-    protected array $filter = array();
+    protected array $filter = [];
+    protected array $selectable_columns_cached = [];
+    protected array $usr_orgu_names = [];
     protected ilMyStaffAccess $access;
 
     private \ILIAS\UI\Factory $uiFactory;
@@ -140,9 +142,6 @@ class ilMStListUsersTableGUI extends ilTable2GUI
         $this->filter['user'] = $item->getValue();
 
         if (ilUserSearchOptions::_isEnabled('org_units')) {
-            $root = ilObjOrgUnit::getRootOrgRefId();
-            $tree = ilObjOrgUnitTree::_getInstance();
-            $nodes = $tree->getAllChildren($root);
             $paths = ilOrgUnitPathStorage::getTextRepresentationOfOrgUnits();
             $options[0] = $DIC->language()->txt('mst_opt_all');
             foreach ($paths as $org_ref_id => $path) {
@@ -159,6 +158,15 @@ class ilMStListUsersTableGUI extends ilTable2GUI
 
     final public function getSelectableColumns(): array
     {
+        if ($this->selectable_columns_cached) {
+            return $this->selectable_columns_cached;
+        }
+
+        return $this->selectable_columns_cached = $this->initSelectableColumns();
+    }
+
+    protected function initSelectableColumns(): array
+    {
         $arr_fields_without_table_sort = array(
             'org_units',
             'interests_general',
@@ -171,6 +179,11 @@ class ilMStListUsersTableGUI extends ilTable2GUI
             if (!in_array($key, $arr_fields_without_table_sort)) {
                 $cols[$key]['sort_field'] = $key;
             }
+        }
+
+        $user_defined_fields = \ilUserDefinedFields::_getInstance();
+        foreach ($user_defined_fields->getDefinitions() as $field => $definition) {
+            unset($cols["udf_" . $field]);
         }
 
         return $cols;
@@ -187,14 +200,23 @@ class ilMStListUsersTableGUI extends ilTable2GUI
 
         foreach ($this->getSelectableColumns() as $k => $v) {
             if ($this->isColumnSelected($k)) {
-                $sort = $v['sort_field'] ?? null;
-                $this->addColumn($v['txt'], (string) $sort);
+                $sort = $v['sort_field'] ?? "";
+                $this->addColumn($v['txt'], $sort);
             }
         }
         //Actions
         if (!$this->getExportMode()) {
             $this->addColumn($DIC->language()->txt('actions'));
         }
+    }
+
+    protected function getTextRepresentationOfUsersOrgUnits(int $user_id): string
+    {
+        if (isset($this->usr_orgu_names[$user_id])) {
+            return $this->usr_orgu_names[$user_id];
+        }
+
+        return $this->usr_orgu_names[$user_id] = \ilOrgUnitPathStorage::getTextRepresentationOfUsersOrgUnits($user_id);
     }
 
     /**
@@ -227,7 +249,7 @@ class ilMStListUsersTableGUI extends ilTable2GUI
                         $this->tpl->setCurrentBlock('td');
                         $this->tpl->setVariable(
                             'VALUE',
-                            strval(ilOrgUnitPathStorage::getTextRepresentationOfUsersOrgUnits($set->getUsrId()))
+                            $this->getTextRepresentationOfUsersOrgUnits($set->getUsrId())
                         );
                         $this->tpl->parseCurrentBlock();
                         break;
@@ -272,25 +294,62 @@ class ilMStListUsersTableGUI extends ilTable2GUI
             }
         }
 
-        $dropdown = $this->uiFactory->dropdown()->standard([
-            $this->uiFactory->button()->shy('test', '#')
-        ])->withLabel($this->language->txt("actions"));
-
         $actions = new ilAdvancedSelectionListGUI();
         $actions->setListTitle($this->language->txt("actions"));
-        $actions->setAsynch(true);
         $actions->setId(strval($set->getUsrId()));
 
-        $DIC->ctrl()->setParameterByClass(ilMStListUsersGUI::class, 'mst_lus_usr_id', $set->getUsrId());
+        $mst_lus_usr_id = $set->getUsrId();
 
-        $actions->setAsynchUrl(str_replace("\\", "\\\\", $DIC->ctrl()
-                                                             ->getLinkTarget(
-                                                                 $this->parent_obj,
-                                                                 ilMStListUsersGUI::CMD_GET_ACTIONS,
-                                                                 "",
-                                                                 true
-                                                             )));
-        //$this->tpl->setVariable('ACTIONS', $this->uiRenderer->render($dropdown));
+        if ($this->access->hasCurrentUserAccessToCourseMemberships()) {
+            $DIC->ctrl()->setParameterByClass(\ilMStShowUserCoursesGUI::class, 'usr_id', $mst_lus_usr_id);
+            $actions->addItem(
+                $DIC->language()->txt('mst_show_courses'),
+                '',
+                $DIC->ctrl()->getLinkTargetByClass(array(
+                    \ilDashboardGUI::class,
+                    ilMyStaffGUI::class,
+                    \ilMStShowUserGUI::class,
+                    \ilMStShowUserCoursesGUI::class,
+                ))
+            );
+        }
+
+        if ($this->access->hasCurrentUserAccessToCertificates()) {
+            $DIC->ctrl()->setParameterByClass(\ilUserCertificateGUI::class, 'usr_id', $mst_lus_usr_id);
+            $actions->addItem(
+                $DIC->language()->txt('mst_list_certificates'),
+                '',
+                $DIC->ctrl()->getLinkTargetByClass(array(
+                    \ilDashboardGUI::class,
+                    ilMyStaffGUI::class,
+                    \ilMStShowUserGUI::class,
+                    \ilUserCertificateGUI::class,
+                ))
+            );
+        }
+
+        if ($this->access->hasCurrentUserAccessToCompetences()) {
+            $DIC->ctrl()->setParameterByClass(\ilMStShowUserCompetencesGUI::class, 'usr_id', $mst_lus_usr_id);
+            $actions->addItem(
+                $DIC->language()->txt('mst_list_competences'),
+                '',
+                $DIC->ctrl()->getLinkTargetByClass(array(
+                    \ilDashboardGUI::class,
+                    ilMyStaffGUI::class,
+                    \ilMStShowUserGUI::class,
+                    \ilMStShowUserCompetencesGUI::class,
+                ))
+            );
+        }
+
+        $this->ctrl->setParameterByClass(\ilMStListUsersGUI::class, 'mst_lus_usr_id', $mst_lus_usr_id);
+
+        $actions = ilMyStaffGUI::extendActionMenuWithUserActions(
+            $actions,
+            $mst_lus_usr_id,
+            rawurlencode($this->ctrl->getLinkTargetByClass("ilMStListUsersGUI", \ilMStListUsersGUI::CMD_INDEX))
+        );
+
         $this->tpl->setVariable('ACTIONS', $actions->getHTML());
         $this->tpl->parseCurrentBlock();
     }
@@ -339,7 +398,7 @@ class ilMStListUsersTableGUI extends ilTable2GUI
         foreach ($this->getSelectedColumns() as $k => $v) {
             switch ($k) {
                 case 'org_units':
-                    $field_values[$k] = ilOrgUnitPathStorage::getTextRepresentationOfUsersOrgUnits($my_staff_user->getUsrId());
+                    $field_values[$k] = $this->getTextRepresentationOfUsersOrgUnits($my_staff_user->getUsrId());
                     break;
                 case 'gender':
                     $field_values[$k] = $DIC->language()->txt('gender_' . $my_staff_user->getGender());

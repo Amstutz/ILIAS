@@ -890,6 +890,7 @@ assessment#:#log_user_not_entered_values#:#User did not enter values
 assessment#:#log_user_solution_willingly_deleted#:#User deleted the answer.
 assessment#:#log_wrong_test_password_entered#:#Participant entered wrong test password.
 assessment#:#longmenu#:#Longmenu
+assessment#:#longmenu_answeroptions_differ#:#This question does not work correctly, as there are not the same amount of gaps in the text as in the correction options.
 assessment#:#longmenu_text#:#Long Menu Text
 assessment#:#mailnottype#:#Send a notification every time a test attempt is completed.
 assessment#:#mailnottype_desc#:#Notify the owner of the test <strong>even if</strong> the number of test attempts has not been limited.
@@ -1865,12 +1866,12 @@ assessment#:#tst_show_solution_answers_only#:#Print View of Results (Answers Onl
 assessment#:#tst_show_solution_answers_only_desc#:#If is selected, the ILIAS content you place around a question using the ‘Edit content’ tab page will not be visible in a print-out. If you want to save some paper space, select this option.
 assessment#:#tst_show_solution_compare#:#Show Best Solution in ‘Detailed Results’
 assessment#:#tst_show_solution_compare_desc#:#Participants are presented with an overview comparing their own answers with the best solutions. Please note that this view will be displayed in the 'Detailed Results' that can be accessed via the 'Show Test Results'-button on the 'Info'-tab. It will not be displayed in the printable 'List of Answers' even though the setting is made here.
-assessment#:#tst_show_solution_details#:#Detailed Information on Individual Questions
-assessment#:#tst_show_solution_details_desc#:#Expand the functionality of the ‘Detailed Results’ tables for individual test attempts, by providing links to pages for each individual question. These pages each contain the question, the answer provided by the participant, information on whether this was the correct answer and the points scored by this answer.
+assessment#:#tst_show_solution_details#:#Scored Answers of Participant
+assessment#:#tst_show_solution_details_desc#:#The ‘Table of Detailed Test Results’ will be added by a list of answers.
 assessment#:#tst_show_solution_details_singlepage#:#Scored Answers on single pages
 assessment#:#tst_show_solution_details_singlepage_desc#:#Participants can access each question individually and see if their answers were correct and how many points they scored.
 assessment#:#tst_show_solution_feedback#:#Feedback
-assessment#:#tst_show_solution_feedback_desc#:#Display feedback on the answers provided by the participant. Please bear in mind that this option only takes effect if you have activated ‘Detailed Information on Individual Questions’  and if feedback for the individual questions has been prepared.
+assessment#:#tst_show_solution_feedback_desc#:#Display feedback on the answers provided by the participant. Please bear in mind that this option only takes effect if you have activated ‘Scored Answers of Participant’ and/or ‘Scored Answers on single pages’  and if feedback for the individual questions has been prepared.
 assessment#:#tst_show_solution_printview#:#Additional ‘List of Answers’ for Printing
 assessment#:#tst_show_solution_printview_desc#:#An overview of all questions with the answers of the respective participant is generated. This list will be offered within the ‘Results’-tab in a subtab 'Review of Scored Answers'.
 assessment#:#tst_show_solution_signature#:#Signature Placeholder
@@ -2754,6 +2755,7 @@ certificate#:#certificate_settings#:#Certificate Settings
 certificate#:#certificate_short_name#:#Certificate file short title
 certificate#:#certificate_short_name_description#:#Please enter a short title for the certificate name. The short title will be part of the certificate name: YYMMDD_[surname]_[SHORT_TITLE]_certificate.pdf.
 certificate#:#certificate_text#:#Certificate Text
+certificate#:#certificate_text_info#:#Please enter the certificate text. If the WYSIWYG editor is disabled in the ILIAS administration, you can still use valid XHTML to format the text.
 certificate#:#certificate_unit_description#:#Enter units of measure as VALUE[cm|mm|in|pt|pc|px|em], e.g. 10mm or 3in
 certificate#:#certificate_usage#:#Please note that the usage of certificates is only available if the ILIAS Java-Server is running. The configuration for Java-Server is available in Administration » General Settings » Server, sub-tab Java-Server.
 certificate#:#certificate_var_max_points#:#46
@@ -5380,7 +5382,7 @@ common#:#report_accessibility_issue#:#Report Accessibility Issue
 common#:#report_accessibility_link#:#Reported Link:
 common#:#report_accessibility_link_mailto#:#Reported%20Link:
 common#:#repository#:#Repository
-common#:#repository_admin#:#Repository Trash and Permissions
+common#:#repository_admin#:#Repository and Trash
 common#:#repository_admin_desc#:#Set permissions for repository items, restore or remove objects from system trash
 common#:#require_email#:#Require e-mail
 common#:#require_gender#:#Require salutation
@@ -7418,12 +7420,12 @@ crs#:#crs_groupings#:#Course groupings
 crs#:#crs_groups_nr#:#Number of Memberships
 crs#:#crs_grp_added_grouping#:#Added new membership limitation.
 crs#:#crs_grp_already_assigned#:#You are already member of this grouping of courses.
-crs#:#crs_grp_assign_crs#:#Assign course
+crs#:#crs_grp_assign_crs#:#Assigned Objects of Membership Limitation
 crs#:#crs_grp_assignments#:#Assignments of Course Members to Groups
 crs#:#crs_grp_enter_title#:#Please enter a title.
 crs#:#crs_grp_info_reg#:#You can only register to one of this courses:
 crs#:#crs_grp_matriculation_required#:#This course grouping requires an unique matriculation number. <br />Please insert this value in your personal settings.
-crs#:#crs_grp_no_courses_assigned#:#No assigned courses.
+crs#:#crs_grp_no_courses_assigned#:#None
 crs#:#crs_grp_table_assigned_courses#:#Assigned courses
 crs#:#crs_header_archives#:#Course Archives
 crs#:#crs_header_delete_members#:#Would you like to remove the following members from this course?
@@ -7990,6 +7992,8 @@ dash#:#dash_studyprogramme#:#My Study Programmes
 dash#:#dash_tile#:#Tile
 dash#:#dash_view_courses_groups#:#Section ‘My Courses and Groups’
 dash#:#dash_view_favourites#:#Section ‘Favourites’
+dash#:#favourites_disabled_info#:#Add to favorites is deactivated. You may change this inside the repository settings.
+dash#:#memberships_disabled_info#:#Subscriptions are deactivated. You may change this inside the course settings.
 dateplaner#:#Fr_long#:#Friday
 dateplaner#:#Fr_short#:#Fr
 dateplaner#:#Mo_long#:#Monday
@@ -12340,8 +12344,8 @@ orgu#:#org_unit_not_found#:#Organisational Unit not found.
 orgu#:#orgu_add#:#Add Organisational Unit
 orgu#:#orgu_adv_settings#:#Advanced Settings
 orgu#:#orgu_already_deleted#:#The object was already deleted.
-orgu#:#orgu_enable_my_staff#:#Enable ‘Staff’
-orgu#:#orgu_enable_my_staff_info#:#Shows learning progress of own employees.
+orgu#:#orgu_enable_my_staff#:#Enable Main Menu Entry
+orgu#:#orgu_enable_my_staff_info#:#A main menu entry is presented that may comprise Staff List, Course Memberships, Certficates, Competences, Talks.
 orgu#:#orgu_global_set_form#:#Global Organisational Unit Settings
 orgu#:#orgu_global_set_positions#:#Enable Positions per Object Type
 orgu#:#orgu_global_set_positions_type_active#:#Positions in
@@ -12659,6 +12663,8 @@ prg#:#prg_belongs_to#:#Belongs to
 prg#:#prg_can_not_manage_in_repo#:#You're not allowed to manage this Study Programme, because of user assignments.
 prg#:#prg_cancel#:#Cancel
 prg#:#prg_cancel_tree_order#:#Dismiss tree order
+prg#:#prg_change_deadline#:#Change deadline
+prg#:#prg_change_expire_date#:#Change expire date
 prg#:#prg_changed_by#:#Changed by
 prg#:#prg_completed_by_subnodes#:#subprogrammes
 prg#:#prg_completion_by#:#Completion by
@@ -12709,6 +12715,7 @@ prg#:#prg_mark_accredited#:#Mark Accredited
 prg#:#prg_mark_accredited_multi_success#:#Mark Selected Users As Accredited
 prg#:#prg_mark_accredited_success#:#Accredited Program Node for User successfully.
 prg#:#prg_mark_not_relevant_multi_success#:#Unmark Selected Users As Relevant
+prg#:#prg_mark_relevant#:#Mark Relevant
 prg#:#prg_mark_relevant_multi_success#:#Mark Selected Users As Relevant
 prg#:#prg_more_objects_without_read_permission#:#Study Programme contains more objects you can't see because of less permissions.
 prg#:#prg_multi_change_deadline#:#Change deadline
@@ -12800,6 +12807,7 @@ prg#:#prg_type_msg_unable_delete#:#Unable to delete type because it is still ass
 prg#:#prg_unmark_accredited#:#Unmark Accredited
 prg#:#prg_unmark_accredited_multi_success#:#Unmark Selected Users As Accredited
 prg#:#prg_unmark_accredited_success#:#Unaccredited Program Node for User successfully.
+prg#:#prg_unmark_relevant#:#Unmark Relevant
 prg#:#prg_update_from_current_plan#:#Update from current Plan
 prg#:#prg_update_from_current_plan_not_possible#:#Update From Current Plan Not Possible
 prg#:#prg_update_from_current_plan_partitial_success#:#Update From Current Plan Partically
@@ -13301,7 +13309,9 @@ rbac#:#crs_visible#:#Course is visible
 rbac#:#crs_write#:#User can edit course settings and manage content
 rbac#:#crsr_copy#:#User can copy course link
 rbac#:#crsr_delete#:#User can move or delete course link
+rbac#:#crsr_edit_learning_progress#:#User can edit learning progress settings
 rbac#:#crsr_edit_permission#:#User can change permission settings
+rbac#:#crsr_read_learning_progress#:#User can view learning progress of other users
 rbac#:#crsr_visible#:#Course link is visible
 rbac#:#crsr_write#:#User can edit settings of course link
 rbac#:#crss_edit_permission#:#User can change permission settings in Course administration
@@ -13460,8 +13470,6 @@ rbac#:#iass_read_learning_progress#:#View learning progress information of an In
 rbac#:#iass_visible#:#Individual Assessment is visible
 rbac#:#iass_write#:#Edit an Individual Assessment
 rbac#:#il_lti_global_role#:#LTI User
-rbac#:#il_orgu_employee#:#Organisational Unit Employee
-rbac#:#il_orgu_superior#:#Organisational Unit Superior
 rbac#:#il_sess_participant#:#Session Participant
 rbac#:#il_sess_status_closed#:#Non-Participant Closed Session
 rbac#:#ilias_id#:#ILIAS-ID
@@ -14800,7 +14808,7 @@ skmg#:#skmg_add_assignment#:#Add Roles / Members
 skmg#:#skmg_add_level#:#Add Level
 skmg#:#skmg_add_local_profile#:#Add Local Profile
 skmg#:#skmg_add_profile#:#Add Profile
-skmg#:#skmg_add_resource#:#Add Resource
+skmg#:#skmg_add_resource#:#Assign Repository Object
 skmg#:#skmg_add_skill#:#Add Competence
 skmg#:#skmg_add_skill_tree#:#Add Competence Tree
 skmg#:#skmg_add_user_to_profile#:#Add users or roles to profile
@@ -14809,7 +14817,7 @@ skmg#:#skmg_allow_local_profiles#:#Allow Creation of Local Profiles
 skmg#:#skmg_allow_local_profiles_info#:#Users with permission 'Edit Settings' in Courses and Groups can create local competence profiles using globally defined competences.
 skmg#:#skmg_ass_materials_from_workspace#:#Here you can assign materials, e.g. files, from your personal resources to competence levels. If you would like to add materials to your personal resources now, please click the following link.
 skmg#:#skmg_assign_level#:#Assign Level
-skmg#:#skmg_assign_materials#:#Assign Materials
+skmg#:#skmg_assign_materials#:#Assign Personal Resources
 skmg#:#skmg_assign_user#:#Assign User
 skmg#:#skmg_assigned_objects#:#Assigned Objects
 skmg#:#skmg_assigned_profiles#:#Assigned Competence Profiles
@@ -14819,7 +14827,7 @@ skmg#:#skmg_cannot_delete_nodes_in_use#:#Some items cannot be deleted, because t
 skmg#:#skmg_cert_skill_level_title#:#Competence Level Title
 skmg#:#skmg_cert_skill_title#:#Competence Title
 skmg#:#skmg_cert_skill_trigger_title#:#Competence Trigger Title
-skmg#:#skmg_confirm_level_resources_removal#:#Do you really want to remove the following resources from the competence level?
+skmg#:#skmg_confirm_level_resources_removal#:#Do you really want to remove the following repository objects from the competence level?
 skmg#:#skmg_confirm_remove_level_ass#:#So you really want to remove the following competence levels from the profile?
 skmg#:#skmg_confirm_user_removal#:#Do you really want to remove the following users from this profile?
 skmg#:#skmg_cont_profiles_info#:#In this view, you can select the competence profiles with competence entries, which are related to the currently open object (course/group). To get to the global view with all competence profiles you are assigned to and all competence entries, click on the link below.
@@ -14865,10 +14873,8 @@ skmg#:#skmg_level#:#Level
 skmg#:#skmg_list_skills#:#List Competences
 skmg#:#skmg_local_assignment_profiles#:#Allow Local Assignment of Global Profiles
 skmg#:#skmg_lp_triggers_level#:#Triggered by Completion
-skmg#:#skmg_lp_triggers_level_resources#:#Resources triggered by Completion
-skmg#:#skmg_material#:#Material
-skmg#:#skmg_materials#:#Materials
-skmg#:#skmg_materials_ressources#:#Resources/Materials
+skmg#:#skmg_materials#:#Personal Resources
+skmg#:#skmg_materials_resources#:#Learning Materials
 skmg#:#skmg_new_level#:#New Level
 skmg#:#skmg_new_sktr#:#New Competence Template Reference
 skmg#:#skmg_next_step#:#Next Step
@@ -14889,14 +14895,16 @@ skmg#:#skmg_previous_step#:#Previous Step
 skmg#:#skmg_profile#:#Profile
 skmg#:#skmg_really_delete_levels#:#Do you really want to delete the following competence levels?
 skmg#:#skmg_really_remove_skills#:#Do you really want to remove the following competences from your list?
-skmg#:#skmg_recommended_learning_material#:#Learning Materials for target achievement
+skmg#:#skmg_recommended_learning_material_crs#:#Achieve your targets in this course
+skmg#:#skmg_recommended_learning_material_global#:#Achieve your targets
+skmg#:#skmg_recommended_learning_material_grp#:#Achieve your targets in this group
 skmg#:#skmg_recommended_learning_material_info#:#Select exactly one of the following learning materials. Please work through it to achieve the competence target.
 skmg#:#skmg_refresh_view#:#Refresh
 skmg#:#skmg_remove_levels#:#Remove Levels
 skmg#:#skmg_remove_skill#:#Remove Competence
 skmg#:#skmg_remove_skills#:#Remove Competences
 skmg#:#skmg_remove_trigger#:#Remove Trigger
-skmg#:#skmg_resources#:#Resources
+skmg#:#skmg_resources#:#Repository Objects
 skmg#:#skmg_save_order#:#Save Order
 skmg#:#skmg_save_self_evaluation#:#Finish Self-Evaluation
 skmg#:#skmg_save_settings#:#Save Settings
@@ -14921,13 +14929,14 @@ skmg#:#skmg_skill_level#:#Competence Level
 skmg#:#skmg_skill_level_trigger#:#Competence Level Trigger
 skmg#:#skmg_skill_levels#:#Competence Levels
 skmg#:#skmg_skill_management_deactivated#:#Competence Management is currently deactivated.
-skmg#:#skmg_skill_needs_impr_no_res#:#You need to improve this competence. Unfortunately, there are currently no learning resources available providing learning material aligned to your competence target.
-skmg#:#skmg_skill_needs_impr_res#:#You need to improve this competence. The following resources provide learning material aligned to your competence target.
+skmg#:#skmg_skill_needs_impr_no_res#:#You need to improve this competence. Unfortunately, there are currently no learning materials available, which are aligned to your competence target.
+skmg#:#skmg_skill_needs_impr_res#:#You need to improve this competence. The following learning materials are aligned to your competence target.
 skmg#:#skmg_skill_needs_self_eval#:#Please conduct a self-evaluation first to see your competence target.
 skmg#:#skmg_skill_needs_self_eval_box#:#Please note that you have not conducted a self-evaluation for at least one competence in this profile. You will not see the competence target for the affected competences until a self-evaluation is done.
 skmg#:#skmg_skill_no_needs_impr#:#Competence target achieved!
 skmg#:#skmg_skill_no_needs_impr_info#:#You achieved the target for this competence.
-skmg#:#skmg_skill_profile_comparison#:#Profile Comparison
+skmg#:#skmg_skill_overview#:#Overview
+skmg#:#skmg_skill_profile_records#:#Competence Records
 skmg#:#skmg_skill_profiles#:#Competence Profiles
 skmg#:#skmg_skill_template#:#Competence Template
 skmg#:#skmg_skill_templates#:#Competence Templates
@@ -14942,8 +14951,8 @@ skmg#:#skmg_status_outdated#:#Outdated
 skmg#:#skmg_status_outdated_info#:#Item cannot be newly selected by users as personal competence, or newly assigned to repository objects or competence profiles. However existing assignments and data are still presented.
 skmg#:#skmg_status_publish#:#Published
 skmg#:#skmg_status_publish_info#:#Item can be used if all parents are published, too.
-skmg#:#skmg_suggested#:#Suggested Resource
-skmg#:#skmg_suggested_resources#:#Suggested Resources
+skmg#:#skmg_suggested#:#Shown as Learning Material
+skmg#:#skmg_suggested_resources#:#Assigned Repository Objects
 skmg#:#skmg_sure_delete_self_evaluation#:#Do you really want to delete the following self-evaluations?
 skmg#:#skmg_target_level#:#Competence Target
 skmg#:#skmg_target_levels#:#Competence Targets
@@ -14956,10 +14965,10 @@ skmg#:#skmg_usage_obj_objects#:#Object(s)
 skmg#:#skmg_usage_obj_profiles#:#Profile(s)
 skmg#:#skmg_usage_obj_users#:#User(s)
 skmg#:#skmg_usage_type_info_gen#:#General Use in Repository Objects
-skmg#:#skmg_usage_type_info_mat#:#Users assigned material from their personal resources
+skmg#:#skmg_usage_type_info_mat#:#Users assigned personal resources from their personal workspace
 skmg#:#skmg_usage_type_info_pers#:#Selected by Users as Personal Competence
 skmg#:#skmg_usage_type_info_prof#:#Used in Competence Profiles
-skmg#:#skmg_usage_type_info_res#:#Repository Objects Assigned as Suggested Resource
+skmg#:#skmg_usage_type_info_res#:#Repository Objects Assigned as Learning Material
 skmg#:#skmg_usage_type_info_user#:#Assigned to Users
 skmg#:#skmg_your_self_evaluation#:#Your Self-Evaluation
 style#:#Style#:#Style
@@ -16626,6 +16635,7 @@ user#:#interests_general#:#General Interests
 user#:#interests_help_looking#:#Looking For Help
 user#:#interests_help_offered#:#Offering Help
 user#:#msg_spoint_not_modified#:#Starting point not modified
+user#:#no_deactivate_yourself#:#You cannot deactivate your own user account.
 user#:#obj_ref_id_not_exist#:#The entered Reference-Id does not exist
 user#:#restrict_user_access#:#Restricted Access to User Accounts
 user#:#restrict_user_access_info#:#Access to local and global user accounts is restricted to roles that have the permission ‘Read Access to User Accounts’.

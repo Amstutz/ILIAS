@@ -83,7 +83,6 @@ class ilMStListCertificatesGUI
                 break;
             default:
                 switch ($cmd) {
-
                     case self::CMD_RESET_FILTER:
                     case self::CMD_APPLY_FILTER:
                     case self::CMD_INDEX:
@@ -139,55 +138,5 @@ class ilMStListCertificatesGUI
     final public function cancel(): void
     {
         $this->ctrl->redirect($this);
-    }
-
-    final public function getActions(): void
-    {
-        $mst_co_usr_id = 0;
-        $mst_lco_crs_ref_id = 0;
-        if ($this->httpWrapper->query()->has('mst_lco_usr_id') && $this->httpWrapper->query()->has('mst_lco_crs_ref_id')) {
-            $mst_co_usr_id = $this->httpWrapper->query()->retrieve('mst_lco_usr_id', $this->refinery->kindlyTo()->int());
-            $mst_lco_crs_ref_id = $this->httpWrapper->query()->retrieve('mst_lco_crs_ref_id', $this->refinery->kindlyTo()->int());
-        }
-
-        if ($mst_co_usr_id > 0 && $mst_lco_crs_ref_id > 0) {
-            $selection = new ilAdvancedSelectionListGUI();
-
-            if ($this->accessHandler->checkAccess("visible", "", $mst_lco_crs_ref_id)) {
-                $link = ilLink::_getStaticLink($mst_lco_crs_ref_id, ilMyStaffAccess::COURSE_CONTEXT);
-                $selection->addItem(
-                    ilObject2::_lookupTitle(ilObject2::_lookupObjectId($mst_lco_crs_ref_id)),
-                    '',
-                    $link
-                );
-            };
-
-            $org_units = ilOrgUnitPathStorage::getTextRepresentationOfOrgUnits('ref_id');
-            /**
-             * @var Array<ilOrgUnitUserAssignment> $assignments
-             */
-            $assignments = ilOrgUnitUserAssignment::innerjoin('object_reference', 'orgu_id', 'ref_id')->where(
-                [
-                'user_id' => $mst_co_usr_id,
-                'object_reference.deleted' => null
-                ],
-                ['user_id' => '=', 'object_reference.deleted' => '!=']
-            )->get();
-            foreach ($assignments as $org_unit_assignment) {
-                if ($this->accessHandler->checkAccess("read", "", $org_unit_assignment->getOrguId())) {
-                    $link = ilLink::_getStaticLink($org_unit_assignment->getOrguId(), 'orgu');
-                    $selection->addItem($org_units[$org_unit_assignment->getOrguId()], '', $link);
-                }
-            }
-
-            $selection = ilMyStaffGUI::extendActionMenuWithUserActions(
-                $selection,
-                $mst_co_usr_id,
-                rawurlencode($this->ctrl->getLinkTarget($this, self::CMD_INDEX))
-            );
-
-            echo $selection->getHTML(true);
-        }
-        exit;
     }
 }

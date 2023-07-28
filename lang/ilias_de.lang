@@ -890,6 +890,7 @@ assessment#:#log_user_not_entered_values#:#Der Benutzer hat keine Werte eingetra
 assessment#:#log_user_solution_willingly_deleted#:#Der Benutzer hat seine Antwort entfernt.
 assessment#:#log_wrong_test_password_entered#:#Teilnehmer hat falsches Testpasswort eingegeben.
 assessment#:#longmenu#:#Longmenu
+assessment#:#longmenu_answeroptions_differ#:#Diese Frage funktioniert nicht richtig, denn sie hat nicht die gleiche Anzahl Lücken im Text wie in den Antwortoptionen.
 assessment#:#longmenu_text#:#‘Long Menu’-Text
 assessment#:#mailnottype#:#Ein Versand findet auch beim Beenden einzelner Testdurchläufe statt
 assessment#:#mailnottype_desc#:#Der Besitzer des Tests wird auch dann benachrichtigt, wenn die Anzahl Durchläufe nicht beschränkt ist.
@@ -2754,6 +2755,7 @@ certificate#:#certificate_settings#:#Einstellungen für Zertifikate
 certificate#:#certificate_short_name#:#Kurztitel für die Dateibenennung
 certificate#:#certificate_short_name_description#:#Bitte geben Sie einen Kurztitel für die Dateibenennung ein. Der Kurztitel wird als Teil des Zertifikat-Dateinamens verwendet: JJMMTT_[Nachname]_[SHORT_TITLE]_Zertifikat.pdf.
 certificate#:#certificate_text#:#Text des Zertifikats
+certificate#:#certificate_text_info#:#Bitte geben Sie hier den Text des Zertifikats ein. Falls der WYSIWYG-Edtior in der ILIAS-Administration deaktiviert wurde, können Sie hier dennoch gültiges XHTML zur Formatierung nutzen.
 certificate#:#certificate_unit_description#:#Geben Sie Maße immer in der Form WERT[cm|mm|in|pt|pc|px|em] an, d.h. 10mm oder 3in
 certificate#:#certificate_usage#:#Bitte beachten Sie, dass die Verwendung und Erstellung von Zertifikaten nur möglich ist, wenn Sie den Java-Server von ILIAS verwenden. Der Java-Server wird in der Hauptseite der Administration in der Kategorie Web-Services konfiguriert und ist unter anderem für die Generierung von PDF-Dateien erforderlich.
 certificate#:#certificate_var_max_points#:#46
@@ -3383,7 +3385,7 @@ cntr#:#cntr_view_info_simple#:#Alle Objekte werden in einer einzigen Liste darge
 cntr#:#cntr_view_sessions#:#Sitzungsansicht
 cntr#:#cntr_view_simple#:#Einfache Liste
 cntr#:#cont_custom_icon#:#Angepasstes Icon
-cntr#:#container_import_zip_file_invalid#:#Die hochgeladene Datei ist kein gültiger ILIAS Export. Um Verzeichnisstrukturen hochzuladen benutzen Sie bitte ein Datei-Objekt.
+cntr#:#container_import_zip_file_invalid#:#Die hochgeladene Datei ist keine gültige ILIAS-Exportdatei. Um Verzeichnisstrukturen hochzuladen, benutzen Sie bitte ein Datei-Objekt.
 cntr#:#edit_questions#:#Fragen bearbeiten
 cntr#:#exc_next_deadline_single#:#Abgabefrist
 cntr#:#msg_no_downloadable_objects#:#Keine herunterladbaren Objekte gefunden.
@@ -3391,9 +3393,9 @@ cntr#:#objects_duplicated#:#Die Objekte wurden kopiert.
 cntr#:#prtf_create_portfolio_from_template#:#Portfolio aus Vorlage erstellen
 cntr#:#sorting_new_items_at_bottom#:#Unten
 cntr#:#sorting_new_items_at_top#:#Oben
-cntr#:#sorting_new_items_direction#:#Sortierungsrichtung neuer Objekte
-cntr#:#sorting_new_items_order#:#Reihenfolge neuer Objekte
-cntr#:#sorting_new_items_position#:#Position neuer Objekte
+cntr#:#sorting_new_items_direction#:#Ausrichtung
+cntr#:#sorting_new_items_order#:#Reihenfolge
+cntr#:#sorting_new_items_position#:#Einfügen neuer Objekte
 cntr#:#tab_back_to_repository#:#Zurück zum Magazin
 common#:#HH#:#SS:MM
 common#:#absolute_path#:#Absoluter Pfad
@@ -4626,7 +4628,7 @@ common#:#mm_repo_tree_view_act#:#Baumansicht an
 common#:#mm_repo_tree_view_deact#:#Baumansicht aus
 common#:#mm_repository#:#Magazin
 common#:#mm_skills#:#Kompetenzen
-common#:#mm_staff_list#:#Mitarbeiter
+common#:#mm_staff_list#:#Mitarbeiterliste
 common#:#mm_tags#:#Tags
 common#:#mm_task_derived_tasks#:#To-Dos
 common#:#mme_lost_item_reason#:#Eintrag wird nicht mehr angeboten.
@@ -5380,7 +5382,7 @@ common#:#report_accessibility_issue#:#Barriere melden
 common#:#report_accessibility_link#:#Gemeldeter Link:
 common#:#report_accessibility_link_mailto#:#Gemeldeter%20Link:
 common#:#repository#:#Magazin
-common#:#repository_admin#:#Magazin, Papierkorb und Rechte
+common#:#repository_admin#:#Magazin und Papierkorb
 common#:#repository_admin_desc#:#Rechteeinstellungen für Magazinobjekte festlegen, Entfernen oder Wiederherstellen von Objekten im Papierkorb
 common#:#require_email#:#Pflichteingabe E-Mail
 common#:#require_gender#:#Pflichteingabe Anrede
@@ -5624,7 +5626,7 @@ common#:#sorting_desc#:#Absteigend
 common#:#sorting_direction#:#Sortierungsrichtung
 common#:#sorting_header#:#Sortierung
 common#:#sorting_info_inherit#:#Wird die Sortierung des übergeordneten Kurses bzw. der Gruppe geändert, ändert sich auch diese Sortierung.
-common#:#sorting_info_manual#:#Die enthaltenen Objekte können in einer gewünschten Reihenfolge angeordnet werden. Bitte legen Sie zusätzlich fest, wie neue Objekte in eine vorhandene manuelle Reihenfolge einsortiert werden sollen.
+common#:#sorting_info_manual#:#Bestehende Objekte können in eine gewünschte Reihenfolge gebracht werden. Legen Sie zusätzlich fest, an welcher Stelle neue Objekte eingefügt und in welcher Reihenfolge und Ausrichtung diese angeordnet werden.
 common#:#sorting_info_title#:#Die enthaltenen Objekte werden automatisch nach ihrem Titel sortiert.
 common#:#sorting_manual_header#:#Manuell
 common#:#sorting_save#:#Sortierung speichern
@@ -7418,12 +7420,12 @@ crs#:#crs_groupings#:#Kursgruppierungen
 crs#:#crs_groups_nr#:#Anzahl Gruppen
 crs#:#crs_grp_added_grouping#:#Eine neue Mitgliedschaftsbeschränkung wurde angelegt.
 crs#:#crs_grp_already_assigned#:#Da Sie bereits Mitglied in einem der Kurse sind, können Sie nicht einem weiteren Kurs aus der Liste beitreten!
-crs#:#crs_grp_assign_crs#:#Kurs zuordnen
+crs#:#crs_grp_assign_crs#:#Ausgewählte Objekte der Mitgliedschaftsbeschränkung
 crs#:#crs_grp_assignments#:#Zuordnung von Kursmitgliedern zu Gruppen
 crs#:#crs_grp_enter_title#:#Bitte geben Sie einen Titel ein.
 crs#:#crs_grp_info_reg#:#Die folgenden Kurse unterliegen einer Mitgliedschaftsbeschränkung. Sie können nur einem dieser Kurse beitreten:
 crs#:#crs_grp_matriculation_required#:#Zur Aufnahme in diese Kursgruppierung ist eine eindeutige Matrikelnummer notwendig. <br />Bitte tragen Sie diese in den Einstellungen des Persönlichen Profils ein.
-crs#:#crs_grp_no_courses_assigned#:#Keine zugeordneten Kurse.
+crs#:#crs_grp_no_courses_assigned#:#Keine
 crs#:#crs_grp_table_assigned_courses#:#Zugeordnete Kurse
 crs#:#crs_header_archives#:#Kursarchive
 crs#:#crs_header_delete_members#:#Sie möchten folgende Mitglieder aus dem Kurs austragen?
@@ -7990,6 +7992,8 @@ dash#:#dash_studyprogramme#:#Meine Studienprogramme
 dash#:#dash_tile#:#Kacheln
 dash#:#dash_view_courses_groups#:#Block ‘Meine Kurse und Gruppen’
 dash#:#dash_view_favourites#:#Block ‘Favoriten’
+dash#:#favourites_disabled_info#:#Das Setzen von Favoriten ist deaktiviert. Sie können dieses in den Magazin-Einstellungen ändern.
+dash#:#memberships_disabled_info#:#Das Setzen von Mitgliedschaften ist deaktiviert. Sie können dieses in den Kurs-Einstellungen ändern.
 dateplaner#:#Fr_long#:#Freitag
 dateplaner#:#Fr_short#:#Fr
 dateplaner#:#Mo_long#:#Montag
@@ -12340,8 +12344,8 @@ orgu#:#org_unit_not_found#:#Die Organisationseinheit wurde nicht gefunden.
 orgu#:#orgu_add#:#Organisationseinheit hinzufügen
 orgu#:#orgu_adv_settings#:#Erweiterte Einstellungen
 orgu#:#orgu_already_deleted#:#Das Objekt wurde bereits gelöscht.
-orgu#:#orgu_enable_my_staff#:#‘Ansicht Mitarbeiter’ aktivieren
-orgu#:#orgu_enable_my_staff_info#:#Die Ansicht ‘Meine Mitarbeiter’ zeigt die Lernfortschritte der eigenen Mitarbeiter an.
+orgu#:#orgu_enable_my_staff#:#Hauptmenüeintrag aktivieren
+orgu#:#orgu_enable_my_staff_info#:#Ein neuer Haupteintrag wird im Hauptmenü angezeigt. Er kann die Einträge Mitarbeiterliste, Einschreibungen, Zertifikate, Kompetenzen, Gespräche enthalten.
 orgu#:#orgu_global_set_form#:#Globale Einstellungen
 orgu#:#orgu_global_set_positions#:#Nutzung von Positionen in Objekttypen
 orgu#:#orgu_global_set_positions_type_active#:#Positionen in:
@@ -12659,6 +12663,8 @@ prg#:#prg_belongs_to#:#Gehört Zu
 prg#:#prg_can_not_manage_in_repo#:#Sie dürfen dieses Studienprogramm nicht verwalten, da Ihm bereits Mitglieder zugeordnet sind.
 prg#:#prg_cancel#:#Abbrechen
 prg#:#prg_cancel_tree_order#:#Reihenfolge des Baums verwerfen.
+prg#:#prg_change_deadline#:#Stichtag anpassen
+prg#:#prg_change_expire_date#:#Ablauf der Qualifikation anpassen
 prg#:#prg_changed_by#:#Geändert durch
 prg#:#prg_completed_by_subnodes#:#Unterprogramm(e)
 prg#:#prg_completion_by#:#Abgeschlossen durch
@@ -12709,6 +12715,7 @@ prg#:#prg_mark_accredited#:#akkreditieren
 prg#:#prg_mark_accredited_multi_success#:#Ausgewählte Benutzer akkreditiert.
 prg#:#prg_mark_accredited_success#:#Das Programm wurde für den Benutzer erfolgreich akkreditiert.
 prg#:#prg_mark_not_relevant_multi_success#:#Ausgewählte Benutzer als nicht relevant markiert.
+prg#:#prg_mark_relevant#:#Als relevant markieren
 prg#:#prg_mark_relevant_multi_success#:#Ausgewählte Benutzer als relevant markiert.
 prg#:#prg_more_objects_without_read_permission#:#Das Studienprogramm beinhaltet weitere Elemente, die Sie aufgrund von fehlenden Rechten nicht einsehen dürfen.
 prg#:#prg_multi_change_deadline#:#Stichtag anpassen
@@ -12800,6 +12807,7 @@ prg#:#prg_type_msg_unable_delete#:#Konnte Typ nicht löschen, da er bei folgende
 prg#:#prg_unmark_accredited#:#Akkreditierung entfernen
 prg#:#prg_unmark_accredited_multi_success#:#Ausgewählte Benutzer als nicht akkreditiert markiert
 prg#:#prg_unmark_accredited_success#:#Die Akkreditierung wurde erfolgreich entfernt.
+prg#:#prg_unmark_relevant#:#Als irrelevant markieren
 prg#:#prg_update_from_current_plan#:#Aus dem aktuellen Plan aktualisieren
 prg#:#prg_update_from_current_plan_not_possible#:#Aus dem aktuellen Plan aktualisieren ist nicht möglich.
 prg#:#prg_update_from_current_plan_partitial_success#:#Aus dem aktuellen Plan aktualisieren teilweise abgeschlossen.
@@ -13301,7 +13309,9 @@ rbac#:#crs_visible#:#Kurs ist sichtbar
 rbac#:#crs_write#:#Kurs bearbeiten
 rbac#:#crsr_copy#:#Kurslinks kopieren
 rbac#:#crsr_delete#:#Kurslinks verschieben oder löschen
+rbac#:#crsr_edit_learning_progress#:#Benutzer kann Lernfortschrittseinstellungen bearbeiten
 rbac#:#crsr_edit_permission#:#Rechteeinstellungen ändern
+rbac#:#crsr_read_learning_progress#:#Benutzer kann Lernfortschritt anderer Benutzer einsehen
 rbac#:#crsr_visible#:#Kurslinks sind sichtbar und können genutzt werden
 rbac#:#crsr_write#:#Einstellungen der Kurslinks bearbeiten
 rbac#:#crss_edit_permission#:#Rechteeinstellungen für die Kurs-Administration ändern
@@ -13460,8 +13470,6 @@ rbac#:#iass_read_learning_progress#:#Lernfortschritt in Individuellen Bewertung 
 rbac#:#iass_visible#:#Individuelle Bewertung ist sichtbar
 rbac#:#iass_write#:#Einstellungen der Individuelle Bewertung bearbeiten
 rbac#:#il_lti_global_role#:#LTI User
-rbac#:#il_orgu_employee#:#Organisationseinheit Mitarbeiter
-rbac#:#il_orgu_superior#:#Organisationseinheit Vorgesetzter
 rbac#:#il_sess_participant#:#Sitzungsteilnehmer
 rbac#:#il_sess_status_closed#:#Nicht-Teilnehmer geschlossene Sitzung
 rbac#:#ilias_id#:#ILIAS-ID
@@ -14800,16 +14808,16 @@ skmg#:#skmg_add_assignment#:#Rollen / Mitglieder zuordnen
 skmg#:#skmg_add_level#:#Ausprägung hinzufügen
 skmg#:#skmg_add_local_profile#:#Lokales Profil hinzufügen
 skmg#:#skmg_add_profile#:#Profil hinzufügen
-skmg#:#skmg_add_resource#:#Ressource hinzufügen
+skmg#:#skmg_add_resource#:#Magazinobjekt zuweisen
 skmg#:#skmg_add_skill#:#Kompetenz hinzufügen
 skmg#:#skmg_add_skill_tree#:#Kompetenzbaum hinzufügen
 skmg#:#skmg_add_user_to_profile#:#Benutzer oder Rollen suchen
 skmg#:#skmg_all#:#Alle
 skmg#:#skmg_allow_local_profiles#:#Erstellung von lokalen Profilen erlauben
 skmg#:#skmg_allow_local_profiles_info#:#Nutzer mit dem Recht 'Einstellungen bearbeiten' in Kursen und Gruppen können lokale Kompetenzprofile erstellen und dabei global definierte Kompetenzen verwenden.
-skmg#:#skmg_ass_materials_from_workspace#:#An dieser Stelle können Sie Materialien aus Ihren persönlichen Ressourcen (z.B. Dateien) Kompetenzen zuordnen. Wenn Sie jetzt Materialien zu Ihren persönlichen Ressourcen hinzufügen wollen, klicken Sie bitten den folgenden Link.
+skmg#:#skmg_ass_materials_from_workspace#:#An dieser Stelle können Sie Inhalte aus Ihren persönlichen Ressourcen (z.B. Dateien) Kompetenzen zuordnen. Wenn Sie jetzt Inhalte zu Ihren persönlichen Ressourcen hinzufügen wollen, klicken Sie bitte den folgenden Link.
 skmg#:#skmg_assign_level#:#Ausprägung zuordnen
-skmg#:#skmg_assign_materials#:#Materialien zuordnen
+skmg#:#skmg_assign_materials#:#Persönliche Ressourcen zuordnen
 skmg#:#skmg_assign_user#:#Benutzer zuordnen
 skmg#:#skmg_assigned_objects#:#Zugeordnete Objekte
 skmg#:#skmg_assigned_profiles#:#Zugewiesene Kompetenzprofile
@@ -14819,7 +14827,7 @@ skmg#:#skmg_cannot_delete_nodes_in_use#:#Einige Objekte können nicht gelöscht 
 skmg#:#skmg_cert_skill_level_title#:#Titel Kompetenzstufe
 skmg#:#skmg_cert_skill_title#:#Titel Kompetenz
 skmg#:#skmg_cert_skill_trigger_title#:#Titel Auslöser
-skmg#:#skmg_confirm_level_resources_removal#:#Wollen Sie wirklich die folgenden Ressourcen aus dem Profil entfernen?
+skmg#:#skmg_confirm_level_resources_removal#:#Wollen Sie wirklich die folgenden Magazinobjekte aus dem Profil entfernen?
 skmg#:#skmg_confirm_remove_level_ass#:#Wollen Sie wirklich die folgenden Kompetenzstufen aus dem Profil entfernen?
 skmg#:#skmg_confirm_user_removal#:#Wollen Sie wirklich die folgenden Benutzer aus dem Profil entfernen?
 skmg#:#skmg_cont_profiles_info#:#In dieser Ansicht können Sie die Kompetenzprofile mit Kompetenzeinträgen auswählen, die im Zusammenhang mit dem derzeit geöffneten Objekt (Kurs/Gruppe) stehen. Um zu der globalen Ansicht mit allen Ihnen zugewiesenen Kompetenzprofilen und sämtlichen Kompetenzeinträgen zu gelangen, klicken Sie auf den unten stehenden Link.
@@ -14866,9 +14874,8 @@ skmg#:#skmg_list_skills#:#Kompetenzen auflisten
 skmg#:#skmg_local_assignment_profiles#:#Lokale Zuordnung von globalen Profilen erlauben
 skmg#:#skmg_lp_triggers_level#:#Gesetzt durch 'Bearbeitet'-Status
 skmg#:#skmg_lp_triggers_level_resources#:#Magazinobjekte gesetzt durch 'Bearbeitet'-Status
-skmg#:#skmg_material#:#Material
-skmg#:#skmg_materials#:#Materialien
-skmg#:#skmg_materials_ressources#:#Ressourcen/Materialien
+skmg#:#skmg_materials#:#Persönliche Ressourcen
+skmg#:#skmg_materials_resources#:#Lerninhalte
 skmg#:#skmg_new_level#:#Neue Ausprägung
 skmg#:#skmg_new_sktr#:#Neue Vorlagenreferenz
 skmg#:#skmg_next_step#:#Nächster Schritt
@@ -14889,14 +14896,16 @@ skmg#:#skmg_previous_step#:#Voriger Schritt
 skmg#:#skmg_profile#:#Profil
 skmg#:#skmg_really_delete_levels#:#Sollen die folgenden Kompetenzstufen wirklich gelöscht werden?
 skmg#:#skmg_really_remove_skills#:#Möchten Sie die folgenden Kompetenzen wirklich entfernen?
-skmg#:#skmg_recommended_learning_material#:#Lerninhalte zur Zielerreichung
+skmg#:#skmg_recommended_learning_material_crs#:#Lerninhalte im Kurs zur Zielerreichung
+skmg#:#skmg_recommended_learning_material_global#:#Lerninhalte zur Zielerreichung
+skmg#:#skmg_recommended_learning_material_grp#:#Lerninhalte in der Gruppe zur Zielerreichung
 skmg#:#skmg_recommended_learning_material_info#:#Wählen Sie genau einen der folgenden Lerninhalte aus. Bearbeiten Sie ihn um das Kompetenzziel zu erreichen.
 skmg#:#skmg_refresh_view#:#Ansicht aktualisieren
 skmg#:#skmg_remove_levels#:#Ausprägungen entfernen
 skmg#:#skmg_remove_skill#:#Kompetenz entfernen
 skmg#:#skmg_remove_skills#:#Kompetenz entfernen
 skmg#:#skmg_remove_trigger#:#Auslöser entfernen
-skmg#:#skmg_resources#:#Ressourcen
+skmg#:#skmg_resources#:#Magazinobjekte
 skmg#:#skmg_save_order#:#Reihenfolge speichern
 skmg#:#skmg_save_self_evaluation#:#Selbsteinschätzung abschließen
 skmg#:#skmg_save_settings#:#Einstellungen speichern
@@ -14921,13 +14930,14 @@ skmg#:#skmg_skill_level#:#Kompetenzstufe
 skmg#:#skmg_skill_level_trigger#:#Auslöser
 skmg#:#skmg_skill_levels#:#Kompetenzstufen
 skmg#:#skmg_skill_management_deactivated#:#Das Kompetenzmanagement ist momentan deaktiviert.
-skmg#:#skmg_skill_needs_impr_no_res#:#Sie müssen diese Kompetenz verbessern. Leider gibt es momentan kein passendes Lernmaterial, welches Ihrem Kompetenzziel entspricht.
-skmg#:#skmg_skill_needs_impr_res#:#Sie müssen diese Kompetenz verbessern. Die folgenden Ressourcen bieten Lernmaterial, welches Ihrem Kompetenzziel entspricht.
+skmg#:#skmg_skill_needs_impr_no_res#:#Sie müssen diese Kompetenz verbessern. Leider gibt es momentan keine passenden Lerninhalte, welche Ihrem Kompetenzziel entsprechen.
+skmg#:#skmg_skill_needs_impr_res#:#Sie müssen diese Kompetenz verbessern. Die folgenden Lerninhalte entsprechen Ihrem Kompetenzziel.
 skmg#:#skmg_skill_needs_self_eval#:#Bitte führen Sie zunächst eine Selbsteinschätzung durch, damit Ihr Kompetenzziel angezeigt wird.
 skmg#:#skmg_skill_needs_self_eval_box#:#Bitte beachten Sie, dass für mindestens eine Kompetenz in diesem Profil noch keine Selbsteinschätzung durchgeführt wurde. Ihnen wird das Kompetenzziel für die betroffenen Kompetenzen angezeigt, sobald eine Selbsteinschätzung durchgeführt wurde.
 skmg#:#skmg_skill_no_needs_impr#:#Kompetenzziel erfüllt!
 skmg#:#skmg_skill_no_needs_impr_info#:#Sie haben das Ziel für diese Kompetenz erfüllt.
-skmg#:#skmg_skill_profile_comparison#:#Profilvergleich
+skmg#:#skmg_skill_overview#:#Übersicht
+skmg#:#skmg_skill_profile_records#:#Kompetenzeinträge
 skmg#:#skmg_skill_profiles#:#Kompetenzprofile
 skmg#:#skmg_skill_template#:#Vorlage
 skmg#:#skmg_skill_templates#:#Vorlagen
@@ -14942,7 +14952,7 @@ skmg#:#skmg_status_outdated#:#Veraltet
 skmg#:#skmg_status_outdated_info#:#Der Eintrag kann von Benutzer nicht mehr als persönliche Kompetenz neu ausgewählt werden. Wurde die Kompetenz bereits früher ausgewählt, so bleibt diese Auswahl weiterhin bestehen.
 skmg#:#skmg_status_publish#:#Veröffentlicht
 skmg#:#skmg_status_publish_info#:#Die Kompetenz kann von Benutzern genutzt werden falls alle übergeordneten Einträge ebenfalls freigegeben sind.
-skmg#:#skmg_suggested#:#Vorgeschlagenes Magazinobjekt
+skmg#:#skmg_suggested#:#Als Lerninhalt anzeigen
 skmg#:#skmg_suggested_resources#:#Zugewiesene Magazinobjekte
 skmg#:#skmg_sure_delete_self_evaluation#:#Möchten Sie die folgenden Selbsteinschätzungen wirklich löschen?
 skmg#:#skmg_target_level#:#Kompetenzziel
@@ -14956,7 +14966,7 @@ skmg#:#skmg_usage_obj_objects#:#Objekt(e)
 skmg#:#skmg_usage_obj_profiles#:#Profil(e)
 skmg#:#skmg_usage_obj_users#:#Benutzer
 skmg#:#skmg_usage_type_info_gen#:#Allgemeiner Gebrauch in Magazinobjekten
-skmg#:#skmg_usage_type_info_mat#:#Benutzer haben Material zugeordnet
+skmg#:#skmg_usage_type_info_mat#:#Benutzer haben persönliche Ressourcen zugeordnet
 skmg#:#skmg_usage_type_info_pers#:#Von Benutzern als persönliche Kompetenz ausgewählt
 skmg#:#skmg_usage_type_info_prof#:#Nutzung in Kompetenzprofilen
 skmg#:#skmg_usage_type_info_res#:#Zuordnung zu Magazinobjekten
@@ -16626,6 +16636,7 @@ user#:#interests_general#:#Allgemeine Interessen
 user#:#interests_help_looking#:#Suche Hilfe
 user#:#interests_help_offered#:#Biete Hilfe
 user#:#msg_spoint_not_modified#:#Die Startseite wurde nicht geändert.
+user#:#no_deactivate_yourself#:#Sie können Ihr eigenes Benutzerkonto nicht deaktivieren.
 user#:#obj_ref_id_not_exist#:#Die eingegebene Referenz-ID existiert nicht.
 user#:#restrict_user_access#:#Eingeschränkter Zugriff auf Anmeldekonten
 user#:#restrict_user_access_info#:#Aktivieren Sie diese Option nur, wenn Sie den Zugriff auf Anmeldekonten beschränken möchten. Wenn aktiviert, benötigen Benutzer das Recht „Lesezugriff auf Anmeldekonten“, um auf lokale Anmeldekonten in Kategorien und auf die globalen Anmeldekonten zugreifen zu können.

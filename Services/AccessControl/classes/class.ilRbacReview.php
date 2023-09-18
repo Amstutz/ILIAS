@@ -128,7 +128,6 @@ class ilRbacReview
         $pathIds = $tree->getPathId($a_endnode_id);
 
         // add system folder since it may not in the path
-        //$pathIds[0] = SYSTEM_FOLDER_ID;
         $pathIds[0] = ROLE_FOLDER_ID;
         return $this->__getParentRoles($pathIds, $a_templates);
     }
@@ -834,7 +833,6 @@ class ilRbacReview
                 $where = 'WHERE ' . $this->db->in('rbac_fa.rol_id', $this->getGlobalRoles(), true, 'integer');
                 break;
 
-                // all role templates
             case self::FILTER_TEMPLATES:
                 $where = "WHERE object_data.type = 'rolt'";
                 $assign = "n";
@@ -1268,6 +1266,33 @@ class ilRbacReview
         return substr($title, 0, 3) == 'il_';
     }
 
+    public function getParentOfRole(int $role_id, ?int $object_ref = null): ?int
+    {
+        global $DIC;
+        /** @var ilTree $tree */
+        $tree = $DIC['tree'];
+
+        if ($object_ref === null || $object_ref === ROLE_FOLDER_ID) {
+            return $this->getRoleFolderOfRole($role_id);
+        }
+
+
+        $path_ids = $tree->getPathId($object_ref);
+        array_unshift($path_ids, ROLE_FOLDER_ID);
+
+        while ($ref_id = array_pop($path_ids)) {
+            $roles = $this->getRoleListByObject($ref_id, false);
+            foreach ($roles as $role) {
+                if ((int) $role['obj_id'] === $role_id) {
+                    return $ref_id;
+                }
+            }
+        }
+
+        return null;
+    }
+
+
     public function getRoleFolderOfRole(int $a_role_id): int
     {
         if (ilObject::_lookupType($a_role_id) == 'role') {
@@ -1373,4 +1398,4 @@ class ilRbacReview
 
         return (bool) $ilDB->numRows($ilDB->query($sql));
     }
-} // END class.ilRbacReview
+}

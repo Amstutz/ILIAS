@@ -9250,27 +9250,6 @@ nav,
 section {
   display: block;
 }
-/*
-*********************
-grid-based layout
-*********************
-*/
-@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-  body {
-    background-image: url("../../templates/default/images/HeaderIcon.svg");
-    background-position: center 43%;
-    background-repeat: no-repeat;
-    display: -ms-flexbox;
-    align-items: center;
-    justify-content: center;
-  }
-  body:after {
-    content: "Microsoft Internet Explorer is no longer supported!";
-  }
-  body .il-layout-page {
-    display: none;
-  }
-}
 .il-layout-page {
   background: white;
   display: grid;
@@ -11212,7 +11191,7 @@ footer {
   grid-template-areas: "icon title close" "none description description" "none actions actions";
   grid-template-columns: 20px 1fr 20px;
   grid-gap: 9px;
-  box-shadow: 3px 9px 9px 0 rgb(0 0 0);
+  box-shadow: 3px 9px 9px 0 rgba(0, 0, 0, 0.3);
   transform: translateX(150%);
   transition: all 0.25s ease-in-out;
 }
@@ -18425,6 +18404,10 @@ body.ilPrtfPdfBody .ilPCMyCoursesToggle img {
 .modal-content .form-horizontal .col-lg-10 {
   width: 66.67%;
 }
+.split-btn ul.dropdown-menu > li > .btn {
+  padding-left: 10px;
+  mso-padding-right-alt: 10px;
+}
 /* Services/Badge */
 img.ilBadgeImage {
   max-width: 150px;
@@ -20012,4 +19995,3 @@ table.mceToolbar td {
     width: auto !important;
   }
 }
-/*# sourceMappingURL=delos.css.map */

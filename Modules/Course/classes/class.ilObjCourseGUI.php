@@ -208,7 +208,7 @@ class ilObjCourseGUI extends ilContainerGUI
         if (
             strlen($this->object->getImportantInformation()) ||
             strlen($this->object->getSyllabus()) ||
-            strlen($this->object->getTargetGroup()) ||
+            strlen((string) $this->object->getTargetGroup()) ||
             count($files)) {
             $info->addSection($this->lng->txt('crs_general_informations'));
         }
@@ -226,7 +226,7 @@ class ilObjCourseGUI extends ilContainerGUI
                 ilUtil::makeClickable($this->object->getSyllabus(), true)
             ));
         }
-        if (strlen($this->object->getTargetGroup())) {
+        if (strlen((string) $this->object->getTargetGroup())) {
             $info->addProperty(
                 $this->lng->txt('crs_target_group'),
                 nl2br(
@@ -911,7 +911,7 @@ class ilObjCourseGUI extends ilContainerGUI
         $this->afterUpdate();
     }
 
-    protected function getSubServices() : array
+    protected function getSubServices(): array
     {
         $subs = array(
             ilObjectServiceSettingsGUI::CALENDAR_CONFIGURATION,
@@ -1556,7 +1556,7 @@ class ilObjCourseGUI extends ilContainerGUI
         ));
     }
 
-    public function readMemberData(array $ids, array $selected_columns = null): array
+    public function readMemberData(array $ids, array $selected_columns = null, bool $skip_names = false): array
     {
         $show_tracking =
             (
@@ -1591,10 +1591,19 @@ class ilObjCourseGUI extends ilContainerGUI
 
         $members = [];
         foreach ($ids as $usr_id) {
-            $name = ilObjUser::_lookupName($usr_id);
-            $tmp_data['firstname'] = $name['firstname'];
-            $tmp_data['lastname'] = $name['lastname'];
-            $tmp_data['login'] = ilObjUser::_lookupLogin($usr_id);
+            /**
+             * When building the members table in a course, user names are
+             * already read out via ilUserQuery::getUserListData (#31394).
+             * Adding skip_name as a parameter here is not super elegant, but
+             * seems like the only practical way avoid unnecessarily reading
+             * out the names again.
+             */
+            if (!$skip_names) {
+                $name = ilObjUser::_lookupName($usr_id);
+                $tmp_data['firstname'] = $name['firstname'];
+                $tmp_data['lastname'] = $name['lastname'];
+                $tmp_data['login'] = $name['login'];
+            }
             $tmp_data['passed'] = $this->object->getMembersObject()->hasPassed($usr_id) ? 1 : 0;
             if ($this->object->getStatusDetermination() == ilObjCourse::STATUS_DETERMINATION_LP) {
                 $tmp_data['passed_info'] = $this->object->getMembersObject()->getPassedInfo($usr_id);
@@ -1969,7 +1978,6 @@ class ilObjCourseGUI extends ilContainerGUI
                 "crs"
             );
         }
-
         $header_action = true;
         switch ($next_class) {
             case strtolower(ilRepositoryTrashGUI::class):
@@ -2141,7 +2149,7 @@ class ilObjCourseGUI extends ilContainerGUI
                 $this->ctrl->forwardCommand($agreement);
                 break;
 
-            // container page editing
+                // container page editing
             case "ilcontainerpagegui":
                 $ret = $this->forwardToPageObject();
                 if ($ret != "") {
@@ -2374,6 +2382,7 @@ class ilObjCourseGUI extends ilContainerGUI
                     && $cmd != 'unsubscribe'
                     && $cmd != 'deliverCertificate'
                     && $cmd != 'performUnsubscribe'
+                    && $cmd != 'removeFromDesk'
                     && !$this->access->checkAccess("read", '', $this->object->getRefId())
                     || $cmd == 'join'
                     || $cmd == 'subscribe') {
@@ -2917,6 +2926,11 @@ class ilObjCourseGUI extends ilContainerGUI
         $tid = 0;
         if ($this->http->wrapper()->query()->has('tid')) {
             $tid = $this->http->wrapper()->query()->retrieve(
+                'tid',
+                $this->refinery->kindlyTo()->int()
+            );
+        } elseif ($this->http->wrapper()->post()->has('tid')) {
+            $tid = $this->http->wrapper()->post()->retrieve(
                 'tid',
                 $this->refinery->kindlyTo()->int()
             );

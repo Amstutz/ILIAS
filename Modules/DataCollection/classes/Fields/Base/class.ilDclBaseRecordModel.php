@@ -39,7 +39,7 @@ class ilDclBaseRecordModel
     protected int $id = 0;
     protected int $table_id;
     protected ?ilDclTable $table = null;
-    protected int $last_edit_by;
+    protected ?int $last_edit_by = null;
     protected int $owner = 0;
     protected ilDateTime $last_update;
     protected ilDateTime $create_date;
@@ -127,6 +127,8 @@ class ilDclBaseRecordModel
         }
         if (null !== $rec["last_update"]) {
             $this->setLastUpdate(new ilDateTime($rec["last_update"], IL_CAL_DATETIME));
+        } else {
+            $this->setLastUpdate(new ilDateTime($rec["create_date"], IL_CAL_DATETIME));
         }
         $this->setOwner((int) $rec["owner"]);
         if (null !== $rec["last_edit_by"]) {
@@ -232,12 +234,12 @@ class ilDclBaseRecordModel
         return $this->owner;
     }
 
-    public function getLastEditBy(): int
+    public function getLastEditBy(): ?int
     {
         return $this->last_edit_by;
     }
 
-    public function setLastEditBy(int $last_edit_by): void
+    public function setLastEditBy(?int $last_edit_by): void
     {
         $this->last_edit_by = $last_edit_by;
     }

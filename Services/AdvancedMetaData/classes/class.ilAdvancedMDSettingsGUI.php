@@ -196,12 +196,12 @@ class ilAdvancedMDSettingsGUI
         return null;
     }
 
-    protected function getOidFromQuery(): ?int
+    protected function getOidFromQuery(): ?string
     {
         if ($this->http->wrapper()->query()->has('oid')) {
             return $this->http->wrapper()->query()->retrieve(
                 'oid',
-                $this->refinery->kindlyTo()->int()
+                $this->refinery->kindlyTo()->string()
             );
         }
         return null;
@@ -1782,6 +1782,31 @@ class ilAdvancedMDSettingsGUI
                 ,
                 "newline" => $perm[ilAdvancedMDPermissionHelper::ACTION_SUBSTITUTION_PRG_EDIT_FIELD_PROPERTY][ilAdvancedMDPermissionHelper::SUBACTION_SUBSTITUTION_NEWLINE]
             );
+        } elseif ($a_obj_type == "orgu") {
+            $perm = $this->getPermissions()->hasPermissions(
+                ilAdvancedMDPermissionHelper::CONTEXT_SUBSTITUTION_ORG_UNIT,
+                (string) $a_field_id,
+                [
+                    ilAdvancedMDPermissionHelper::ACTION_SUBSTITUTION_ORG_UNIT_SHOW_FIELD
+                    ,
+                    [
+                        ilAdvancedMDPermissionHelper::ACTION_SUBSTITUTION_ORG_UNIT_EDIT_FIELD_PROPERTY,
+                        ilAdvancedMDPermissionHelper::SUBACTION_SUBSTITUTION_BOLD
+                    ]
+                    ,
+                    [
+                        ilAdvancedMDPermissionHelper::ACTION_SUBSTITUTION_ORG_UNIT_EDIT_FIELD_PROPERTY,
+                        ilAdvancedMDPermissionHelper::SUBACTION_SUBSTITUTION_NEWLINE
+                    ]
+                ]
+            );
+            return [
+                "show" => $perm[ilAdvancedMDPermissionHelper::ACTION_SUBSTITUTION_ORG_UNIT_SHOW_FIELD]
+                ,
+                "bold" => $perm[ilAdvancedMDPermissionHelper::ACTION_SUBSTITUTION_ORG_UNIT_EDIT_FIELD_PROPERTY][ilAdvancedMDPermissionHelper::SUBACTION_SUBSTITUTION_BOLD]
+                ,
+                "newline" => $perm[ilAdvancedMDPermissionHelper::ACTION_SUBSTITUTION_ORG_UNIT_EDIT_FIELD_PROPERTY][ilAdvancedMDPermissionHelper::SUBACTION_SUBSTITUTION_NEWLINE]
+            ];
         }
         return [];
     }
@@ -2105,10 +2130,10 @@ class ilAdvancedMDSettingsGUI
                 }
                 // scope needs to match in object context
                 if (
-                ilAdvancedMDRecord::isFilteredByScope(
-                    $this->ref_id,
-                    $record->getScopes()
-                )
+                    ilAdvancedMDRecord::isFilteredByScope(
+                        $this->ref_id,
+                        $record->getScopes()
+                    )
                 ) {
                     continue;
                 }

@@ -890,6 +890,7 @@ assessment#:#log_user_not_entered_values#:#A felhasználó nem írt be értékek
 assessment#:#log_user_solution_willingly_deleted#:#A felhasználó törölte a választ.
 assessment#:#log_wrong_test_password_entered#:#A résztvevő rossz jelszót adott meg.
 assessment#:#longmenu#:#Étlap
+assessment#:#longmenu_answeroptions_differ#:#This question does not work correctly, as there are not the same amount of gaps in the text as in the correction options.###28 07 2023 new variable
 assessment#:#longmenu_text#:#'Étlap'-szöveg
 assessment#:#mailnottype#:#Értesítés küldése minden tesztkitöltést befejezésekor.
 assessment#:#mailnottype_desc#:#A teszt tulajdonosának értesítése <strong>akkor is</strong>, amikor a próbálkozások száma nem korlátozott.
@@ -932,6 +933,7 @@ assessment#:#new_category#:#Új mértékegység-kategória
 assessment#:#new_unit#:#Új mértékegység
 assessment#:#next_question#:#Következő
 assessment#:#next_question_rows#:#Kérdések %d - %d (összesen: %d) →
+assessment#:#no_manual_feedback_export_info#:#Manual feedbacks will not be exported.###13 09 2023 new variable
 assessment#:#no_passed_mark#:#Legalább egy értékelésnek sikeres teljesítésnek kell lennie. Az értékeléssémát nem mentettük.
 assessment#:#no_question_selected_for_move#:#Legalább egy kérdést jelöljön ki az áthelyezéshez!
 assessment#:#no_questions_available#:#Nincsenek elérhető kérdések.
@@ -1660,6 +1662,7 @@ assessment#:#tst_password_form#:#Adja meg a tesztjelszót
 assessment#:#tst_password_introduction#:#Ez a teszt csak tesztjelszóval érhető el. Adja meg a teszthez tartozó jelszót a teszt elkezdéséhez!
 assessment#:#tst_percent_solved#:#Elért százalék
 assessment#:#tst_player_answer_saved_and_locked#:#Mentett és zárolt válasz nem módosítható
+assessment#:#tst_please_select_source_pool#:#Please select a question pool.###13 09 2023 new variable
 assessment#:#tst_please_select_target_for_pool_derives#:#Válassza ki a céltárolót.
 assessment#:#tst_position#:#%s / %s kérdés
 assessment#:#tst_position_without_total#:#%s. kérdés
@@ -2754,6 +2757,7 @@ certificate#:#certificate_settings#:#Igazolás beállításai
 certificate#:#certificate_short_name#:#Igazolásfájl rövid címe
 certificate#:#certificate_short_name_description#:#Adja meg az igazolás rövid nevét! A rövid név az igazolásnév része lesz: ÉÉHHNN_[surname]_[SHORT_TITLE]_certificate.pdf
 certificate#:#certificate_text#:#Igazolásszöveg
+certificate#:#certificate_text_info#:#Please enter the certificate text. If the WYSIWYG editor is disabled in the ILIAS administration, you can still use valid XHTML to format the text.###28 07 2023 new variable
 certificate#:#certificate_unit_description#:#Adja meg értékként a mérték egységeit [cm|mm|in|pt|pc|px|em], például 10 mm vagy 3 in!
 certificate#:#certificate_usage#:#Az igazoláskezelés csak akkor érhető el, ha fut az ILIAS Java-szerver. A Java-szerver konfigurálása a Rendszerbeállítások » Általános beállítások » Szerver menü Java-szerver almenüjében érhető el.
 certificate#:#certificate_var_max_points#:#46
@@ -2813,8 +2817,6 @@ chatroom#:#chat_auth_token_info#:#Kérem, egyedi sztringeket hozzon létre. Ezek
 chatroom#:#chat_ban#:#Kizárás
 chatroom#:#chat_broadcast_typing#:#Gépelés műsorszórása
 chatroom#:#chat_broadcast_typing_info#:#A gépelési folyamat megjelenítése a beszélgetés, illetve a csevegőszoba résztvevőnél.
-chatroom#:#chat_broadcast_typing_no#:#A gépelést nem jelenítjük meg a többi résztvevőnél
-chatroom#:#chat_broadcast_typing_yes#:#A gépelést megjelenítjük a többi résztvevőnél
 chatroom#:#chat_connection_disconnected#:#--- <b>#username#</b> elhagyta a csevegőszobát ---
 chatroom#:#chat_connection_established#:#+++ <b>#username#</b> belépett a csevegőszobába +++
 chatroom#:#chat_create_private_room_button#:#Privát szoba létrehozása
@@ -5744,7 +5746,6 @@ common#:#udf_delete_sure#:#Biztos, hogy törli ezt a mezőt és minden hozzáren
 common#:#udf_duplicate_entries#:#Az értékeknek egyedieknek kell lenniük.
 common#:#udf_field_deleted#:#Törölt mező
 common#:#udf_name_already_exists#:#Ez a mezőnév már létezik. Válasszon egy másik nevet!
-common#:#udf_required_and_visible_requires_changeable#:#Ha a mező 'kötelező' és 'Látható a személyes adatok alatt', akkor a 'Módosítható a profilban' opciót is be kell állítani
 common#:#udf_required_requires_visib_reg#:#Ha a mező 'kötelező', akkor a 'Látható a Regisztráció alatt' opciót is be kell állítani
 common#:#udf_type_date#:#Dátum
 common#:#udf_type_datetime#:#Dátum és idő
@@ -5872,6 +5873,7 @@ common#:#usrimport_no_insert_ext_account_exists#:#Nem hajtható végre a 'Beszú
 common#:#usrimport_no_update_ext_account_exists#:#Nem hajtható végre a 'Frissítés' művelet. A külső felhasználói fiók már létezik.
 common#:#usrimport_with_specified_role_not_permitted#:#Az import a megadott szereppel nem engedélyezett.
 common#:#usrimport_wrong_file_count#:#Túl sok a fájl az importálandó mappában. Próbálja újra.
+common#:#usrimport_xml_anonymous_or_root_not_allowed#:#Neither the system-account nor the anonymous account can be changed through the import.###13 09 2023 new variable
 common#:#usrimport_xml_attribute_missing#:#Hiányzik a '%2$s' tulajdonság a '%1$s' elemből.
 common#:#usrimport_xml_attribute_value_illegal#:#Nem érvényes a '%2$s' tulajdonság '%3$s' értéke a '%1$s' elemben.
 common#:#usrimport_xml_attribute_value_inapplicable#:#'%2$s' attribútum '%3$s' értéke '%1$s' elemben nem használható '%4$s' tevékenységhez.
@@ -7587,6 +7589,8 @@ crs#:#crs_members_groups#:#Csoporttagságok
 crs#:#crs_members_map#:#Kurzustagok térképe
 crs#:#crs_members_print_title#:#Kurzustagok
 crs#:#crs_min_one_admin#:#Legalább egy vezetőt hozzá kell rendelni ehhez a kurzushoz.
+crs#:#crs_my_courses_groups_enabled#:#My Courses and Groups###28 07 2023 new variable
+crs#:#crs_my_courses_groups_enabled_info#:#If activated, the section 'My Courses and Groups' is visible.###28 07 2023 new variable
 crs#:#crs_new_status#:#Az Ön új állapota:
 crs#:#crs_new_subscription#:#'%s' kurzusba felhasználó regisztrált
 crs#:#crs_new_subscription_body#:#ezúton értesítjük, hogy %s regisztrált a(z) '%s' kurzusba.
@@ -7988,6 +7992,8 @@ dash#:#dash_studyprogramme#:#Képzési programjaim
 dash#:#dash_tile#:#Csempe
 dash#:#dash_view_courses_groups#:#'Kurzusaim és csoportjaim' rész
 dash#:#dash_view_favourites#:#'Kedvenceim' rész
+dash#:#favourites_disabled_info#:#Add to favorites is deactivated. You may change this inside the repository settings.###28 07 2023 new variable
+dash#:#memberships_disabled_info#:#Subscriptions are deactivated. You may change this inside the course settings.###28 07 2023 new variable
 dateplaner#:#Fr_long#:#Péntek
 dateplaner#:#Fr_short#:#P
 dateplaner#:#Mo_long#:#Hétfő
@@ -8142,6 +8148,8 @@ dateplaner#:#cal_create#:#Létrehozás
 dateplaner#:#cal_created_appointment#:#Új esemény létrehozása.
 dateplaner#:#cal_created_milestone#:#A mérföldkővet sikeresen hozzáadta.
 dateplaner#:#cal_created_milestone_resp_q#:#A mérföldkővet sikeresen hozzáadta. Válassza ki a felhasználókat, akik felelősek a mérföldkő eléréséért.
+dateplaner#:#cal_cronjob_remote_description#:#If activated, appointments of the calendar type "Web calendar" are automatically synchronised after the specified time interval.###13 09 2023 new variable
+dateplaner#:#cal_cronjob_remote_title#:#External Calendar Synchronisation###13 09 2023 new variable
 dateplaner#:#cal_crs_info#:#Kurzusinformáció
 dateplaner#:#cal_crs_new_notification_body#:#ezúton tájékoztatjuk, hogy '%s' kurzusban új esemény jött létre.
 dateplaner#:#cal_crs_new_notification_sub#:#'%s' kurzusban új esemény
@@ -10665,6 +10673,7 @@ lti#:#lti_con_tool_url#:#Login URL
 lti#:#lti_con_version#:#LTI Version
 lti#:#lti_con_version_1.1#:#Version 1.1
 lti#:#lti_con_version_1.3#:#Version 1.3
+lti#:#lti_con_version_1.3_before_id#:#If dynamic registration is not used, after entering the data provided by the tool, additional data will appear that must be entered with the tool.###28 07 2023 new variable
 lti#:#lti_confirm_delete_providers#:#Are you sure that you want to delete the following provider(s)?
 lti#:#lti_consumer#:#Megosztva vele:
 lti#:#lti_consumer_created#:#A fogyasztót sikeresen létrehozta
@@ -10977,6 +10986,7 @@ mail#:#mail_smtp_status_info#:#Az ILIAS a PHP függvény (sendmail, mail() függ
 mail#:#mail_smtp_user#:#Felhasználó
 mail#:#mail_subject_prefix#:#Levél tárgya
 mail#:#mail_subject_prefix_info#:#Az automatikusan generált kimenő e-mailek tárgya elé kerülő szöveg, ami segíti, hogy a felhasználók szűrhessék az üzenetet.
+mail#:#mail_subject_too_long#:#The subject is too long.###13 09 2023 new variable
 mail#:#mail_sure_delete#:#Biztos, hogy törli a megjelölt level(ek)et?
 mail#:#mail_sure_delete_entry#:#Biztos, hogy törli az alábbi névjegy(ek)et?
 mail#:#mail_sure_delete_file#:#Biztos, hogy törli a kiválasztott fájlokat?
@@ -12296,8 +12306,6 @@ orgu#:#employee#:#Beosztott
 orgu#:#ext_id#:#External-ID
 orgu#:#ext_id_updated#:#Az external-ID sikeresen frissült.
 orgu#:#form_title_org_default_permissions_update#:#Alapértelmezett jogosultságok
-orgu#:#il_orgu_employee#:#Beosztott
-orgu#:#il_orgu_superior#:#Felettes
 orgu#:#import_failed#:#Importálás sikertelen. Győződjön meg róla, hogy a fájl xml formátumú és érvényes a struktúrája.
 orgu#:#import_successful#:#Az import sikeresen véget ért. Létrejött: %s, módosult: %s, törlődött: %s.
 orgu#:#import_terminated_with_errors#:#Az import hibákkal futott le.
@@ -12658,6 +12666,8 @@ prg#:#prg_belongs_to#:#Kiindulópontja
 prg#:#prg_can_not_manage_in_repo#:#Nincs jogosultsága ennek a Képzési programnak a kezeléséhez.
 prg#:#prg_cancel#:#Mégsem
 prg#:#prg_cancel_tree_order#:#Faszerkezet eldobása
+prg#:#prg_change_deadline#:#Change deadline###28 07 2023 new variable
+prg#:#prg_change_expire_date#:#Change expire date###28 07 2023 new variable
 prg#:#prg_changed_by#:#Módosította
 prg#:#prg_completed_by_subnodes#:#alprogramok
 prg#:#prg_completion_by#:#Véglegesítette
@@ -12708,6 +12718,7 @@ prg#:#prg_mark_accredited#:#Abszolváltként megjelölése
 prg#:#prg_mark_accredited_multi_success#:#Kijelölt felhasználók megjelölés akkreditáltként
 prg#:#prg_mark_accredited_success#:#A felhasználó programcsomópont teljesítettségét sikeresen beállította.
 prg#:#prg_mark_not_relevant_multi_success#:#Kijelölt felhasználók releváns jelölésének eltávolítása
+prg#:#prg_mark_relevant#:#Mark Relevant###28 07 2023 new variable
 prg#:#prg_mark_relevant_multi_success#:#Kijelölt felhasználók megjelölés relevánsként
 prg#:#prg_more_objects_without_read_permission#:#Képzési program több olyan objektumot is tartalmaz, melyek megtekintéséhez nem rendelkezik megfelelő jogosultsággal.
 prg#:#prg_multi_change_deadline#:#Határidő módosítása
@@ -12799,6 +12810,7 @@ prg#:#prg_type_msg_unable_delete#:#Nem törölhető ez a típus, mert az alábbi
 prg#:#prg_unmark_accredited#:#Abszolvált jelölés eltávolítása
 prg#:#prg_unmark_accredited_multi_success#:#Kijelölt felhasználók akkreditált jelölésének eltávolítása
 prg#:#prg_unmark_accredited_success#:#A felhasználó programcsomópont teljesítettségét sikeresen eltávolította.
+prg#:#prg_unmark_relevant#:#Unmark Relevant###28 07 2023 new variable
 prg#:#prg_update_from_current_plan#:#Frissítés a jelenlegi terv alapján
 prg#:#prg_update_from_current_plan_not_possible#:#Nem sikerült frissíteni a jelenlegi tervből
 prg#:#prg_update_from_current_plan_partitial_success#:#Részben sikeresen frissített a jelenlegi tervből
@@ -13300,7 +13312,9 @@ rbac#:#crs_visible#:#A kurzus látható
 rbac#:#crs_write#:#A felhasználó módosíthatja a kurzus beállításait és kezelheti a tartalmát
 rbac#:#crsr_copy#:#A felhasználó másolhat kurzuslinket
 rbac#:#crsr_delete#:#A felhasználó áthelyezhet vagy törölhet kurzuslinket
+rbac#:#crsr_edit_learning_progress#:#User can edit learning progress settings###28 07 2023 new variable
 rbac#:#crsr_edit_permission#:#A felhasználó módosíthatja a jogosultsági beállításokat
+rbac#:#crsr_read_learning_progress#:#User can view learning progress of other users###28 07 2023 new variable
 rbac#:#crsr_visible#:#A kurzuslink látható
 rbac#:#crsr_write#:#A felhasználó szerkesztheti kurzuslinket
 rbac#:#crss_edit_permission#:#A felhasználó módosíthatja a Rendszerbeállítások » Kurzus jogosultsági beállításait
@@ -13459,8 +13473,6 @@ rbac#:#iass_read_learning_progress#:#Személyes értékelés tanulási haladási
 rbac#:#iass_visible#:#Személyes értékelés látható
 rbac#:#iass_write#:#Személyes értékelés módosítása
 rbac#:#il_lti_global_role#:#LTI-Felhasználó
-rbac#:#il_orgu_employee#:#Szervezeti egység beosztottja
-rbac#:#il_orgu_superior#:#Szervezeti egység felettese
 rbac#:#il_sess_participant#:#Munkamenet résztvevők
 rbac#:#il_sess_status_closed#:#Résztvevő nélküli zárt esemény
 rbac#:#ilias_id#:#ILIAS-ID
@@ -14864,10 +14876,8 @@ skmg#:#skmg_level#:#Szint
 skmg#:#skmg_list_skills#:#Kompetenciák listája
 skmg#:#skmg_local_assignment_profiles#:#Globális profilok helyi hozzárendelésének engedélyzése
 skmg#:#skmg_lp_triggers_level#:#A befejezés hatására
-skmg#:#skmg_lp_triggers_level_resources#:#Resources triggered by Completion
-skmg#:#skmg_material#:#Segédanyag
 skmg#:#skmg_materials#:#Segédanyagok
-skmg#:#skmg_materials_ressources#:#Erőforrások/Segédanyagok
+skmg#:#skmg_materials_resources#:#Learning Materials###28 07 2023 new variable
 skmg#:#skmg_new_level#:#Új szint
 skmg#:#skmg_new_sktr#:#Új kompetenciasablon-hivatkozás
 skmg#:#skmg_next_step#:#Következő lépés
@@ -14888,7 +14898,9 @@ skmg#:#skmg_previous_step#:#Előző lépés
 skmg#:#skmg_profile#:#Profil
 skmg#:#skmg_really_delete_levels#:#Biztos, hogy törli az alábbi kompetenciaszinteket?
 skmg#:#skmg_really_remove_skills#:#Biztos, hogy eltávolítja az alábbi kompetenciákat a listáról?
-skmg#:#skmg_recommended_learning_material#:#Learning Materials for target achievement
+skmg#:#skmg_recommended_learning_material_crs#:#Achieve your targets in this course###28 07 2023 new variable
+skmg#:#skmg_recommended_learning_material_global#:#Achieve your targets###28 07 2023 new variable
+skmg#:#skmg_recommended_learning_material_grp#:#Achieve your targets in this group###28 07 2023 new variable
 skmg#:#skmg_recommended_learning_material_info#:#Select exactly one of the following learning materials. Please work through it to achieve the competence target.
 skmg#:#skmg_refresh_view#:#Frissítés
 skmg#:#skmg_remove_levels#:#Szintek eltávolítása
@@ -14926,7 +14938,8 @@ skmg#:#skmg_skill_needs_self_eval#:#Please conduct a self-evaluation first to se
 skmg#:#skmg_skill_needs_self_eval_box#:#Please note that you have not conducted a self-evaluation for at least one competence in this profile. You will not see the competence target for the affected competences until a self-evaluation is done.
 skmg#:#skmg_skill_no_needs_impr#:#Competence target achieved!
 skmg#:#skmg_skill_no_needs_impr_info#:#You achieved the target for this competence.
-skmg#:#skmg_skill_profile_comparison#:#Profile Comparison
+skmg#:#skmg_skill_overview#:#Overview###28 07 2023 new variable
+skmg#:#skmg_skill_profile_records#:#Competence Records###28 07 2023 new variable
 skmg#:#skmg_skill_profiles#:#Kompetenciaprofilok
 skmg#:#skmg_skill_template#:#Kompetenciasablon
 skmg#:#skmg_skill_templates#:#Kompetenciasablonok
@@ -16625,6 +16638,7 @@ user#:#interests_general#:#Általános érdeklődési kör
 user#:#interests_help_looking#:#Segítséget várok ezekben
 user#:#interests_help_offered#:#Segíteni tudok ezekben
 user#:#msg_spoint_not_modified#:#A kiindulási pont nem változott
+user#:#no_deactivate_yourself#:#You cannot deactivate your own user account.###28 07 2023 new variable
 user#:#obj_ref_id_not_exist#:#A megadott ref_id nem létezik
 user#:#restrict_user_access#:#Korlátozott hozzáférés az ILIAS-fiókokhoz
 user#:#restrict_user_access_info#:#Csak akkor engedélyezze, ha korlátozni szeretné a hozzáférést az ILIAS-fiókokhoz. 'Olvasási elérés a helyi ILIAS-fiókhoz' jogosultság szükséges a helyi és a globális ILIAS-fiókok hozzáféréséhez.

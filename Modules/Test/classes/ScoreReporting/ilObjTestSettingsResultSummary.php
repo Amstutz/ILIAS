@@ -62,6 +62,13 @@ class ilObjTestSettingsResultSummary extends TestSettings
             }
         );
 
+        $reporting_date = $this->getReportingDate();
+        if ($reporting_date !== null) {
+            $reporting_date = $reporting_date->setTimezone(
+                new DateTimeZone($environment['user_time_zone'])
+            )->format($environment['user_date_format']);
+        }
+
         $results_time_group = $f->switchableGroup(
             [
                 self::SCORE_REPORTING_IMMIDIATLY => $f->group([], $lng->txt('tst_results_access_always'), $lng->txt('tst_results_access_always_desc')),
@@ -70,8 +77,11 @@ class ilObjTestSettingsResultSummary extends TestSettings
                 self::SCORE_REPORTING_DATE => $f->group(
                     [
                     $f->dateTime($lng->txt('tst_reporting_date'), "")
+                        ->withTimezone($environment['user_time_zone'])
                         ->withUseTime(true)
-                        ->withValue($this->getReportingDate())
+                        ->withValue(
+                            $reporting_date
+                        )
                         ->withRequired(true)
                     ],
                     $lng->txt('tst_results_access_date'),
@@ -156,7 +166,8 @@ class ilObjTestSettingsResultSummary extends TestSettings
     {
         $dat = $this->getReportingDate();
         if ($dat) {
-            $dat = $dat->format(ilObjTestScoreSettingsDatabaseRepository::STORAGE_DATE_FORMAT);
+            $dat = $dat->setTimezone(new DateTimeZone('UTC'))
+                ->format(ilObjTestScoreSettingsDatabaseRepository::STORAGE_DATE_FORMAT);
         }
         return [
             'pass_deletion_allowed' => ['integer', (int) $this->getPassDeletionAllowed()],

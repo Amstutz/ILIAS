@@ -463,7 +463,11 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
                     $ilTabs,
                     $this->getTestObject()->getScoreSettingsRepository(),
                     $this->getTestObject()->getTestId(),
-                    ...$this->ui
+                    $this->ui[0],
+                    $this->ui[1],
+                    $this->ui[2],
+                    $this->ui[3],
+                    $this->user
                 );
 
                 $this->ctrl->forwardCommand($gui);
@@ -1066,7 +1070,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
     /**
     * form for new test object import
     */
-    protected function importFileObject(int $parent_id = null, bool $catch_errors = true): void
+    protected function importFileObject(int $parent_id = null): void
     {
         if (!$this->checkPermissionBool("create", "", $_REQUEST["new_type"])) {
             $this->error->raiseError($this->lng->txt("no_create_permission"));
@@ -2401,7 +2405,7 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
 
             $template->setVariable("TXT_QUESTION_ID", $this->lng->txt('question_id_short'));
             $template->setVariable("QUESTION_ID", $question_gui->object->getId());
-            $result_output = $question_gui->getSolutionOutput("", null, false, true, false, $this->object->getShowSolutionFeedback());
+            $result_output = $question_gui->getSolutionOutput(0, null, false, true, false, $this->object->getShowSolutionFeedback());
             $template->setVariable("SOLUTION_OUTPUT", $result_output);
             $template->parseCurrentBlock("question");
             $counter++;
@@ -3692,10 +3696,10 @@ class ilObjTestGUI extends ilObjectGUI implements ilCtrlBaseClassInterface
             $this->ctrl->redirect($this, "infoScreen");
         }
 
-        if ($this->testrequest->raw('q_id') && !is_array($this->testrequest->raw('q_id'))) {
-            $ids = array($this->testrequest->raw('q_id'));
-        } elseif ($this->testrequest->raw('q_id')) {
-            $ids = $this->testrequest->raw('q_id');
+        if ($this->testrequest->hasQuestionId() && !is_array($this->testrequest->raw('q_id'))) {
+            $ids = [$this->testrequest->getQuestionId()];
+        } elseif ($this->testrequest->getQuestionIds()) {
+            $ids = $this->testrequest->getQuestionIds();
         } else {
             $this->tpl->setOnScreenMessage('failure', $this->lng->txt('copy_no_questions_selected'), true);
             $this->ctrl->redirect($this, 'questions');

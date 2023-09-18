@@ -1,6 +1,5 @@
 <?php
 
-declare(strict_types=1);
 /**
  * This file is part of ILIAS, a powerful learning management system
  * published by ILIAS open source e-Learning e.V.
@@ -17,6 +16,7 @@ declare(strict_types=1);
  *
  *********************************************************************/
 
+declare(strict_types=1);
 /**
  * Class pdoDB
  * @author Oskar Truffer <ot@studer-raimann.ch>
@@ -500,13 +500,13 @@ abstract class ilDBPdo implements ilDBInterface, ilDBPdoInterface
             $q = "UPDATE " . $this->quoteIdentifier($table_name) . " SET ";
             $lim = "";
             foreach ($fields as $k => $field) {
-                $q .= $lim . $field . " = " . $placeholders_full[$k];
+                $q .= $lim . $this->quoteIdentifier($field) . " = " . $placeholders_full[$k];
                 $lim = ", ";
             }
             $q .= " WHERE ";
             $lim = "";
             foreach ($where as $k => $col) {
-                $q .= $lim . $k . " = " . $this->quote($col[1], $col[0]);
+                $q .= $lim . $this->quoteIdentifier($k) . " = " . $this->quote($col[1], $col[0]);
                 $lim = " AND ";
             }
 
@@ -531,7 +531,7 @@ abstract class ilDBPdo implements ilDBInterface, ilDBPdoInterface
             $q .= " WHERE ";
             $lim = "";
             foreach (array_keys($where) as $k) {
-                $q .= $lim . $k . " = %s";
+                $q .= $lim . $this->quoteIdentifier($k) . " = %s";
                 $lim = " AND ";
             }
 
@@ -846,7 +846,7 @@ abstract class ilDBPdo implements ilDBInterface, ilDBPdoInterface
         $values = [];
 
         foreach ($a_columns as $k => $col) {
-            $fields[] = $k;
+            $fields[] = $this->quoteIdentifier($k);
             $placeholders[] = "%s";
             $placeholders2[] = ":$k";
             $types[] = $col[0];
@@ -1499,5 +1499,20 @@ abstract class ilDBPdo implements ilDBInterface, ilDBPdoInterface
     public function cast(string $a_field_name, string $a_dest_type): string
     {
         return $this->manager->getQueryUtils()->cast($a_field_name, $a_dest_type);
+    }
+
+    public function primaryExistsByFields(string $table_name, array $fields): bool
+    {
+        $constraints = $this->manager->listTableConstraints($table_name);
+
+        if (in_array('primary', $constraints)) {
+            $definitions = $this->reverse->getTableConstraintDefinition($table_name, 'primary');
+            $primary_fields = array_keys($definitions['fields']);
+            sort($primary_fields);
+            sort($fields);
+
+            return $primary_fields === $fields;
+        }
+        return false;
     }
 }

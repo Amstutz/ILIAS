@@ -121,7 +121,7 @@ class ilBookingReservation
     public function setStatus(?int $a_status): void
     {
         if ($a_status === null) {
-            $this->status = null;
+            $this->status = 0;
         }
         if (self::isValidStatus((int) $a_status)) {
             $this->status = (int) $a_status;
@@ -293,8 +293,8 @@ class ilBookingReservation
     public static function isObjectAvailableInPeriod(
         int $a_obj_id,
         ilBookingSchedule $a_schedule,
-        int $a_from,
-        int $a_to
+        ?int $a_from,
+        ?int $a_to
     ): bool {
         if (!$a_from) {
             $a_from = time();

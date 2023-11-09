@@ -1205,14 +1205,14 @@ class ilObjUserGUI extends ilObjectGUI
         $acfrom = new ilDateTimeInputGUI($this->lng->txt("crs_from"), "time_limit_from");
         $acfrom->setRequired(true);
         $acfrom->setShowTime(true);
-        //		$ac->addSubItem($acfrom);
+        $acfrom->setMinuteStepSize(1);
         $op2->addSubItem($acfrom);
 
         // access.to
         $acto = new ilDateTimeInputGUI($this->lng->txt("crs_to"), "time_limit_until");
         $acto->setRequired(true);
         $acto->setShowTime(true);
-        //		$ac->addSubItem($acto);
+        $acto->setMinuteStepSize(1);
         $op2->addSubItem($acto);
 
         //		$this->form_gui->addItem($ac);
@@ -1246,11 +1246,13 @@ class ilObjUserGUI extends ilObjectGUI
         }
 
         // firstname, lastname, title
-        $fields = array("firstname" => true,
-                        "lastname" => true,
-                        "title" => isset($settings["require_title"]) && $settings["require_title"]
-        );
+        $fields = [
+            "firstname" => true,
+            "lastname" => true,
+            "title" => isset($settings["require_title"]) && $settings["require_title"]
+        ];
         foreach ($fields as $field => $req) {
+            $max_len = $field === 'title' ? 32 : 128;
             if ($this->isSettingChangeable($field)) {
                 // #18795
                 $caption = ($field == "title")
@@ -1258,7 +1260,7 @@ class ilObjUserGUI extends ilObjectGUI
                     : $field;
                 $inp = new ilTextInputGUI($lng->txt($caption), $field);
                 $inp->setSize(32);
-                $inp->setMaxLength(32);
+                $inp->setMaxLength($max_len);
                 $inp->setRequired($req);
                 $this->form_gui->addItem($inp);
             }
@@ -1338,6 +1340,7 @@ class ilObjUserGUI extends ilObjectGUI
             $em = new ilEMailInputGUI($lng->txt("email"), "email");
             $em->setRequired(isset($settings["require_email"]) &&
                 $settings["require_email"]);
+            $em->setMaxLength(128);
             $this->form_gui->addItem($em);
         }
 
@@ -2094,14 +2097,25 @@ class ilObjUserGUI extends ilObjectGUI
         global $DIC;
 
         $ilUser = $DIC['ilUser'];
+
+        /** @var ilCtrl $ilCtrl */
         $ilCtrl = $DIC['ilCtrl'];
+
+        if (strstr($a_target, ilPersonalProfileGUI::CHANGE_EMAIL_CMD) === $a_target
+            && $ilUser->getId() !== ANONYMOUS_USER_ID) {
+            $class = ilPersonalProfileGUI::class;
+            $cmd = ilPersonalProfileGUI::CHANGE_EMAIL_CMD;
+            $ilCtrl->clearParametersByClass($class);
+            $ilCtrl->setParameterByClass($class, 'token', str_replace($cmd, '', $a_target));
+            $ilCtrl->redirectByClass(['ildashboardgui', $class], $cmd);
+        }
 
         // #10888
         if ($a_target == md5("usrdelown")) {
             if ($ilUser->getId() != ANONYMOUS_USER_ID &&
                 $ilUser->hasDeletionFlag()) {
                 $ilCtrl->setTargetScript('ilias.php');
-                $ilCtrl->redirectByClass(array("ildashboardgui", "ilpersonalsettingsgui"), "deleteOwnAccount3");
+                $ilCtrl->redirectByClass(['ildashboardgui', 'ilpersonalsettingsgui'], "deleteOwnAccount3");
             }
             exit("This account is not flagged for deletion."); // #12160
         }

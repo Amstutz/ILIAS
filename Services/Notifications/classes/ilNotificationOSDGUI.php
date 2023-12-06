@@ -57,12 +57,12 @@ class ilNotificationOSDGUI
 
         $notificationSettings = new ilSetting('notifications');
 
-        // Unibe-Patch
+        /* Unibe-Patch
         if(! $chatSettings->get("chat_enabled"))
         {
             return;
         }
-        // End Unibe-Patch
+        */
         $osdTemplate = new ilTemplate('tpl.osd_notifications.js', true, true, 'Services/Notifications');
 
         $osdTemplate->setVariable(

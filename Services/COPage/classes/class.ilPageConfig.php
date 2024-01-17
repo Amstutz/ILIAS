@@ -317,7 +317,12 @@ abstract class ilPageConfig
 
     public function getPreventHTMLUnmasking(): bool
     {
-        return true;
+        //UNIBEPATCH Javascript enable
+        $safe = true;
+        if($this->page_obj_key == 'cont' || $this->page_obj_key == 'qpl' || $this->page_obj_key == 'lm') {
+            $safe = false;
+        }
+        return $safe;
     }
 
     public function setEnableSelfAssessment(

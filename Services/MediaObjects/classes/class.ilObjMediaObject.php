@@ -1092,6 +1092,9 @@ class ilObjMediaObject extends ilObject
                     case "exca~":
                         $obj_id = (int) $a_usage['id'];
                         break;
+                    case "xsev":
+                        $obj_id = $id;
+                        break;
 
                     // "old" category pages
                     case "cat":

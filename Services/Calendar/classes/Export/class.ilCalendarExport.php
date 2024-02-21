@@ -291,21 +291,20 @@ class ilCalendarExport
         // end-patch aptar
 
 
-
-  //UNIBE-Patch
+        //UNIBE-Patch
         $obj_id = $this->getCategoryFromCalendarEntry($app)->getObjId();
 
-        $this->writer->addLine('SUMMARY:' . ilICalWriter::escapeText(htmlspecialchars_decode($app->getPresentationTitle(false), ENT_QUOTES)));
+        $str_writer->addLine('SUMMARY:' . ilICalWriter::escapeText(htmlspecialchars_decode($app->getPresentationTitle(false), ENT_QUOTES)));
 
         $description = $app->getDescription();
         $description .= $this->getDescriptionByMetaData($obj_id);
         if (strlen($description)) {
-            $this->writer->addLine('DESCRIPTION:' . ilICalWriter::escapeText($description));
+            $str_writer->addLine('DESCRIPTION:' . ilICalWriter::escapeText($description));
         }
         $location = $this->getLocationByMetaData($obj_id);
         $location = $location ? ilICalWriter::escapeText($location) : ilICalWriter::escapeText($app->getLocation());
         if (strlen($location)) {
-            $this->writer->addLine('LOCATION:' . $location);
+            $str_writer->addLine('LOCATION:' . $location);
         }
         //END UNIBE-Patch
         $str_writer->append($this->createRecurrences($app));

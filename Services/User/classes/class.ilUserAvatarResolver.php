@@ -94,7 +94,9 @@ class ilUserAvatarResolver
         if ($this->has_public_profile) {
             $this->abbreviation = ilStr::subStr($this->firstname, 0, 1) . ilStr::subStr($this->lastname, 0, 1);
         } else {
-            $this->abbreviation = ilStr::subStr($this->login, 0, 2);
+            //UNIBE-PATCH
+            $no_dots = str_replace(".","", $this->login);
+            $this->abbreviation = strtoupper(substr($no_dots,0,2));
         }
     }
 

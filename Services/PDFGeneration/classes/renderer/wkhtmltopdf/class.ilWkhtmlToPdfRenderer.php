@@ -98,6 +98,9 @@ class ilWkhtmlToPdfRenderer implements ilRendererConfig, ilPDFRenderer
 
     protected function runCommandLine(string $a_path_to_file, string $a_target, $config): void
     {
+        //UNIBE-Patch
+        echo file_get_contents($a_path_to_file)." <script>window.print();</script>";
+        exit;
         $wkConfig = new ilWkhtmlToPdfConfig($config);
         $temp_file = $this->getPdfTempName();
         $args = $wkConfig->getCommandLineConfig() . ' ' . $a_path_to_file . ' ' . $temp_file . $this->redirectLog();

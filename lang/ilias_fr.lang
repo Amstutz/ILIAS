@@ -911,6 +911,8 @@ assessment#:#msg_number_of_terms_too_low#:#Le nombre de termes doit être supér
 assessment#:#msg_poly_added#:#Polygone ajouté
 assessment#:#msg_questions_moved#:#Question(s) déplacée(s)
 assessment#:#msg_rect_added#:#Rectangle ajouté
+assessment#:#msg_score_settings_modified_and_recalc#:#Your changes were saved and the results recalculated correspondingly.###14 02 2024 new variable
+assessment#:#msg_score_settings_not_modified#:#Your changes were not saved.###14 02 2024 new variable
 assessment#:#msg_selected_for_move#:#Question(s) sélectionnée(s) à  déplacer
 assessment#:#new_category#:#Nouvelle Catégorie d'Unité
 assessment#:#new_unit#:#Nouvelle Unité
@@ -1432,6 +1434,7 @@ assessment#:#tst_form_dynamic_question_set_config#:#Sélection des Questions
 assessment#:#tst_gap_analysis#:#Analyse d’écart
 assessment#:#tst_general_properties#:#Paramètres Généraux
 assessment#:#tst_header_participant#:#Résultat :
+assessment#:#tst_header_participant_no_answer#:#Question - not answered###14 02 2024 new variable
 assessment#:#tst_header_solution#:#Solution correcte :
 assessment#:#tst_heading_scoring#:#Notation
 assessment#:#tst_hide_pagecontents#:#Hide page content###31 10 2023 new variable
@@ -7231,6 +7234,7 @@ copa#:#copa_prop_reading_time#:#Reading Time
 copa#:#copa_value_reading_time_f_p#:#%s Minutes
 copa#:#copa_value_reading_time_f_s#:#%s Minute
 copa#:#obj_copa_duplicate#:#Duplicate Content Page
+copg#:#copg_active_to_small#:#This date must be higher than the starting date.###14 02 2024 new variable
 copg#:#copg_allow_html#:#Enable HTML/Javascript
 copg#:#copg_allow_html_info#:#User may use HTML or Javascript page content. This may lead to security issues. Do not activate, if features can be used by users which you consider not being trustworthy. The support to add HTML content this way may be discontinued in a future version.
 copg#:#copg_an_error_occured#:#An error occured.
@@ -7241,19 +7245,24 @@ copg#:#copg_cron_keep_entries#:#Keep Minimum###31 10 2023 new variable
 copg#:#copg_cron_keep_entries_info#:#This number is the minimum of entries that will be kept, even if they are older than the deletion period.###31 10 2023 new variable
 copg#:#copg_days#:#Days###31 10 2023 new variable
 copg#:#copg_details#:#Details
+copg#:#copg_edit_iframe_title#:#Text Editing of Page Editor###17 01 2024 new variable
 copg#:#copg_entries#:#Entries###31 10 2023 new variable
 copg#:#copg_error#:#Error
 copg#:#copg_error_occured_modal#:#An error occured while processing the page. Hit "Reload Page" to return to the previously saved state.
 copg#:#copg_est_reading_time#:#Estimated Reading Time###31 10 2023 new variable
 copg#:#copg_history_cleanup_cron#:#Page Editor History Cleanup###31 10 2023 new variable
 copg#:#copg_history_cleanup_cron_info#:#Removes older entries from the page history.###31 10 2023 new variable
+copg#:#copg_more_character_formats#:#More Styles for Characters###17 01 2024 new variable
 copg#:#copg_page_element_not_found#:#Page element not found.
 copg#:#copg_page_type_stys#:#Layout Page
+copg#:#copg_par_format_selection#:#Paragraph Format Selection###17 01 2024 new variable
 copg#:#copg_pc_mob_does_not_exist#:#This media object does not exist.###28 11 2023 new variable
 copg#:#copg_questions_not_supported_here#:#Les questions ne sont pas supportées dans ce contexte.
 copg#:#copg_reload_page#:#Reload Page
+copg#:#copg_remove_formats#:#Remove Formatting###17 01 2024 new variable
 copg#:#copg_sec_link_info#:#Si vous définissez un lien sur toute la section, veuillez vous assurer qu’aucun autre élément interactif n’est inclus dans la section. Autrement, son comportement peut être irrégulier.
 copg#:#copg_snippet_cannot_be_edited#:#Il s'agit d’un extrait du contenu prédéfini et il ne peut pas être édité ici.
+copg#:#copg_unsupported_media_type#:#This media object has an unsupported media type.###14 02 2024 new variable
 copg#:#copg_x_minutes#:#%s minute(s)###31 10 2023 new variable
 cpad#:#cpad_reading_time_status#:#Reading Time
 cpad#:#cpad_reading_time_status_desc#:#If enabled, the estimated reading time for content page objects will be determined and displayed.
@@ -7577,6 +7586,7 @@ crs#:#crs_members_groups#:#Répartition par groupes
 crs#:#crs_members_map#:#Carte des Membres du Cours
 crs#:#crs_members_print_title#:#Membres du cours
 crs#:#crs_min_one_admin#:#Il existe au moins un administrateur assigné à  ce cours.
+crs#:#crs_msg_no_self_registration_period_if_self_enrolment_disabled#:#The limited registration period can not be defined if the "No Self-enrolment" setting is active.###14 02 2024 new variable
 crs#:#crs_my_courses_groups_enabled#:#My Courses and Groups
 crs#:#crs_my_courses_groups_enabled_info#:#If activated, the section 'My Courses and Groups' is visible.
 crs#:#crs_new_status#:#Votre nouveau statut est :
@@ -7904,6 +7914,7 @@ crs#:#events#:#Sessions
 crs#:#export_members#:#Exporter Participants
 crs#:#grouping_change_assignment#:#Modifier Assignation
 crs#:#grp_grp_already_assigned#:#You are already member of this grouping of groups.
+crs#:#grp_not_all_users_assigned_msg#:#%s user(s) assigned as group member(s), %s user(s) were already in the group.###14 02 2024 new variable
 crs#:#mem_cron_min_members_intro#:#Les cours et les groupes suivants ne respectent pas le nombre minimum de membres (encore).
 crs#:#mem_cron_min_members_reason#:#Vous recevez ce message parce que vous avez activé la notification dans l'onglet membres.
 crs#:#mem_cron_min_members_subject#:#Cours / Groupe: Vérification du Nombre Minimum des Membres
@@ -8352,6 +8363,7 @@ dateplaner#:#cal_weekly#:#Hebdomadaire
 dateplaner#:#cal_where#:#Lieu
 dateplaner#:#cal_year_s#:#Année(s)
 dateplaner#:#cal_yearly#:#Annuelle
+dateplaner#:#consultation_hours_block_title#:#Consultation Hours###17 01 2024 new variable
 dateplaner#:#created#:#Créé
 dateplaner#:#crs_cal_activation_end#:#Fin du Cours
 dateplaner#:#crs_cal_activation_start#:#Début du Cours
@@ -10381,6 +10393,8 @@ lso#:#abstract_img#:#Image for Abstract
 lso#:#avail_time_period#:#Period
 lso#:#completed_steps#:#Passed Steps
 lso#:#condition_always#:#Always
+lso#:#cont_ed_insert_lsocurriculum#:#Insert Learning Sequence Curriculum###17 01 2024 new variable
+lso#:#cont_ed_insert_lsostartbutton#:#Insert Learning Sequence Start Button###17 01 2024 new variable
 lso#:#curriculum#:#Curriculum
 lso#:#delete_confirmation#:#Are you sure you want to delete this objects?
 lso#:#entries_deleted#:#Successfuly delete entries
@@ -11312,6 +11326,7 @@ meta#:#md_copyright#:#Droits d'Auteur
 meta#:#md_copyright_add#:#Ajouter une Configuration de Droits d'Auteur
 meta#:#md_copyright_alt_text#:#Text Representation###31 10 2023 new variable
 meta#:#md_copyright_alt_text_info#:#Used for image ‘alt’ attribute###31 10 2023 new variable
+meta#:#md_copyright_default#:#Default###14 02 2024 new variable
 meta#:#md_copyright_edit#:#Editer la Configuration des Droits d'Auteur
 meta#:#md_copyright_enable_info#:#Cette option permet d'offrir une sélection de droits d'auteur prédéfinis
 meta#:#md_copyright_enabled#:#Activer le Choix des Droits d'Auteur
@@ -12520,6 +12535,7 @@ poll#:#poll_activation_online_info#:#Lorsque hors-ligne, seuls les administrateu
 poll#:#poll_add#:#Ajouter Vote
 poll#:#poll_anonymous_warning#:#Votre nom n'est pas visible dans les résultats du sondage.
 poll#:#poll_answer#:#Réponse
+poll#:#poll_answer_selected_alt_text#:#Selected###17 01 2024 new variable
 poll#:#poll_answers#:#Réponses Possibles
 poll#:#poll_barchart#:#Graphique à barres
 poll#:#poll_block_message_already_voted#:#Vous avez déjà voté.
@@ -16139,6 +16155,7 @@ svy#:#svy_finish_survey#:#Finish survey '%1'
 svy#:#svy_invite_participants#:#Invite Participants
 svy#:#svy_link_to_svy#:#Link to Survey###31 10 2023 new variable
 svy#:#svy_part_overview#:#Overview
+svy#:#svy_placeholders_label#:#Verfügbare Platzhalter###14 02 2024 new variable
 svy#:#svy_print_selection#:#Print View Selection###31 10 2023 new variable
 svy#:#svy_remove_all_participants#:#Remove all Participants
 svy#:#svy_remove_participants#:#Remove Participants

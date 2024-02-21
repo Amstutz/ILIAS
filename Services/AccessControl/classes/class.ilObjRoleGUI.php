@@ -433,7 +433,7 @@ class ilObjRoleGUI extends ilObjectGUI
         }
 
         if (!$this->checkAccess('write', 'edit_permission')) {
-            $this->tpl->setOnScreenMessage('msg_no_perm_write', $this->lng->txt('permission_denied'), true);
+            $this->tpl->setOnScreenMessage('failure', $this->lng->txt('msg_no_perm_write'), true);
             $this->ctrl->redirectByClass(ilRepositoryGUI::class);
         }
 
@@ -877,7 +877,7 @@ class ilObjRoleGUI extends ilObjectGUI
                 $this->object->getId(),
                 $assigned_global_roles
             )) {
-                $userObj = $this->ilias->obj_factory->getInstanceByObjId($user);
+                $userObj = new ilObjUser($user);
                 $last_role[$user] = $userObj->getFullName();
                 unset($userObj);
             }

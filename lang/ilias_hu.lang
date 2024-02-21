@@ -926,6 +926,8 @@ assessment#:#msg_number_of_terms_too_low#:#A kifejezések száma nagyobb vagy eg
 assessment#:#msg_poly_added#:#Sokszög hozzáadva
 assessment#:#msg_questions_moved#:#Kérdés(ek) áthelyezve.
 assessment#:#msg_rect_added#:#Téglalap hozzáadva
+assessment#:#msg_score_settings_modified_and_recalc#:#Your changes were saved and the results recalculated correspondingly.###14 02 2024 new variable
+assessment#:#msg_score_settings_not_modified#:#Your changes were not saved.###14 02 2024 new variable
 assessment#:#msg_selected_for_move#:#Kérdés(ek) kiválasztva áthelyezéshez.
 assessment#:#new_category#:#Új mértékegység-kategória
 assessment#:#new_unit#:#Új mértékegység
@@ -1447,6 +1449,7 @@ assessment#:#tst_form_dynamic_question_set_config#:#Folyamatos kérdéskiválasz
 assessment#:#tst_gap_analysis#:#Gap analízis (rés elemzés)
 assessment#:#tst_general_properties#:#Általános beállítások
 assessment#:#tst_header_participant#:#Az Ön válasza:
+assessment#:#tst_header_participant_no_answer#:#Question - not answered###14 02 2024 new variable
 assessment#:#tst_header_solution#:#Legjobb megoldás:
 assessment#:#tst_heading_scoring#:#Pontozás
 assessment#:#tst_hide_pagecontents#:#Oldaltartalom elrejtése
@@ -7246,6 +7249,7 @@ copa#:#copa_prop_reading_time#:#Olvasási idő
 copa#:#copa_value_reading_time_f_p#:#%s perc
 copa#:#copa_value_reading_time_f_s#:#%s perc
 copa#:#obj_copa_duplicate#:#Tartalomlap duplikálása
+copg#:#copg_active_to_small#:#This date must be higher than the starting date.###14 02 2024 new variable
 copg#:#copg_allow_html#:#HTML/Javascript bekapcsolása
 copg#:#copg_allow_html_info#:#HTML, illetve Javascript oldaltartalmakat használhat. Ez biztonsági rést okozhat, ezért ne kapcsolja be, ha lehet ártó szándékú felhasználója. Az ilyen módú HTML-tartalom hozzáadása várhatóan már nem lesz támogatott a későbbi verziókban.
 copg#:#copg_an_error_occured#:#Hiba történt.
@@ -7256,19 +7260,24 @@ copg#:#copg_cron_keep_entries#:#Minimálisan megtartandók
 copg#:#copg_cron_keep_entries_info#:#Legalább ennyi bejegyzést akkor is megtartunk, ha azok régebbiek a megadottnál.
 copg#:#copg_days#:#Napok
 copg#:#copg_details#:#Részletek
+copg#:#copg_edit_iframe_title#:#Text Editing of Page Editor###17 01 2024 new variable
 copg#:#copg_entries#:#Bejegyzések
 copg#:#copg_error#:#Hiba
 copg#:#copg_error_occured_modal#:#Hiba az oldal betöltése közben. Kattintson az oldal újratöltésére, így visszatér a korábban mentett állapothoz.
 copg#:#copg_est_reading_time#:#Becsült olvasási idő
 copg#:#copg_history_cleanup_cron#:#Oldalszerkesztőelőzmény-tisztítás
 copg#:#copg_history_cleanup_cron_info#:#Régi bejegyzések eltávolítása az oldalelőzményekből.
+copg#:#copg_more_character_formats#:#More Styles for Characters###17 01 2024 new variable
 copg#:#copg_page_element_not_found#:#Az oldalelem nem található.
 copg#:#copg_page_type_stys#:#Lapelrendezés
+copg#:#copg_par_format_selection#:#Paragraph Format Selection###17 01 2024 new variable
 copg#:#copg_pc_mob_does_not_exist#:#This media object does not exist.###28 11 2023 new variable
 copg#:#copg_questions_not_supported_here#:#Ebben a kontextusban a kérdéseket nem támogatjuk.
 copg#:#copg_reload_page#:#Reload Page###29 06 2022 new variable
+copg#:#copg_remove_formats#:#Remove Formatting###17 01 2024 new variable
 copg#:#copg_sec_link_info#:#Válassza ki a cél, amire a blokk mutat. Figyelem: A blokk nem tartalmazhat önmagára mutató linket!
 copg#:#copg_snippet_cannot_be_edited#:#Ez egy előre definiált tartalom-építőelem, ezért itt nem módosítható.
+copg#:#copg_unsupported_media_type#:#This media object has an unsupported media type.###14 02 2024 new variable
 copg#:#copg_x_minutes#:#%s perc
 cpad#:#cpad_reading_time_status#:#Olvasási idő
 cpad#:#cpad_reading_time_status_desc#:#A tartalomlap becsült olvasási idejét megállapítjuk és megjelenítjük.
@@ -7592,6 +7601,7 @@ crs#:#crs_members_groups#:#Csoporttagságok
 crs#:#crs_members_map#:#Kurzustagok térképe
 crs#:#crs_members_print_title#:#Kurzustagok
 crs#:#crs_min_one_admin#:#Legalább egy vezetőt hozzá kell rendelni ehhez a kurzushoz.
+crs#:#crs_msg_no_self_registration_period_if_self_enrolment_disabled#:#The limited registration period can not be defined if the "No Self-enrolment" setting is active.###14 02 2024 new variable
 crs#:#crs_my_courses_groups_enabled#:#My Courses and Groups###28 07 2023 new variable
 crs#:#crs_my_courses_groups_enabled_info#:#If activated, the section 'My Courses and Groups' is visible.###28 07 2023 new variable
 crs#:#crs_new_status#:#Az Ön új állapota:
@@ -7919,6 +7929,7 @@ crs#:#events#:#Események
 crs#:#export_members#:#Résztvevők adatainak exportálása
 crs#:#grouping_change_assignment#:#Hozzárendelés változtatása
 crs#:#grp_grp_already_assigned#:#Már tagja ennek a csoportosításnak.
+crs#:#grp_not_all_users_assigned_msg#:#%s user(s) assigned as group member(s), %s user(s) were already in the group.###14 02 2024 new variable
 crs#:#mem_cron_min_members_intro#:#Ezúton értesítjük, hogy az alábbi kurzusok és csoportok esetén nincs meg a minimális taglétszám (még):
 crs#:#mem_cron_min_members_reason#:#Ezt a levelet azért kapta, mert a tagok fülön beállította, hogy kér értesítést.
 crs#:#mem_cron_min_members_subject#:#Kurzus/Csoport: Minimális taglétszám ellenőrzése
@@ -8367,6 +8378,7 @@ dateplaner#:#cal_weekly#:#Hetente
 dateplaner#:#cal_where#:#Hely
 dateplaner#:#cal_year_s#:#Év
 dateplaner#:#cal_yearly#:#Évente
+dateplaner#:#consultation_hours_block_title#:#Consultation Hours###17 01 2024 new variable
 dateplaner#:#created#:#Létrehozva
 dateplaner#:#crs_cal_activation_end#:#Kurzus láthatóságának vége
 dateplaner#:#crs_cal_activation_start#:#Kurzus láthatóságának kezdete
@@ -10396,6 +10408,8 @@ lso#:#abstract_img#:#Absztrakt képe
 lso#:#avail_time_period#:#Időköz
 lso#:#completed_steps#:#Megtett lépések
 lso#:#condition_always#:#Mindig
+lso#:#cont_ed_insert_lsocurriculum#:#Insert Learning Sequence Curriculum###17 01 2024 new variable
+lso#:#cont_ed_insert_lsostartbutton#:#Insert Learning Sequence Start Button###17 01 2024 new variable
 lso#:#curriculum#:#Tanterv
 lso#:#delete_confirmation#:#Biztos, hogy törli ezeket az objektumokat?
 lso#:#entries_deleted#:#Az objektumokat sikeresen törölte.
@@ -11327,6 +11341,7 @@ meta#:#md_copyright#:#Szerzői jog
 meta#:#md_copyright_add#:#Új szerzői jog hozzáadása
 meta#:#md_copyright_alt_text#:#Text Representation###23 10 2023 new variable
 meta#:#md_copyright_alt_text_info#:#Used for image ‘alt’ attribute###23 10 2023 new variable
+meta#:#md_copyright_default#:#Default###14 02 2024 new variable
 meta#:#md_copyright_edit#:#Alapértelmezett szerzői jog módosítása
 meta#:#md_copyright_enable_info#:#Válassza ezt az opciót előre meghatározott szerzői jogok ajánlására.
 meta#:#md_copyright_enabled#:#Szerzői jog kiválasztásának engedélyezése
@@ -12535,6 +12550,7 @@ poll#:#poll_activation_online_info#:#Kapcsolja be ezt a beállítást, hogy a sz
 poll#:#poll_add#:#Szavazás létrehozása
 poll#:#poll_anonymous_warning#:#Ez a szavazás névtelen.
 poll#:#poll_answer#:#Válasz
+poll#:#poll_answer_selected_alt_text#:#Selected###17 01 2024 new variable
 poll#:#poll_answers#:#Lehetséges válaszok
 poll#:#poll_barchart#:#Oszlopdiagram
 poll#:#poll_block_message_already_voted#:#Már szavazott ebben a szavazásban.
@@ -16154,6 +16170,7 @@ svy#:#svy_finish_survey#:#'%1' kérdőív befejezése
 svy#:#svy_invite_participants#:#Résztvevők meghívása
 svy#:#svy_link_to_svy#:#Kérdőívre mutató link
 svy#:#svy_part_overview#:#Áttekintés
+svy#:#svy_placeholders_label#:#Verfügbare Platzhalter###14 02 2024 new variable
 svy#:#svy_print_selection#:#Nyomtatási nézet választása
 svy#:#svy_remove_all_participants#:#Összes résztvevő eltávolítása
 svy#:#svy_remove_participants#:#Résztvevő eltávolítása

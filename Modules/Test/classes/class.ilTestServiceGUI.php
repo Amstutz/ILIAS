@@ -439,7 +439,13 @@ class ilTestServiceGUI
 
                         if ($show_best_solution) {
                             $compare_template = new ilTemplate('tpl.il_as_tst_answers_compare.html', true, true, 'Modules/Test');
-                            $compare_template->setVariable("HEADER_PARTICIPANT", $this->lng->txt('tst_header_participant'));
+                            $test_session = $this->testSessionFactory->getSession($active_id);
+                            if ($pass <= $test_session->getLastFinishedPass()) {
+                                $compare_template->setVariable("HEADER_PARTICIPANT", $this->lng->txt('tst_header_participant'));
+                            } else {
+                                $compare_template->setVariable("HEADER_PARTICIPANT", $this->lng->txt('tst_header_participant_no_answer'));
+                            }
+
                             $compare_template->setVariable("HEADER_SOLUTION", $this->lng->txt('tst_header_solution'));
                             $result_output = $question_gui->getSolutionOutput($active_id, $pass, $show_graphical_output, false, $show_question_only, $show_feedback);
                             $best_output = $question_gui->getSolutionOutput($active_id, $pass, false, false, $show_question_only, false, true);
@@ -781,10 +787,6 @@ class ilTestServiceGUI
      */
     public function getCorrectSolutionOutput($question_id, $active_id, $pass, ilTestQuestionRelatedObjectivesList $objectivesList = null): string
     {
-        global $DIC;
-        $ilUser = $DIC['ilUser'];
-
-        $test_id = $this->object->getTestId();
         $question_gui = $this->object->createQuestionGUI("", $question_id);
 
         if ($this->isPdfDeliveryRequest()) {
@@ -794,6 +796,20 @@ class ilTestServiceGUI
         $template = new ilTemplate("tpl.il_as_tst_correct_solution_output.html", true, true, "Modules/Test");
         $show_question_only = ($this->object->getShowSolutionAnswersOnly()) ? true : false;
         $result_output = $question_gui->getSolutionOutput($active_id, $pass, true, false, $show_question_only, $this->object->getShowSolutionFeedback(), false, false, true);
+        if ($question_gui instanceof assTextQuestionGUI && $this->object->getAutosave()) {
+            $result_output .= $question_gui->getAutoSavedSolutionOutput(
+                $active_id,
+                $pass,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true
+            );
+        }
         $best_output = $question_gui->getSolutionOutput($active_id, $pass, false, false, $show_question_only, false, true, false, false);
         if ($this->object->getShowSolutionFeedback() && $this->testrequest->raw('cmd') != 'outCorrectSolution') {
             $specificAnswerFeedback = $question_gui->getSpecificFeedbackOutput(

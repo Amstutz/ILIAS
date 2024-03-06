@@ -421,10 +421,10 @@ class ilUserUtil
                 $dozent_role_id = $DIC->rbac()->review()->roleExists("Dozent Humanmedizin");
                 if ($dozent_role_id && $DIC->rbac()->review()->isAssigned($ilUser->getId(), $dozent_role_id)) {
                     $DIC->ctrl()->setParameterByClass("ilcalendarpresentationgui", "cal_agenda_per", ilCalendarAgendaListGUI::PERIOD_HALF_YEAR);
-                    $list_link = $DIC->ctrl()->getLinkTargetByClass(["ilPersonalDesktopGUI", "ilCalendarPresentationGUI", "ilCalendarInboxGUI", "ilcalendaragendalistgui"], "", "", false, false);
+                    $list_link = $DIC->ctrl()->getLinkTargetByClass(["ilDashboardGUI", "ilCalendarPresentationGUI", "ilCalendarInboxGUI", "ilcalendaragendalistgui"], "", "", false, false);
                     return $list_link;
                 } else {
-                    $week_link = $DIC->ctrl()->getLinkTargetByClass(["ilPersonalDesktopGUI", "ilCalendarPresentationGUI", "ilcalendarweekgui"], "", "", false, false);
+                    $week_link = $DIC->ctrl()->getLinkTargetByClass(["ilDashboardGUI", "ilCalendarPresentationGUI", "ilcalendarweekgui"], "", "", false, false);
                     return $week_link;
                 }
 

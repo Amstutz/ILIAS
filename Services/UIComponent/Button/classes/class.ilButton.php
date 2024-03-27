@@ -247,8 +247,8 @@ class ilButton extends ilButtonBase
         $this->form_action = $form_action;
         return $this;
     }
-
-    public function getForm(): string
+    //PATCH unibe for selfeval-plugin
+    public function getForm(): ?string
     {
         return $this->form;
     }

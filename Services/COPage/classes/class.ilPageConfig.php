@@ -319,7 +319,7 @@ abstract class ilPageConfig
     {
         //UNIBEPATCH Javascript enable
         $safe = true;
-        if($this->page_obj_key == 'cont' || $this->page_obj_key == 'qpl' || $this->page_obj_key == 'lm') {
+        if($this->page_obj_key == 'cont' || $this->page_obj_key == 'qpl' || $this->page_obj_key == 'lm' || $this->page_obj_key == 'copa') {
             $safe = false;
         }
         return $safe;

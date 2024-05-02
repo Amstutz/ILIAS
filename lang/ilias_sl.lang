@@ -591,7 +591,6 @@ assessment#:#backtocallingtest#:#Nazaj na odprti test
 assessment#:#baseunit#:#Osnovna enota
 assessment#:#button_request_next_question_hint#:#Zahtevaj naslednji namig glede rešitve
 assessment#:#button_request_question_hint#:#Zahtevaj namig glede rešitve
-assessment#:#button_show_requested_question_hints#:#Prikaži zahtevane namige glede rešitve
 assessment#:#by#:#po
 assessment#:#cancel_test#:#Prekini test
 assessment#:#cannot_edit_marks#:#Udeleženci so že opravili test. Oceno lahko spremenite samo, če je bil nastavljen datum poročila o rezultatih, ki je trenutno še v prihodnosti.
@@ -1218,6 +1217,7 @@ assessment#:#show_detailed_results#:#Podrobni rezultati testov (ocenjeno opravlj
 assessment#:#show_examview_html#:#Na zaslonu
 assessment#:#show_examview_pdf#:#Prenos PDF
 assessment#:#show_pass_overview#:#Pregled rezultatov (ocenjeno opravljanje testa)
+assessment#:#show_requested_question_hints#:#Prikaži zahtevane namige glede rešitve
 assessment#:#show_user_answers#:#Odgovori (ocenjeno opravljanje testa)
 assessment#:#showinfo#:#Prikaži lastnosti testa
 assessment#:#showinfo_desc#:#Uporabnikom se na zavihku 'Info' prikažejo vse značilnosti testa, npr. zaporedje, ocena ali poročilo o rezultatih.
@@ -10958,6 +10958,7 @@ mail#:#mail_notification_membership_section#:#Članstva
 mail#:#mail_notification_subject#:#Nova sporočila v nabiralniku
 mail#:#mail_notify_orphaned#:#Sporočilo za obveščanje
 mail#:#mail_notify_orphaned_info#:#Če tukaj vnesete vrednost večjo ali enako 1, bo ILIAS poslal e-pošto uporabniku, preden bo interno sporočilo izbrisano. Prepričajte se, da je mogoče prejemanje zunanje e-pošte.
+mail#:#mail_operation_on_invalid_folder#:#The operation cannot be executed, the folder given in the server request is invalid. Please contact an administrator.###19 03 2024 new variable
 mail#:#mail_options_saved#:#Nastavitve so bile shranjene
 mail#:#mail_orphaned_mails#:#Brisanje starih ali opuščenih sporočil
 mail#:#mail_orphaned_mails_desc#:#Brisanje starih ali opuščenih sporočil
@@ -13613,6 +13614,7 @@ rbac#:#mobs_visible#:#Administracija medijskih objektov in skupin medijev je vid
 rbac#:#mobs_write#:#Uredi nastavitve za medijske objekte in skupine medijev
 rbac#:#moderate#:#Moderiraj
 rbac#:#moderate_frm#:#Moderiraj
+rbac#:#msg_anonymous_cannot_be_assigned#:#Anonymous cannot be assigned to a role.###19 03 2024 new variable
 rbac#:#msg_no_roles_of_type#:#Z izbrano nastavitvijo filtra ni na voljo nobene vloge
 rbac#:#news_add_news#:#Ustvari novosti
 rbac#:#nots_edit_permissions#:#User can change permission settings of Notes administration.###19 08 2022 new variable

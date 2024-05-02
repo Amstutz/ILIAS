@@ -80,7 +80,7 @@ class ilNewItemGroupTableGUI extends ilTable2GUI
 
         $subitems = ilObjRepositorySettings::getNewItemGroupSubItems();
 
-        if ($subitems[0]) {
+        if ($subitems[0] ?? false) {
             $this->main_tpl->setOnScreenMessage('info', sprintf(
                 $lng->txt("rep_new_item_group_unassigned_subitems"),
                 is_array($subitems[0]) ? count($subitems[0]) : 0
@@ -94,7 +94,7 @@ class ilNewItemGroupTableGUI extends ilTable2GUI
                 "pos" => $item["pos"],
                 "title" => $item["title"],
                 "type" => $item["type"],
-                "subitems" => is_array($subitems[$item["id"]]) ? count($subitems[$item["id"]]) : 0
+                "subitems" => is_array($subitems[$item["id"]] ?? false) ? count($subitems[$item["id"]]) : 0
             ];
         }
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of ILIAS, a powerful learning management system
  * published by ILIAS open source e-Learning e.V.
@@ -16,6 +17,8 @@
  *********************************************************************/
 
 require_once 'Modules/Test/classes/inc.AssessmentConstants.php';
+
+use ILIAS\Refinery\Factory as Refinery;
 
 /**
  * Class ilObjTest
@@ -45,6 +48,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
     private array $mob_ids;
     private array $file_ids;
     private bool $online;
+    private Refinery $refinery;
     private \ILIAS\Test\InternalRequestService $testrequest;
     protected int $_kiosk;
     public int $test_id;
@@ -275,6 +279,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         $this->db = $DIC['ilDB'];
         $ilUser = $DIC['ilUser'];
         $lng = $DIC['lng'];
+        $this->refinery = $DIC['refinery'];
         $this->type = "tst";
         $this->testrequest = $DIC->test()->internal()->request();
 
@@ -1330,10 +1335,14 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         if ($result->numRows() == 1) {
             $data = $ilDB->fetchObject($result);
             $this->setTestId($data->test_id);
-            if (strlen($this->getAuthor()) == 0) {
-                $this->saveAuthorToMetadata($data->author);
+
+            if ($data->author) {
+                if(strlen($this->getAuthor()) == 0) {
+                    $this->saveAuthorToMetadata($data->author);
+                }
+                $this->setAuthor($data->author);
             }
-            $this->setAuthor($data->author);
+
             $this->setIntroductionEnabled($data->intro_enabled);
             $this->setIntroduction(ilRTE::_replaceMediaObjectImageSrc((string) $data->introduction, 1));
             $this->setShowInfo($data->showinfo);
@@ -1445,6 +1454,8 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         global $DIC;
         $ilUser = $DIC['ilUser'];
         $ilDB = $DIC['ilDB'];
+
+        $tags_trafo = $this->refinery->string()->stripTags();
 
         $this->questions = array();
         if ($this->isRandomTest()) {
@@ -2567,6 +2578,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         $testSequenceFactory = new ilTestSequenceFactory(
             $DIC->database(),
             $DIC->language(),
+            $DIC['refinery'],
             $DIC['component.repository'],
             $this
         );
@@ -3279,6 +3291,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         $tree = $DIC['tree'];
         $ilDB = $DIC['ilDB'];
         $lng = $DIC['lng'];
+        $refinery = $DIC['refinery'];
         $component_repository = $DIC['component.repository'];
 
         $results = $this->getResultsForActiveId($active_id);
@@ -3290,7 +3303,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         $testSessionFactory = new ilTestSessionFactory($this);
         $testSession = $testSessionFactory->getSession($active_id);
 
-        $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $component_repository, $this);
+        $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $refinery, $component_repository, $this);
         $testSequence = $testSequenceFactory->getSequenceByActiveIdAndPass($active_id, $pass);
 
         if ($this->isDynamicTest()) {
@@ -4139,7 +4152,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
                     );
                     $dynamicQuestionSetConfig->loadFromDb();
 
-                    $testSequenceFactory = new ilTestSequenceFactory($DIC->database(), $DIC->language(), $DIC['component.repository'], $this);
+                    $testSequenceFactory = new ilTestSequenceFactory($DIC->database(), $DIC->language(), $DIC['refinery'], $DIC['component.repository'], $this);
                     $testSequence = $testSequenceFactory->getSequenceByActiveIdAndPass($active_id, $testpass);
 
                     $testSequence->loadFromDb($dynamicQuestionSetConfig);
@@ -6130,7 +6143,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
     * @access public
     * @see $author
     */
-    public function setAuthor($author = "")
+    public function setAuthor(string $author = "")
     {
         $this->author = $author;
     }
@@ -6144,7 +6157,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
     * @access private
     * @see $author
     */
-    public function saveAuthorToMetadata($a_author = "")
+    public function saveAuthorToMetadata(string $a_author = "")
     {
         $md = new ilMD($this->getId(), 0, $this->getType());
         $md_life = $md->getLifecycle();
@@ -6563,10 +6576,12 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         global $DIC;
         $ilDB = $DIC['ilDB'];
 
-        $res = "";
-        if (($active_id) && ($question_id)) {
-            if (is_null($pass)) {
+        if (!$active_id || !$question_id) {
+            if ($pass === null) {
                 $pass = assQuestion::_getSolutionMaxPass($question_id, $active_id);
+            }
+            if ($pass === null) {
+                return '';
             }
             $result = $ilDB->queryF(
                 "SELECT value1 FROM tst_solutions WHERE active_fi = %s AND question_fi = %s AND pass = %s",
@@ -6575,10 +6590,10 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
             );
             if ($result->numRows() == 1) {
                 $row = $ilDB->fetchAssoc($result);
-                $res = $row["value1"];
+                return $row["value1"];
             }
         }
-        return $res;
+        return '';
     }
 
     /**
@@ -7352,12 +7367,13 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
             $tree = $DIC['tree'];
             $ilDB = $DIC['ilDB'];
             $lng = $DIC['lng'];
+            $refinery = $DIC['refinery'];
             $component_repository = $DIC['component.repository'];
 
             $testSessionFactory = new ilTestSessionFactory($this);
             $testSession = $testSessionFactory->getSession($active_id);
 
-            $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $component_repository, $this);
+            $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $refinery, $component_repository, $this);
             $testSequence = $testSequenceFactory->getSequenceByTestSession($testSession);
 
             $dynamicQuestionSetConfig = new ilObjTestDynamicQuestionSetConfig($tree, $ilDB, $component_repository, $this);
@@ -7606,6 +7622,8 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         global $DIC;
         $ilDB = $DIC['ilDB'];
 
+        $tags_trafo = $this->refinery->string()->stripTags();
+
         $query = "
 			SELECT		questions.*,
 						questtypes.type_tag,
@@ -7638,11 +7656,12 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         $questions = array();
 
         while ($row = $ilDB->fetchAssoc($query_result)) {
-            $question = $row;
+            $row['title'] = $tags_trafo->transform($row['title']);
+            $row['description'] = $tags_trafo->transform($row['description'] !== '' && $row['description'] !== null ? $row['description'] : '&nbsp;');
+            $row['author'] = $tags_trafo->transform($row['author']);
+            $row['obligationPossible'] = self::isQuestionObligationPossible($row['question_id']);
 
-            $question['obligationPossible'] = self::isQuestionObligationPossible($row['question_id']);
-
-            $questions[] = $question;
+            $questions[] = $row;
         }
 
         return $questions;
@@ -8752,42 +8771,150 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         $testsettings = unserialize($test_defaults["defaults"]);
         $this->mark_schema = unserialize($test_defaults["marks"]);
 
-        $this->setTitleOutput($testsettings["TitleOutput"]);
-        $this->setIntroductionEnabled($testsettings["IntroEnabled"]);
-        $this->setIntroduction($testsettings["Introduction"] ?? '');
-        $this->setFinalStatement($testsettings["FinalStatement"] ?? '');
-        $this->setShowInfo($testsettings["ShowInfo"]);
-        $this->setForceJS($testsettings["ForceJS"]);
-        $this->setCustomStyle($testsettings["CustomStyle"]);
-        $this->setShowFinalStatement($testsettings["ShowFinalStatement"]);
-        $this->setSequenceSettings($testsettings["SequenceSettings"]);
-        $this->setScoreReporting($testsettings["ScoreReporting"]);
-        $this->setSpecificAnswerFeedback($testsettings['SpecificAnswerFeedback']);
-        $this->setInstantFeedbackSolution($testsettings["InstantFeedbackSolution"]);
-        $this->setAnswerFeedback($testsettings["AnswerFeedback"]);
-        $this->setAnswerFeedbackPoints($testsettings["AnswerFeedbackPoints"]);
-        $this->setResultsPresentation($testsettings["ResultsPresentation"]);
-        $this->setAnonymity($testsettings["Anonymity"]);
-        $this->setShowCancel($testsettings["ShowCancel"]);
-        $this->setShuffleQuestions($testsettings["Shuffle"]);
-        $this->setShowMarker($testsettings["ShowMarker"]);
-        $this->setReportingDate($testsettings["ReportingDate"]);
-        $this->setNrOfTries($testsettings["NrOfTries"]);
-        $this->setBlockPassesAfterPassedEnabled((bool) $testsettings['BlockAfterPassed']);
-        $this->setUsePreviousAnswers($testsettings["UsePreviousAnswers"]);
-        $this->setRedirectionMode($testsettings['redirection_mode']);
-        $this->setRedirectionUrl($testsettings['redirection_url']);
-        $this->setProcessingTime($testsettings["ProcessingTime"]);
-        $this->setResetProcessingTime($testsettings["ResetProcessingTime"]);
-        $this->setEnableProcessingTime($testsettings["EnableProcessingTime"]);
-        $this->setStartingTimeEnabled($testsettings["StartingTimeEnabled"]);
-        $this->setStartingTime($testsettings["StartingTime"]);
-        $this->setKiosk($testsettings["Kiosk"]);
-        $this->setEndingTimeEnabled($testsettings["EndingTimeEnabled"]);
-        $this->setEndingTime($testsettings["EndingTime"]);
-        $this->setECTSOutput($testsettings["ECTSOutput"]);
-        $this->setECTSFX($testsettings["ECTSFX"]);
-        $this->setECTSGrades($testsettings["ECTSGrades"]);
+        if (array_key_exists('TitleOutput', $testsettings)) {
+            $this->setTitleOutput($testsettings['TitleOutput']);
+        }
+
+        if (array_key_exists('IntroEnabled', $testsettings)) {
+            $this->setIntroductionEnabled($testsettings['IntroEnabled']);
+        }
+
+        if (array_key_exists('Introduction', $testsettings)) {
+            $this->setIntroduction($testsettings['Introduction'] ?? '');
+        }
+
+        if (array_key_exists('FinalStatement', $testsettings)) {
+            $this->setFinalStatement($testsettings['FinalStatement'] ?? '');
+        }
+
+        if (array_key_exists('ShowInfo', $testsettings)) {
+            $this->setShowInfo($testsettings['ShowInfo']);
+        }
+
+        if (array_key_exists('ForceJS', $testsettings)) {
+            $this->setForceJS($testsettings['ForceJS']);
+        }
+
+        if (array_key_exists('CustomStyle', $testsettings)) {
+            $this->setCustomStyle($testsettings['CustomStyle']);
+        }
+
+        if (array_key_exists('ShowFinalStatement', $testsettings)) {
+            $this->setShowFinalStatement($testsettings['ShowFinalStatement']);
+        }
+
+        if (array_key_exists('SequenceSettings', $testsettings)) {
+            $this->setSequenceSettings($testsettings['SequenceSettings']);
+        }
+
+        if (array_key_exists('ScoreReporting', $testsettings)) {
+            $this->setScoreReporting($testsettings['ScoreReporting']);
+        }
+
+        if (array_key_exists('SpecificAnswerFeedback', $testsettings)) {
+            $this->setSpecificAnswerFeedback($testsettings['SpecificAnswerFeedback']);
+        }
+
+        if (array_key_exists('InstantFeedbackSolution', $testsettings)) {
+            $this->setInstantFeedbackSolution($testsettings['InstantFeedbackSolution']);
+        }
+
+        if (array_key_exists('AnswerFeedback', $testsettings)) {
+            $this->setAnswerFeedback($testsettings['AnswerFeedback']);
+        }
+
+        if (array_key_exists('AnswerFeedbackPoints', $testsettings)) {
+            $this->setAnswerFeedbackPoints($testsettings['AnswerFeedbackPoints']);
+        }
+
+        if (array_key_exists('ResultsPresentation', $testsettings)) {
+            $this->setResultsPresentation($testsettings['ResultsPresentation']);
+        }
+
+        if (array_key_exists('Anonymity', $testsettings)) {
+            $this->setAnonymity($testsettings['Anonymity']);
+        }
+
+        if (array_key_exists('ShowCancel', $testsettings)) {
+            $this->setShowCancel($testsettings['ShowCancel']);
+        }
+
+        if (array_key_exists('Shuffle', $testsettings)) {
+            $this->setShuffleQuestions($testsettings['Shuffle']);
+        }
+
+        if (array_key_exists('ShowMarker', $testsettings)) {
+            $this->setShowMarker($testsettings['ShowMarker']);
+        }
+
+        if (array_key_exists('ReportingDate', $testsettings)) {
+            $this->setReportingDate($testsettings['ReportingDate']);
+        }
+
+        if (array_key_exists('NrOfTries', $testsettings)) {
+            $this->setNrOfTries($testsettings['NrOfTries']);
+        }
+
+        if (array_key_exists('BlockAfterPassed', $testsettings)) {
+            $this->setBlockPassesAfterPassedEnabled($testsettings['BlockAfterPassed']);
+        }
+
+        if (array_key_exists('UsePreviousAnswers', $testsettings)) {
+            $this->setUsePreviousAnswers($testsettings['UsePreviousAnswers']);
+        }
+
+        if (array_key_exists('redirection_mode', $testsettings)) {
+            $this->setRedirectionMode($testsettings['redirection_mode']);
+        }
+
+        if (array_key_exists('redirection_url', $testsettings)) {
+            $this->setRedirectionUrl($testsettings['redirection_url']);
+        }
+
+        if (array_key_exists('ProcessingTime', $testsettings)) {
+            $this->setProcessingTime($testsettings['ProcessingTime']);
+        }
+
+        if (array_key_exists('ResetProcessingTime', $testsettings)) {
+            $this->setResetProcessingTime($testsettings['ResetProcessingTime']);
+        }
+
+        if (array_key_exists('EnableProcessingTime', $testsettings)) {
+            $this->setEnableProcessingTime($testsettings['EnableProcessingTime']);
+        }
+
+        if (array_key_exists('StartingTimeEnabled', $testsettings)) {
+            $this->setStartingTimeEnabled($testsettings['StartingTimeEnabled']);
+        }
+
+        if (array_key_exists('StartingTime', $testsettings)) {
+            $this->setStartingTime($testsettings['StartingTime']);
+        }
+
+        if (array_key_exists('Kiosk', $testsettings)) {
+            $this->setKiosk($testsettings['Kiosk']);
+        }
+
+        if (array_key_exists('EndingTimeEnabled', $testsettings)) {
+            $this->setEndingTimeEnabled($testsettings['EndingTimeEnabled']);
+        }
+
+        if (array_key_exists('EndingTime', $testsettings)) {
+            $this->setEndingTime($testsettings['EndingTime']);
+        }
+
+        if (array_key_exists('ECTSOutput', $testsettings)) {
+            $this->setECTSOutput($testsettings['ECTSOutput']);
+        }
+
+        if (array_key_exists('ECTSFX', $testsettings)) {
+            $this->setECTSFX($testsettings['ECTSFX']);
+        }
+
+        if (array_key_exists('ECTSGrades', $testsettings)) {
+            $this->setECTSGrades($testsettings['ECTSGrades']);
+        }
+
         if (isset($testsettings["isRandomTest"])) {
             if ($testsettings["isRandomTest"]) {
                 $this->setQuestionSetType(self::QUESTION_SET_TYPE_RANDOM);
@@ -8798,12 +8925,29 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
             $this->setQuestionSetType($testsettings["questionSetType"]);
         }
 
-        $this->setMailNotification($testsettings["mailnotification"]);
-        $this->setMailNotificationType($testsettings["mailnottype"]);
-        $this->setExportSettings($testsettings['exportsettings']);
-        $this->setListOfQuestionsSettings($testsettings["ListOfQuestionsSettings"]);
-        $this->setObligationsEnabled($testsettings["obligations_enabled"]);
-        $this->setOfferingQuestionHintsEnabled($testsettings["offer_question_hints"]);
+        if (array_key_exists('mailnotification', $testsettings)) {
+            $this->setMailNotification($testsettings['mailnotification']);
+        }
+
+        if (array_key_exists('mailnottype', $testsettings)) {
+            $this->setMailNotificationType($testsettings['mailnottype']);
+        }
+
+        if (array_key_exists('exportsettings', $testsettings)) {
+            $this->setExportSettings($testsettings['exportsettings']);
+        }
+
+        if (array_key_exists('ListOfQuestionsSettings', $testsettings)) {
+            $this->setListOfQuestionsSettings($testsettings['ListOfQuestionsSettings']);
+        }
+
+        if (array_key_exists('obligations_enabled', $testsettings)) {
+            $this->setObligationsEnabled($testsettings['obligations_enabled']);
+        }
+
+        if (array_key_exists('offer_question_hints', $testsettings)) {
+            $this->setOfferingQuestionHintsEnabled($testsettings['offer_question_hints']);
+        }
 
         if (isset($testsettings['examid_in_kiosk'])) {
             $this->setShowExamIdInTestPassEnabled($testsettings['examid_in_kiosk']);
@@ -8811,35 +8955,121 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
             $this->setShowExamIdInTestPassEnabled($testsettings['examid_in_test_pass']);
         }
 
-        $this->setEnableExamview($testsettings['enable_examview']);
-        $this->setShowExamviewHtml($testsettings['show_examview_html']);
-        $this->setShowExamviewPdf($testsettings['show_examview_pdf']);
-        $this->setEnableArchiving($testsettings['enable_archiving']);
-        $this->setSignSubmission($testsettings['sign_submission']);
-        $this->setCharSelectorAvailability($testsettings['char_selector_availability']);
-        $this->setCharSelectorDefinition($testsettings['char_selector_definition']);
-        $this->setSkillServiceEnabled((bool) $testsettings['skill_service']);
-        $this->setShowGradingStatusEnabled((bool) $testsettings['show_grading_status']);
-        $this->setShowGradingMarkEnabled((bool) $testsettings['show_grading_mark']);
-        $this->setFollowupQuestionAnswerFixationEnabled($testsettings['follow_qst_answer_fixation']);
-        $this->setInstantFeedbackAnswerFixationEnabled($testsettings['inst_fb_answer_fixation']);
-        $this->setForceInstantFeedbackEnabled($testsettings['force_inst_fb']);
-        $this->setRedirectionMode($testsettings['redirection_mode']);
-        $this->setRedirectionUrl($testsettings['redirection_url']);
-        $this->setAutosave($testsettings['autosave']);
-        $this->setAutosaveIval($testsettings['autosave_ival']);
-        $this->setPasswordEnabled($testsettings['password_enabled']);
-        $this->setPassword($testsettings['password']);
-        $this->setFixedParticipants($testsettings['fixed_participants']);
-        $this->setLimitUsersEnabled($testsettings['limit_users_enabled']);
-        $this->setAllowedUsers($testsettings['allowedusers']);
-        $this->setAllowedUsersTimeGap($testsettings['alloweduserstimegap']);
-        $this->setUsePreviousAnswers($testsettings['use_previous_answers']);
-        $this->setActivationLimited($testsettings['activation_limited']);
-        $this->setActivationStartingTime($testsettings['activation_start_time']);
-        $this->setActivationEndingTime($testsettings['activation_end_time']);
-        $this->setActivationVisibility($testsettings['activation_visibility']);
-        $this->setPassWaiting($testsettings['pass_waiting']);
+        if (array_key_exists('enable_examview', $testsettings)) {
+            $this->setEnableExamview($testsettings['enable_examview']);
+        }
+
+        if (array_key_exists('show_examview_html', $testsettings)) {
+            $this->setShowExamviewHtml($testsettings['show_examview_html']);
+        }
+
+        if (array_key_exists('show_examview_pdf', $testsettings)) {
+            $this->setShowExamviewPdf($testsettings['show_examview_pdf']);
+        }
+
+        if (array_key_exists('enable_archiving', $testsettings)) {
+            $this->setEnableArchiving($testsettings['enable_archiving']);
+        }
+
+        if (array_key_exists('sign_submission', $testsettings)) {
+            $this->setSignSubmission($testsettings['sign_submission']);
+        }
+
+        if (array_key_exists('char_selector_availability', $testsettings)) {
+            $this->setCharSelectorAvailability($testsettings['char_selector_availability']);
+        }
+
+        if (array_key_exists('char_selector_definition', $testsettings)) {
+            $this->setCharSelectorDefinition($testsettings['char_selector_definition']);
+        }
+
+        if (array_key_exists('skill_service', $testsettings)) {
+            $this->setSkillServiceEnabled((bool) $testsettings['skill_service']);
+        }
+
+        if (array_key_exists('show_grading_status', $testsettings)) {
+            $this->setShowGradingStatusEnabled((bool) $testsettings['show_grading_status']);
+        }
+
+        if (array_key_exists('show_grading_mark', $testsettings)) {
+            $this->setShowGradingMarkEnabled((bool) $testsettings['show_grading_mark']);
+        }
+
+        if (array_key_exists('follow_qst_answer_fixation', $testsettings)) {
+            $this->setFollowupQuestionAnswerFixationEnabled($testsettings['follow_qst_answer_fixation']);
+        }
+
+        if (array_key_exists('inst_fb_answer_fixation', $testsettings)) {
+            $this->setInstantFeedbackAnswerFixationEnabled($testsettings['inst_fb_answer_fixation']);
+        }
+
+        if (array_key_exists('force_inst_fb', $testsettings)) {
+            $this->setForceInstantFeedbackEnabled($testsettings['force_inst_fb']);
+        }
+
+        if (array_key_exists('redirection_mode', $testsettings)) {
+            $this->setRedirectionMode($testsettings['redirection_mode']);
+        }
+
+        if (array_key_exists('redirection_url', $testsettings)) {
+            $this->setRedirectionUrl($testsettings['redirection_url']);
+        }
+
+        if (array_key_exists('autosave', $testsettings)) {
+            $this->setAutosave($testsettings['autosave']);
+        }
+
+        if (array_key_exists('autosave_ival', $testsettings)) {
+            $this->setAutosaveIval($testsettings['autosave_ival']);
+        }
+
+        if (array_key_exists('password_enabled', $testsettings)) {
+            $this->setPasswordEnabled($testsettings['password_enabled']);
+        }
+
+        if (array_key_exists('password', $testsettings)) {
+            $this->setPassword($testsettings['password']);
+        }
+
+        if (array_key_exists('fixed_participants', $testsettings)) {
+            $this->setFixedParticipants($testsettings['fixed_participants']);
+        }
+
+        if (array_key_exists('limit_users_enabled', $testsettings)) {
+            $this->setLimitUsersEnabled($testsettings['limit_users_enabled']);
+        }
+
+        if (array_key_exists('allowedusers', $testsettings)) {
+            $this->setAllowedUsers($testsettings['allowedusers']);
+        }
+
+        if (array_key_exists('alloweduserstimegap', $testsettings)) {
+            $this->setAllowedUsersTimeGap($testsettings['alloweduserstimegap']);
+        }
+
+        if (array_key_exists('use_previous_answers', $testsettings)) {
+            $this->setUsePreviousAnswers($testsettings['use_previous_answers']);
+        }
+
+        if (array_key_exists('activation_limited', $testsettings)) {
+            $this->setActivationLimited($testsettings['activation_limited']);
+        }
+
+        if (array_key_exists('activation_start_time', $testsettings)) {
+            $this->setActivationStartingTime($testsettings['activation_start_time']);
+        }
+
+        if (array_key_exists('activation_end_time', $testsettings)) {
+            $this->setActivationEndingTime($testsettings['activation_end_time']);
+        }
+
+        if (array_key_exists('activation_visibility', $testsettings)) {
+            $this->setActivationVisibility($testsettings['activation_visibility']);
+        }
+
+        if (array_key_exists('pass_waiting', $testsettings)) {
+            $this->setPassWaiting($testsettings['pass_waiting']);
+        }
 
         $settings = $this->getScoreSettings();
         $exam_id_in_results = false;
@@ -10697,6 +10927,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         global $DIC;
         $ilDB = $DIC['ilDB'];
         $lng = $DIC['lng'];
+        $refinery = $DIC['refinery'];
         $component_repository = $DIC['component.repository'];
 
         /* @var ilObjTest $testOBJ */
@@ -10707,7 +10938,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
 
         $testSessionFactory = new ilTestSessionFactory($testOBJ);
 
-        $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $component_repository, $testOBJ);
+        $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $refinery, $component_repository, $testOBJ);
 
         $testSession = $testSessionFactory->getSession($activeId);
         $testSequence = $testSequenceFactory->getSequenceByActiveIdAndPass($activeId, $testSession->getPass());
@@ -10729,6 +10960,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         global $DIC;
         $ilDB = $DIC['ilDB'];
         $lng = $DIC['lng'];
+        $refinery = $DIC['refinery'];
         $component_repository = $DIC['component.repository'];
 
         /* @var ilObjTest $testOBJ */
@@ -10742,7 +10974,7 @@ class ilObjTest extends ilObject implements ilMarkSchemaAware, ilEctsGradesEnabl
         // Added temporarily bugfix smeyer
         $testSessionFactory->reset();
 
-        $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $component_repository, $testOBJ);
+        $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $refinery, $component_repository, $testOBJ);
 
         $testSession = $testSessionFactory->getSession($activeId);
         $testSequence = $testSequenceFactory->getSequenceByActiveIdAndPass($activeId, $testSession->getPass());

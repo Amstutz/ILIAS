@@ -417,7 +417,10 @@ class ilPersonalSettingsGUI
             $si = new ilSelectInputGUI($this->lng->txt("language"), "language");
             $si->setOptions($options);
             $si->setValue($ilUser->getLanguage());
-            $si->setDisabled((bool) $ilSetting->get("usr_settings_disable_language"));
+            $si->setDisabled(
+                $ilSetting->get("usr_settings_disable_language") === '1'
+                || count($options) <= 1
+            );
             $this->form->addItem($si);
         }
 
@@ -624,7 +627,8 @@ class ilPersonalSettingsGUI
         $ilSetting = $DIC->settings();
 
         $this->initGeneralSettingsForm();
-        if ($this->form->checkInput()) {
+        if ($this->form->checkInput()
+            && $this->checkPersonalStartingPoint()) {
             if ($this->workWithUserSetting("skin_style")) {
                 //set user skin and style
                 if ($this->form->getInput("skin_style") != "") {
@@ -714,6 +718,22 @@ class ilPersonalSettingsGUI
 
         $this->form->setValuesByPost();
         $this->showGeneralSettings(true);
+    }
+
+    private function checkPersonalStartingPoint(): bool
+    {
+        if (!ilUserUtil::hasPersonalStartingPoint()
+            || (int) $this->form->getInput('usr_start') !== ilUserUtil::START_REPOSITORY_OBJ) {
+            return true;
+        }
+
+        $ref_id = $this->form->getInput('usr_start_ref_id');
+        if (!is_numeric($ref_id) || !ilObject::_exists($ref_id, true)) {
+            $this->tpl->setOnScreenMessage('failure', $this->lng->txt('obj_ref_id_not_exist'), true);
+            return false;
+        }
+
+        return true;
     }
 
     /**

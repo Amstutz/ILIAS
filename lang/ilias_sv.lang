@@ -592,7 +592,6 @@ assessment#:#backtocallingtest#:#Tillbaka till testet
 assessment#:#baseunit#:#Basenhet
 assessment#:#button_request_next_question_hint#:#Förfrågan om nästa lösning
 assessment#:#button_request_question_hint#:#Förfrågan om lösning
-assessment#:#button_show_requested_question_hints#:#Visa begärda lösningsanteckningar
 assessment#:#by#:#till
 assessment#:#cancel_test#:#Test av avbrott
 assessment#:#cannot_edit_marks#:#Testet har redan genomförts av deltagarna. Du kan bara ändra bedömningen om ett datum har fastställts för resultatutmatningen som för närvarande fortfarande ligger i framtiden.
@@ -1219,6 +1218,7 @@ assessment#:#show_detailed_results#:#Detaljerade testresultat (poängsatt testk�
 assessment#:#show_examview_html#:#På skärmen
 assessment#:#show_examview_pdf#:#PDF nedladdning
 assessment#:#show_pass_overview#:#Resultatöversikt (poängsatt provkörning)
+assessment#:#show_requested_question_hints#:#Visa begärda lösningsanteckningar
 assessment#:#show_user_answers#:#Answers (poängsatt testkörning)
 assessment#:#showinfo#:#Visa testets egenskaper
 assessment#:#showinfo_desc#:#Användare visas alla testegenskaper på fliken "Info", t.ex. ordning, betyg eller resultatutmatning.
@@ -10959,6 +10959,7 @@ mail#:#mail_notification_membership_section#:#Memberships
 mail#:#mail_notification_subject#:#Nya e-postmeddelanden i inkorgen
 mail#:#mail_notify_orphaned#:#Meddelanden via e-post
 mail#:#mail_notify_orphaned_info#:#Om du anger ett värde som är större än eller lika med 1 här, kommer ILIAS att skicka ett e-postmeddelande till användaren innan ett internt e-postmeddelande raderas. Se till att extern e-postmottagning är möjlig.
+mail#:#mail_operation_on_invalid_folder#:#The operation cannot be executed, the folder given in the server request is invalid. Please contact an administrator.###19 03 2024 new variable
 mail#:#mail_options_saved#:#Inställningarna har sparats
 mail#:#mail_orphaned_mails#:#Radera gamla eller föräldralösa e-postmeddelanden
 mail#:#mail_orphaned_mails_desc#:#Radera gamla eller föräldralösa e-postmeddelanden
@@ -13614,6 +13615,7 @@ rbac#:#mobs_visible#:#Administration för mediaobjekt och pooler är synlig
 rbac#:#mobs_write#:#Redigera inställningar för mediaobjekt och pooler
 rbac#:#moderate#:#Måttlig
 rbac#:#moderate_frm#:#Måttlig
+rbac#:#msg_anonymous_cannot_be_assigned#:#Anonymous cannot be assigned to a role.###19 03 2024 new variable
 rbac#:#msg_no_roles_of_type#:#Inga rullar närvarande med den valda filterinställningen
 rbac#:#news_add_news#:#Skapa nyheter
 rbac#:#nots_edit_permissions#:#Ändra administrationens rättighetsinställningar för anteckningar

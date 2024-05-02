@@ -514,6 +514,11 @@ abstract class assQuestion
         return $this->title;
     }
 
+    public function getTitleForHTMLOutput(): string
+    {
+        return $this->refinery->string()->stripTags()->transform($this->title);
+    }
+
     public function getTitleFilenameCompliant(): string
     {
         return ilFileUtils::getASCIIFilename($this->getTitle());
@@ -537,6 +542,11 @@ abstract class assQuestion
     public function getComment(): string
     {
         return $this->comment;
+    }
+
+    public function getDescriptionForHTMLOutput(): string
+    {
+        return $this->refinery->string()->stripTags()->transform($this->comment);
     }
 
     public function getThumbSize(): int
@@ -581,6 +591,11 @@ abstract class assQuestion
     public function getAuthor(): string
     {
         return $this->author;
+    }
+
+    public function getAuthorForHTMLOutput(): string
+    {
+        return $this->refinery->string()->stripTags()->transform($this->author);
     }
 
     public function getOwner(): int
@@ -1304,7 +1319,7 @@ abstract class assQuestion
      */
     public function getSolutionValues($active_id, $pass = null, bool $authorized = true): array
     {
-        if (is_null($pass)) {
+        if ($pass === null && is_numeric($active_id)) {
             $pass = $this->getSolutionMaxPass((int) $active_id);
         }
 
@@ -2209,10 +2224,16 @@ abstract class assQuestion
         }
     }
 
-    protected function syncSuggestedSolutionFiles(int $original_id): void
-    {
+    protected function syncSuggestedSolutionFiles(
+        int $target_question_id,
+        int $target_obj_id
+    ): void {
         $filepath = $this->getSuggestedSolutionPath();
-        $filepath_original = str_replace("/$this->id/solution", "/$original_id/solution", $filepath);
+        $filepath_original = str_replace(
+            "{$this->getObjId()}/{$this->id}/solution",
+            "{$target_obj_id}/{$target_question_id}/solution",
+            $filepath
+        );
         ilFileUtils::delDir($filepath_original);
         foreach ($this->suggested_solutions as $index => $solution) {
             if (strcmp($solution["type"], "file") == 0) {
@@ -2250,7 +2271,7 @@ abstract class assQuestion
         }
     }
 
-    public function updateSuggestedSolutions(int $original_id = -1): void
+    public function updateSuggestedSolutions(int $original_id = -1, int $original_obj_id = -1): void
     {
         $id = $original_id !== -1 ? $original_id : $this->getId();
         $this->db->manipulateF(
@@ -2284,8 +2305,9 @@ abstract class assQuestion
                 ilInternalLink::_saveLink("qst", $id, $matches[2], (int) $matches[3], (int) $matches[1]);
             }
         }
-        if ($original_id !== -1) {
-            $this->syncSuggestedSolutionFiles($id);
+        if ($original_id !== -1
+            && $original_obj_id !== -1) {
+            $this->syncSuggestedSolutionFiles($id, $original_obj_id);
         }
         $this->cleanupMediaObjectUsage();
     }
@@ -2510,7 +2532,7 @@ abstract class assQuestion
         $this->setOriginalId($originalID);
         $this->setObjId($currentObjId);
 
-        $this->updateSuggestedSolutions($this->getOriginalId());
+        $this->updateSuggestedSolutions($this->getOriginalId(), $originalObjId);
         $this->syncXHTMLMediaObjectsOfQuestion();
 
         $this->afterSyncWithOriginal($this->getOriginalId(), $this->getId(), $originalObjId, $this->getObjId());
@@ -2610,7 +2632,7 @@ abstract class assQuestion
         $this->points = $points;
     }
 
-    public function getSolutionMaxPass(int $active_id)
+    public function getSolutionMaxPass(int $active_id): ?int
     {
         return self::_getSolutionMaxPass($this->getId(), $active_id);
     }
@@ -2618,7 +2640,7 @@ abstract class assQuestion
     /**
     * Returns the maximum pass a users question solution
     */
-    public static function _getSolutionMaxPass(int $question_id, int $active_id)
+    public static function _getSolutionMaxPass(int $question_id, int $active_id): ?int
     {
         /*		include_once "./Modules/Test/classes/class.ilObjTest.php";
                 $pass = ilObjTest::_getPass($active_id);
@@ -2635,12 +2657,12 @@ abstract class assQuestion
             array('integer','integer'),
             array($active_id, $question_id)
         );
-        if ($result->numRows() == 1) {
+        if ($result->numRows() === 1) {
             $row = $ilDB->fetchAssoc($result);
             return $row["maxpass"];
         }
 
-        return 0;
+        return null;
     }
 
     public static function _isWriteable(int $question_id, int $user_id): bool
@@ -2901,19 +2923,22 @@ abstract class assQuestion
         }
 
         if ($points <= $maxpoints) {
-            if (is_null($pass)) {
+            if ($pass === null) {
                 $pass = assQuestion::_getSolutionMaxPass($question_id, $active_id);
             }
 
-            // retrieve the already given points
+            $rowsnum = 0;
             $old_points = 0;
-            $result = $ilDB->queryF(
-                "SELECT points FROM tst_test_result WHERE active_fi = %s AND question_fi = %s AND pass = %s",
-                array('integer','integer','integer'),
-                array($active_id, $question_id, $pass)
-            );
-            $manual = ($manualscoring) ? 1 : 0;
-            $rowsnum = $result->numRows();
+
+            if ($pass !== null) {
+                $result = $ilDB->queryF(
+                    "SELECT points FROM tst_test_result WHERE active_fi = %s AND question_fi = %s AND pass = %s",
+                    array('integer','integer','integer'),
+                    array($active_id, $question_id, $pass)
+                );
+                $manual = ($manualscoring) ? 1 : 0;
+                $rowsnum = $result->numRows();
+            }
             if ($rowsnum > 0) {
                 $row = $ilDB->fetchAssoc($result);
                 $old_points = $row["points"];
@@ -2971,7 +2996,7 @@ abstract class assQuestion
         return $this->purifyAndPrepareTextAreaOutput($this->question);
     }
 
-    protected function purifyAndPrepareTextAreaOutput(string $content) : string
+    protected function purifyAndPrepareTextAreaOutput(string $content): string
     {
         $purified_content = $this->getHtmlQuestionContentPurifier()->purify($content);
         if ($this->isAdditionalContentEditingModePageObject()
@@ -3901,7 +3926,7 @@ abstract class assQuestion
 
     public function authorizedSolutionExists(int $active_id, ?int $pass): bool
     {
-        if (is_null($pass)) {
+        if ($pass === null) {
             return false;
         }
         $solutionAvailability = $this->lookupForExistingSolutions($active_id, $pass);

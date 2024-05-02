@@ -577,7 +577,6 @@ assessment#:#backtocallingtest#:#Voltar ao teste vocacional
 assessment#:#baseunit#:#Unidade base
 assessment#:#button_request_next_question_hint#:#Pedir próxima sugestão
 assessment#:#button_request_question_hint#:#Pedir sugestão
-assessment#:#button_show_requested_question_hints#:#Mostrar sugestões pedidas
 assessment#:#by#:#por
 assessment#:#cancel_test#:#Cancelar o teste
 assessment#:#cannot_edit_marks#:#Já há alunos que fizeram o teste. Pode apenas alterar as marcas se estiver ativada uma data do relatório da pontuação e se a data do relatório ainda não foi alcançada.
@@ -1204,6 +1203,7 @@ assessment#:#show_detailed_results#:#Mostrar resultados detalhados do utilizador
 assessment#:#show_examview_html#:#No ecrã
 assessment#:#show_examview_pdf#:#Download de PDF
 assessment#:#show_pass_overview#:#Mostrar vista geral de tentativas marcadas
+assessment#:#show_requested_question_hints#:#Mostrar sugestões pedidas
 assessment#:#show_user_answers#:#Mostrar respostas marcadas do utilizador
 assessment#:#showinfo#:#Mostrar todas as propriedades de teste
 assessment#:#showinfo_desc#:#Os utilizadores terão uma lista completa das propriedades do teste no separador ‘Informação’, isto é informação sobre a pontuação e relatórios.
@@ -10944,6 +10944,7 @@ mail#:#mail_notification_membership_section#:#Adesão
 mail#:#mail_notification_subject#:#Funções locais adicionais %s
 mail#:#mail_notify_orphaned#:#Mail de notificação
 mail#:#mail_notify_orphaned_info#:#Tem a certeza que quer apagar a seguinte posição?
+mail#:#mail_operation_on_invalid_folder#:#The operation cannot be executed, the folder given in the server request is invalid. Please contact an administrator.###19 03 2024 new variable
 mail#:#mail_options_saved#:#Não foi possível encontrar ou_parent_id.
 mail#:#mail_orphaned_mails#:#Apagar mails antigos ou órfãos
 mail#:#mail_orphaned_mails_desc#:#Apagar mails antigos ou órfãos
@@ -13599,6 +13600,7 @@ rbac#:#mobs_visible#:#Definições guardadas
 rbac#:#mobs_write#:#Número necessário de visitas
 rbac#:#moderate#:#Moderar
 rbac#:#moderate_frm#:#Moderar
+rbac#:#msg_anonymous_cannot_be_assigned#:#Anonymous cannot be assigned to a role.###19 03 2024 new variable
 rbac#:#msg_no_roles_of_type#:#Nenhumas funções disponíveis com definição de filtro selecionada
 rbac#:#news_add_news#:#Adicionar notícias
 rbac#:#nots_edit_permissions#:#User can change permission settings of Notes administration.###30 04 2021 new variable

@@ -577,7 +577,6 @@ assessment#:#backtocallingtest#:#Tagasi koostatava testi juurde
 assessment#:#baseunit#:#Base Unit
 assessment#:#button_request_next_question_hint#:#Request Next Hint
 assessment#:#button_request_question_hint#:#Request Hint
-assessment#:#button_show_requested_question_hints#:#Show Requested Hints
 assessment#:#by#:#poolt
 assessment#:#cancel_test#:#Katkesta test
 assessment#:#cannot_edit_marks#:#See test on juba mõnede kasutajate poolt käivitatud. Sa saad muuta vaid hindeid, kui on aktiveeritud testitulemuste esitamise tähtaeg ja see pole veel käes.
@@ -1204,6 +1203,7 @@ assessment#:#show_detailed_results#:#Näita kasutaja tulemusi detailselt (märgi
 assessment#:#show_examview_html#:#Show exam view on the test submission page.
 assessment#:#show_examview_pdf#:#Shows exam view in an automatically downloaded PDF.
 assessment#:#show_pass_overview#:#Näita märgistatud soorituse ülevaadet
+assessment#:#show_requested_question_hints#:#Show Requested Hints
 assessment#:#show_user_answers#:#Näita kasutaja märgitud vastuseid
 assessment#:#showinfo#:#Näita kogu testi infolehte
 assessment#:#showinfo_desc#:#Kui on märgistatud, on kogu testi infoleht kuvatud (k.a testi seaded). Kui on märgistamata, on kuvatud vaid sissejuhatav tekst (kui on olemas) ja seaded on kuvatud testi infolehel.
@@ -10944,6 +10944,7 @@ mail#:#mail_notification_membership_section#:#Membership###30 08 2015 new variab
 mail#:#mail_notification_subject#:#New mail in your inbox
 mail#:#mail_notify_orphaned#:#Notification Mail###30 08 2015 new variable
 mail#:#mail_notify_orphaned_info#:#If you enter a value here is larger than or equal to 1, ILIAS will send an email to the user before an internal mail is deleted. Please make sure that an external e-mail reception is possible.###30 08 2015 new variable
+mail#:#mail_operation_on_invalid_folder#:#The operation cannot be executed, the folder given in the server request is invalid. Please contact an administrator.###19 03 2024 new variable
 mail#:#mail_options_saved#:#Options saved
 mail#:#mail_orphaned_mails#:#Delete old or orphaned mails###30 08 2015 new variable
 mail#:#mail_orphaned_mails_desc#:#Delete old or orphaned mails###30 08 2015 new variable
@@ -13599,6 +13600,7 @@ rbac#:#mobs_visible#:#Media Objects/Pools Settings are visible
 rbac#:#mobs_write#:#Edit Media Objects/Pools Settings
 rbac#:#moderate#:#Moderate
 rbac#:#moderate_frm#:#Modereeri
+rbac#:#msg_anonymous_cannot_be_assigned#:#Anonymous cannot be assigned to a role.###19 03 2024 new variable
 rbac#:#msg_no_roles_of_type#:#Valitud filtriseadetele vastavad rollid puuduvad
 rbac#:#news_add_news#:#Add News###25 10 2016 new variable
 rbac#:#nots_edit_permissions#:#User can change permission settings of Notes administration.###30 04 2021 new variable

@@ -16,6 +16,7 @@
  *
  *********************************************************************/
 
+use ILIAS\Refinery\Factory as Refinery;
 use ILIAS\Refinery\Transformation;
 use ILIAS\Refinery\Random\Seed\GivenSeed;
 use ILIAS\Refinery\Random\Group as RandomGroup;
@@ -53,6 +54,8 @@ class ilTestServiceGUI
      * @var ilDBInterface
      */
     protected $db;
+
+    protected Refinery $refinery;
 
     public $lng;
     /** @var ilGlobalTemplateInterface */
@@ -131,6 +134,7 @@ class ilTestServiceGUI
     {
         global $DIC;
         $lng = $DIC['lng'];
+        $refinery = $DIC['refinery'];
         $tpl = $DIC['tpl'];
         $ilCtrl = $DIC['ilCtrl'];
         $ilias = $DIC['ilias'];
@@ -144,6 +148,7 @@ class ilTestServiceGUI
 
         $this->db = $ilDB;
         $this->lng = &$lng;
+        $this->refinery = &$refinery;
         $this->tpl = &$tpl;
         $this->ctrl = &$ilCtrl;
         $this->tabs = $ilTabs;
@@ -157,7 +162,7 @@ class ilTestServiceGUI
         $this->testrequest = $DIC->test()->internal()->request();
         $this->testSessionFactory = new ilTestSessionFactory($this->object);
 
-        $this->testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $component_repository, $this->object);
+        $this->testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $refinery, $component_repository, $this->object);
         $this->randomGroup = $DIC->refinery()->random();
         $this->objectiveOrientedContainer = null;
     }
@@ -1015,7 +1020,6 @@ class ilTestServiceGUI
             $user = new ilObjUser();
             $user->setLastname($this->lng->txt("deleted_user"));
         }
-        $title_matric = "";
         if (strlen($user->getMatriculation()) && (($this->object->getAnonymity() == false))) {
             $template->setCurrentBlock("user_matric");
             $template->setVariable("TXT_USR_MATRIC", $this->lng->txt("matriculation"));
@@ -1024,7 +1028,6 @@ class ilTestServiceGUI
             $template->setVariable("VALUE_USR_MATRIC", $user->getMatriculation());
             $template->parseCurrentBlock();
             $template->touchBlock("user_matric_separator");
-            $title_matric = " - " . $this->lng->txt("matriculation") . ": " . $user->getMatriculation();
         }
 
         $invited_user = array_pop($this->object->getInvitedUsers($user_id));
@@ -1036,7 +1039,6 @@ class ilTestServiceGUI
             $template->setVariable("VALUE_CLIENT_IP", $invited_user["clientip"]);
             $template->parseCurrentBlock();
             $template->touchBlock("user_clientip_separator");
-            $title_client = " - " . $this->lng->txt("clientip") . ": " . $invited_user["clientip"];
         }
 
         $template->setVariable("TXT_USR_NAME", $this->lng->txt("name"));
@@ -1159,7 +1161,7 @@ class ilTestServiceGUI
         $table_gui = $this->buildPassDetailsOverviewTableGUI($this, 'outUserPassDetails');
         $table_gui->initFilter();
 
-        $questionList = new ilAssQuestionList($ilDB, $this->lng, $component_repository);
+        $questionList = new ilAssQuestionList($ilDB, $this->lng, $this->refinery, $component_repository);
 
         $questionList->setParentObjIdsFilter(array($this->object->getId()));
         $questionList->setQuestionInstanceTypeFilter(ilAssQuestionList::QUESTION_INSTANCE_TYPE_DUPLICATES);

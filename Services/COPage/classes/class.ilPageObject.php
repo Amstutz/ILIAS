@@ -365,6 +365,10 @@ abstract class ilPageObject
             return true;
         }
         $options = 0;
+        if ($this->getXMLContent() === "") {
+            $this->setXMLContent("<PageObject></PageObject>");
+        }
+
         //$options = DOMXML_LOAD_VALIDATING;
         //$options = LIBXML_DTDLOAD;
         //$options = LIBXML_NOXMLDECL;
@@ -374,6 +378,13 @@ abstract class ilPageObject
         $res = xpath_eval($xpc, $path);
         if (count($res->nodeset) == 1) {
             $this->node = $res->nodeset[0];
+        } else {
+            $mess = "No PageObject Node found: " . $this->getParentType() . ", " . $this->getId() . ", " . $this->getXMLContent(true);
+            if (defined('DEVMODE') && DEVMODE) {
+                throw new ilCOPageException($mess);
+            } else {
+                $this->log->error($mess);
+            }
         }
 
         if (empty($error)) {
@@ -1161,7 +1172,7 @@ s     */
                 }
                 if ($a_append_bib) {
                     // deprecated
-//					$bibs = $this->getBibliographyXML();
+                    //					$bibs = $this->getBibliographyXML();
                 }
                 $trans = $this->getLanguageVariablesXML($style_id);
                 //echo htmlentities($this->dom->dump_node($this->node)); exit;
@@ -1547,7 +1558,7 @@ s     */
     /**
      * Validate the page content agains page DTD
      */
-    public function validateDom(): ?array
+    public function validateDom(bool $throw = false): ?array
     {
         $this->stripHierIDs();
 
@@ -1555,7 +1566,7 @@ s     */
         //libxml_disable_entity_loader(false);
 
         $error = null;
-        $this->dom->validate($error);
+        $this->dom->validate($error, $throw);
         return $error;
     }
 
@@ -1854,7 +1865,7 @@ s     */
                 }
                 $this->log->debug("map, type: " . $type . ", target: " . $target . ", new target: " . $new_target);
             }
-            if ($new_target !== false) {
+            if ($new_target !== false && !is_null($new_target)) {
                 $res->nodeset[$i]->set_attribute("Target", $new_target);
                 $changed = true;
             } else {        // check wether link target is same installation
@@ -2404,9 +2415,10 @@ s     */
         $this->buildDom(true);
         $dom_doc = $this->getDomDoc();
 
+        $errors = $this->validateDom(true);
+
         $iel = $this->containsDeactivatedElements($content);
         $inl = $this->containsIntLinks($content);
-
         // create object
         $this->db->insert("page_object", array(
             "page_id" => array("integer", $this->getId()),
@@ -2448,6 +2460,8 @@ s     */
 
         $this->buildDom(true);
         $dom_doc = $this->getDomDoc();
+
+        $errors = $this->validateDom(true);
 
         $iel = $this->containsDeactivatedElements($content);
         $inl = $this->containsIntLinks($content);
@@ -2648,7 +2662,6 @@ s     */
             $iel = $this->containsDeactivatedElements($content);
             $this->log->debug("checking internal links");
             $inl = $this->containsIntLinks($content);
-
             $this->db->update("page_object", array(
                 "content" => array("clob", $content),
                 "parent_id" => array("integer", $this->getParentId()),
@@ -2909,7 +2922,7 @@ s     */
                 $this->db->quote($a_old_nr, "integer") . "," .
                 $this->db->quote($u["template"], "integer") . "," .
                 $this->db->quote($u["stype"], "text") . "," .
-                $this->db->quote($u["sname"], "text") .
+                $this->db->quote(ilStr::subStr($u["sname"], 0, 30), "text") .
                 ")");
         }
     }
@@ -3447,7 +3460,7 @@ s     */
                 $new_node = $a_cont_obj->getNode();
                 //$a_pos = ilPageContent::incEdId($a_pos);
                 //$curr_node = $this->getContentNode($a_pos);
-//echo "behind $a_pos:";
+                //echo "behind $a_pos:";
                 if ($succ_node = $curr_node->next_sibling()) {
                     $new_node = $succ_node->insert_before($new_node, $succ_node);
                 } else {
@@ -3458,16 +3471,16 @@ s     */
                 break;
 
             case IL_INSERT_BEFORE:
-//echo "INSERT_BEF";
+                //echo "INSERT_BEF";
                 $new_node = $a_cont_obj->getNode();
                 $succ_node = $this->getContentNode($a_pos);
                 $new_node = $succ_node->insert_before($new_node, $succ_node);
                 $a_cont_obj->setNode($new_node);
                 break;
 
-            // insert new node as first child of parent $a_pos (= $a_parent)
+                // insert new node as first child of parent $a_pos (= $a_parent)
             case IL_INSERT_CHILD:
-//echo "insert as child:parent_childs:$cnt_parent_childs:<br>";
+                //echo "insert as child:parent_childs:$cnt_parent_childs:<br>";
                 $new_node = $a_cont_obj->getNode();
                 if ($cnt_parent_childs == 0) {
                     $new_node = $parent_node->append_child($new_node);
@@ -3475,7 +3488,7 @@ s     */
                     $new_node = $parent_childs[0]->insert_before($new_node, $parent_childs[0]);
                 }
                 $a_cont_obj->setNode($new_node);
-//echo "PP";
+                //echo "PP";
                 break;
         }
 
@@ -3554,7 +3567,7 @@ s     */
                 //$a_cont_obj->setNode($new_node);
                 break;
 
-            // insert new node as first child of parent $a_pos (= $a_parent)
+                // insert new node as first child of parent $a_pos (= $a_parent)
             case IL_INSERT_CHILD:
                 //$new_node = $a_cont_obj->getNode();
                 if ($cnt_parent_childs == 0) {
@@ -4226,8 +4239,8 @@ s     */
         int $a_right
     ): array {
         // get page objects
-        $l_page = ilPageObjectFactory::getInstance($this->getParentType(), $this->getId(), $a_left);
-        $r_page = ilPageObjectFactory::getInstance($this->getParentType(), $this->getId(), $a_right);
+        $l_page = ilPageObjectFactory::getInstance($this->getParentType(), $this->getId(), $a_left, $this->getLanguage());
+        $r_page = ilPageObjectFactory::getInstance($this->getParentType(), $this->getId(), $a_right, $this->getLanguage());
         $this->preparePageForCompare($l_page);
         $this->preparePageForCompare($r_page);
         $l_hashes = $l_page->getPageContentsHashes();

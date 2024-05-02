@@ -577,7 +577,6 @@ assessment#:#backtocallingtest#:#Tilbage til testen
 assessment#:#baseunit#:#Base Unit###16 09 2013 new variable
 assessment#:#button_request_next_question_hint#:#Få næste tip
 assessment#:#button_request_question_hint#:#Få tip
-assessment#:#button_show_requested_question_hints#:#Vis givne tips
 assessment#:#by#:#af
 assessment#:#cancel_test#:#Afslut testen
 assessment#:#cannot_edit_marks#:#There are already learners who ran the test. You can only change the marks if a score reporting date is enabled and the reporting date is not yet reached.###23 Dec 2005 new variable
@@ -1204,6 +1203,7 @@ assessment#:#show_detailed_results#:#Vis detaljerede besvarelser
 assessment#:#show_examview_html#:#Show exam view on the test submission page.###16 09 2013 new variable
 assessment#:#show_examview_pdf#:#Shows exam view in an automatically downloaded PDF.###16 09 2013 new variable
 assessment#:#show_pass_overview#:#Vis overblik for de markerede besvarelser
+assessment#:#show_requested_question_hints#:#Vis givne tips
 assessment#:#show_user_answers#:#Vis de markerede besvarelser
 assessment#:#showinfo#:#Vis den komplette informationsside
 assessment#:#showinfo_desc#:#Aktiverer visning af den komplette informationsside til testen inkl. test-egenskaber. Ellers vises kun evt. introduktionstekst og de krævede egenskaber på informationssiden.
@@ -10944,6 +10944,7 @@ mail#:#mail_notification_membership_section#:#Membership###30 08 2015 new variab
 mail#:#mail_notification_subject#:#Ny post i din indbakke
 mail#:#mail_notify_orphaned#:#Notification Mail###30 08 2015 new variable
 mail#:#mail_notify_orphaned_info#:#If you enter a value here is larger than or equal to 1, ILIAS will send an email to the user before an internal mail is deleted. Please make sure that an external e-mail reception is possible.###30 08 2015 new variable
+mail#:#mail_operation_on_invalid_folder#:#The operation cannot be executed, the folder given in the server request is invalid. Please contact an administrator.###19 03 2024 new variable
 mail#:#mail_options_saved#:#Egenskaber gemt
 mail#:#mail_orphaned_mails#:#Delete old or orphaned mails###30 08 2015 new variable
 mail#:#mail_orphaned_mails_desc#:#Delete old or orphaned mails###30 08 2015 new variable
@@ -13599,6 +13600,7 @@ rbac#:#mobs_visible#:#Media Objects/Pools Settings are visible###24 07 2009 new 
 rbac#:#mobs_write#:#Edit Media Objects/Pools Settings###24 07 2009 new variable
 rbac#:#moderate#:#Moderate###10 11 2011 new variable
 rbac#:#moderate_frm#:#Moderer
+rbac#:#msg_anonymous_cannot_be_assigned#:#Anonymous cannot be assigned to a role.###19 03 2024 new variable
 rbac#:#msg_no_roles_of_type#:#Ingen roller med det valgte filter
 rbac#:#news_add_news#:#Add News###25 10 2016 new variable
 rbac#:#nots_edit_permissions#:#User can change permission settings of Notes administration.###30 04 2021 new variable

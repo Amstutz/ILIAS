@@ -577,7 +577,6 @@ assessment#:#backtocallingtest#:#Atgal į testą
 assessment#:#baseunit#:#Base Unit###24 10 2013 new variable
 assessment#:#button_request_next_question_hint#:#Request Next Hint###28 08 2012 new variable
 assessment#:#button_request_question_hint#:#Request Hint###28 08 2012 new variable
-assessment#:#button_show_requested_question_hints#:#Show Requested Hints###28 08 2012 new variable
 assessment#:#by#:#
 assessment#:#cancel_test#:#Atidėti testą
 assessment#:#cannot_edit_marks#:#Jau yra besimokančių, kurie laikė testą. Jūs galite pakeisti pažymius tik tuo atveju, jei rezultatų pranešimo data yra nustatyta ir dar neatėjo.
@@ -1204,6 +1203,7 @@ assessment#:#show_detailed_results#:#Show User's Detailed Results (Marked Pass)#
 assessment#:#show_examview_html#:#Show exam view on the test submission page.###24 10 2013 new variable
 assessment#:#show_examview_pdf#:#Shows exam view in an automatically downloaded PDF.###24 10 2013 new variable
 assessment#:#show_pass_overview#:#Show Marked Pass Overview###31 05 2007 new variable
+assessment#:#show_requested_question_hints#:#Show Requested Hints###28 08 2012 new variable
 assessment#:#show_user_answers#:#Show User's Marked Anwers###31 05 2007 new variable
 assessment#:#showinfo#:#Show the complete Information Page###15 09 2008 new variable
 assessment#:#showinfo_desc#:#If checked, the complete Test Information Page will be shown (including the test properties). If unchecked, only the introduction text (if available) and the required properties will be shown on the Test Information Page. ###15 09 2008 new variable
@@ -10944,6 +10944,7 @@ mail#:#mail_notification_membership_section#:#Membership###30 08 2015 new variab
 mail#:#mail_notification_subject#:#New mail in your inbox###16 08 2007 new variable
 mail#:#mail_notify_orphaned#:#Notification Mail###30 08 2015 new variable
 mail#:#mail_notify_orphaned_info#:#If you enter a value here is larger than or equal to 1, ILIAS will send an email to the user before an internal mail is deleted. Please make sure that an external e-mail reception is possible.###30 08 2015 new variable
+mail#:#mail_operation_on_invalid_folder#:#The operation cannot be executed, the folder given in the server request is invalid. Please contact an administrator.###19 03 2024 new variable
 mail#:#mail_options_saved#:#Nustatymai išsaugoti
 mail#:#mail_orphaned_mails#:#Delete old or orphaned mails###30 08 2015 new variable
 mail#:#mail_orphaned_mails_desc#:#Delete old or orphaned mails###30 08 2015 new variable
@@ -13599,6 +13600,7 @@ rbac#:#mobs_visible#:#Media Objects/Pools Settings are visible###24 07 2009 new 
 rbac#:#mobs_write#:#Edit Media Objects/Pools Settings###24 07 2009 new variable
 rbac#:#moderate#:#Moderate###10 11 2011 new variable
 rbac#:#moderate_frm#:#Moderate###20 08 2010 new variable
+rbac#:#msg_anonymous_cannot_be_assigned#:#Anonymous cannot be assigned to a role.###19 03 2024 new variable
 rbac#:#msg_no_roles_of_type#:#Nėra prieinamų Rolių pasirinktam filtro nustatymui
 rbac#:#news_add_news#:#Add News###25 10 2016 new variable
 rbac#:#nots_edit_permissions#:#User can change permission settings of Notes administration.###30 04 2021 new variable

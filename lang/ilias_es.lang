@@ -579,7 +579,6 @@ assessment#:#backtocallingtest#:#Volver al Test origen
 assessment#:#baseunit#:#Unidad Base
 assessment#:#button_request_next_question_hint#:#Solicitar siguiente sugerencia
 assessment#:#button_request_question_hint#:#Solicitar sugerencia
-assessment#:#button_show_requested_question_hints#:#Mostrar sugerencias solicitadas
 assessment#:#by#:#por
 assessment#:#cancel_test#:#Cancelar el test
 assessment#:#cannot_edit_marks#:#Hay usuarios que ejecutaron el test. Sólo puede cambiar las calificaciones si se habilitó una fecha de informe de resultados y dicha fecha no ha sido alcanzada.
@@ -1206,6 +1205,7 @@ assessment#:#show_detailed_results#:#Mostrar datos detallados del usuario (Marke
 assessment#:#show_examview_html#:#Mostrar vista del examen del test en la página de entrega.
 assessment#:#show_examview_pdf#:#Muestra la vista del examen automáticamente en un PDF descargable.
 assessment#:#show_pass_overview#:#Mostrar resumen de la ejecución seleccionada
+assessment#:#show_requested_question_hints#:#Mostrar sugerencias solicitadas
 assessment#:#show_user_answers#:#Mostrar las respuestas marcadas del usuario
 assessment#:#showinfo#:#Mostrar propiedades del Test
 assessment#:#showinfo_desc#:#Si se activa, se mostrará la página de información completa del Test (incluidas sus propiedades). Si no lo está, sólo se mostrarán el texto de introducción (si está disponible) y las propiedades solicitadas
@@ -10946,6 +10946,7 @@ mail#:#mail_notification_membership_section#:#Pertenencia
 mail#:#mail_notification_subject#:#Nuevo correo en su bandeja de entrada
 mail#:#mail_notify_orphaned#:#Correo de aviso
 mail#:#mail_notify_orphaned_info#:#Si introduces un valor aquí igual o mayor que 1, ILIAS enviará un correo al usuario antes de que sea borrado un correo interno. Por favor, comprueba que es posible la recepción de correos externos.
+mail#:#mail_operation_on_invalid_folder#:#The operation cannot be executed, the folder given in the server request is invalid. Please contact an administrator.###19 03 2024 new variable
 mail#:#mail_options_saved#:#Opciones guardadas
 mail#:#mail_orphaned_mails#:#Borrar correos antiguos o huérfanos
 mail#:#mail_orphaned_mails_desc#:#Borrar correos antiguos o huérfanos
@@ -13601,6 +13602,7 @@ rbac#:#mobs_visible#:#La configuración de los objetos media/bancos son visibles
 rbac#:#mobs_write#:#Editar Configuraciones de objeto media/bancos
 rbac#:#moderate#:#Moderar
 rbac#:#moderate_frm#:#Moderar
+rbac#:#msg_anonymous_cannot_be_assigned#:#Anonymous cannot be assigned to a role.###19 03 2024 new variable
 rbac#:#msg_no_roles_of_type#:#No hay roles disponibles para el filtro seleccionado
 rbac#:#news_add_news#:#Añadir noticias
 rbac#:#nots_edit_permissions#:#User can change permission settings of Notes administration.###30 04 2021 new variable

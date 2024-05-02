@@ -46,6 +46,7 @@ abstract class ilTestOutputGUI extends ilTestPlayerAbstractGUI
         $ilDB = $DIC['ilDB'];
         $component_repository = $DIC['component.repository'];
         $lng = $DIC['lng'];
+        $refinery = $DIC['refinery'];
         $ilTabs = $DIC['ilTabs'];
 
         $this->checkReadAccess();
@@ -61,13 +62,30 @@ abstract class ilTestOutputGUI extends ilTestPlayerAbstractGUI
 
         $this->initAssessmentSettings();
 
+        $testSessionFactory = new ilTestSessionFactory($this->object);
+        $this->testSession = $testSessionFactory->getSession($this->testrequest->raw('active_id'));
+
+        $this->ensureExistingTestSession($this->testSession);
+        $this->checkTestSessionUser($this->testSession);
+
+        $this->initProcessLocker($this->testSession->getActiveId());
+
+        $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $refinery, $component_repository, $this->object);
+        $this->testSequence = $testSequenceFactory->getSequenceByTestSession($this->testSession);
+        $this->testSequence->loadFromDb();
+        $this->testSequence->loadQuestions();
+
         $DIC->globalScreen()->tool()->context()->current()->addAdditionalData(
             ilTestPlayerLayoutProvider::TEST_PLAYER_KIOSK_MODE_ENABLED,
             $this->object->getKioskMode()
         );
+        $title = $this->object->getTitle();
+        if (($sequence_index = $this->getSequenceElementParameter()) !== null) {
+            $title .= ' - ' . $this->lng->txt('question') . $sequence_index;
+        }
         $DIC->globalScreen()->tool()->context()->current()->addAdditionalData(
             ilTestPlayerLayoutProvider::TEST_PLAYER_TITLE,
-            $this->object->getTitle()
+            $title
         );
         $instance_name =  $DIC['ilSetting']->get('short_inst_name');
         if (trim($instance_name) === '') {
@@ -77,19 +95,6 @@ abstract class ilTestOutputGUI extends ilTestPlayerAbstractGUI
             ilTestPlayerLayoutProvider::TEST_PLAYER_SHORT_TITLE,
             $instance_name
         );
-
-        $testSessionFactory = new ilTestSessionFactory($this->object);
-        $this->testSession = $testSessionFactory->getSession($this->testrequest->raw('active_id'));
-
-        $this->ensureExistingTestSession($this->testSession);
-        $this->checkTestSessionUser($this->testSession);
-
-        $this->initProcessLocker($this->testSession->getActiveId());
-
-        $testSequenceFactory = new ilTestSequenceFactory($ilDB, $lng, $component_repository, $this->object);
-        $this->testSequence = $testSequenceFactory->getSequenceByTestSession($this->testSession);
-        $this->testSequence->loadFromDb();
-        $this->testSequence->loadQuestions();
 
         $this->questionRelatedObjectivesList = new ilTestQuestionRelatedObjectivesList();
 

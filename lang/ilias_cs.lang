@@ -577,7 +577,6 @@ assessment#:#backtocallingtest#:#Zpět k vyvolávacímu testu
 assessment#:#baseunit#:#Základní jednotka
 assessment#:#button_request_next_question_hint#:#Požadavek další nápovědy
 assessment#:#button_request_question_hint#:#Požadavek nápovědy
-assessment#:#button_show_requested_question_hints#:#Zobrazit požadované nápovědy
 assessment#:#by#:#podle
 assessment#:#cancel_test#:#Přerušit test
 assessment#:#cannot_edit_marks#:#Již jsou tu studenti, kteří test spustili. Známky můžete měnit pouze je-li zapnuto datum hlášení hodnocení a toto datum doposud nenastalo.
@@ -1204,6 +1203,7 @@ assessment#:#show_detailed_results#:#Zobrazit podrobné výsledky uživatele. (Z
 assessment#:#show_examview_html#:#Zobrazit přehled zkoušky ve stránce odevzdání testu
 assessment#:#show_examview_pdf#:#Zobrazit výsledky testu v automaticky staženém PDF.
 assessment#:#show_pass_overview#:#Zobrazit přehled označených průchodů
+assessment#:#show_requested_question_hints#:#Zobrazit požadované nápovědy
 assessment#:#show_user_answers#:#Zobrazit označené odpovědi uživatelů
 assessment#:#showinfo#:#Zobrazit úplnou stránku informací
 assessment#:#showinfo_desc#:#Pokud je vybráno, úplná stránka informací testu bude zobrazena (včetně vlastností test). Pokud není vybráno, bude zobrazen pouze úvodní text (je-li dostupný) a požadované vlastnosti budou zobrazeny na stránce informací testu.
@@ -10944,6 +10944,7 @@ mail#:#mail_notification_membership_section#:#Členství
 mail#:#mail_notification_subject#:#Nová pošta ve Vaší schránce.
 mail#:#mail_notify_orphaned#:#Mail obsahující oznámení
 mail#:#mail_notify_orphaned_info#:#Pokud zde zadáte hodnotu větší nebo rovnou 1, ILIAS pošle uživateli e-mail před vymazáním interní pošty. Ujistěte se, že doručení externího e-mailu je možné.
+mail#:#mail_operation_on_invalid_folder#:#The operation cannot be executed, the folder given in the server request is invalid. Please contact an administrator.###19 03 2024 new variable
 mail#:#mail_options_saved#:#Volby uloženy
 mail#:#mail_orphaned_mails#:#Smazat staré nebo nadále nefunkční zprávy
 mail#:#mail_orphaned_mails_desc#:#Smazat staré nebo nadále nefunkční zprávy
@@ -13599,6 +13600,7 @@ rbac#:#mobs_visible#:#Nastavení mediálních objektů/zásobníků je viditeln�
 rbac#:#mobs_write#:#Upravit nastavení mediálního objektu/zásobníku
 rbac#:#moderate#:#Moderovat
 rbac#:#moderate_frm#:#Moderovat
+rbac#:#msg_anonymous_cannot_be_assigned#:#Anonymous cannot be assigned to a role.###19 03 2024 new variable
 rbac#:#msg_no_roles_of_type#:#Žádná role pro vybrané nastavení filtru nenalezena
 rbac#:#news_add_news#:#Přidat zprávy
 rbac#:#nots_edit_permissions#:#User can change permission settings of Notes administration.###30 04 2021 new variable

@@ -127,7 +127,7 @@ class ilCalendarCopyFilesToTempDirectoryJob extends AbstractJob
         $percentage = 0;
         foreach ($definition->getCopyDefinitions() as $copy_task) {
             $percentage += 100 / $amount;
-            $observer->notifyPercentage($this, $percentage);
+            $observer->notifyPercentage($this, (int)$percentage);
             // End UNIBE-Patch
             if (!file_exists($copy_task[ilCalendarCopyDefinition::COPY_SOURCE_DIR])) {
                 $this->logger->notice('Cannot find file: ' . $copy_task[ilCalendarCopyDefinition::COPY_SOURCE_DIR]);

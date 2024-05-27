@@ -502,12 +502,12 @@ class ilAdvancedMDRecordGUI
                          *  work in modals (36490). Note that at that point formatting of
                          *  maps in appointment lists has to be improved.
                          **/
-                        $presentation_value = $presentation_bridge->getSortable();
+                        $presentation_value = $presentation_bridge->getHTML();
                     } elseif (get_class($element) == 'ilADTExternalLink' || get_class($element) == 'ilADTInternalLink') {
                         #22638
                         $presentation_value = $presentation_bridge->getHTML();
                     } else {
-                        $presentation_value = strip_tags($presentation_bridge->getHTML());
+                        $presentation_value = $presentation_bridge->getHTML();
                     }
                     $array_elements[$positions[$element_id]] =
                         [

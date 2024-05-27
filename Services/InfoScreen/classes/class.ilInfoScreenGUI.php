@@ -1296,4 +1296,14 @@ class ilInfoScreenGUI
             }
         }
     }
+
+    public function getSection(): array
+    {
+        return $this->section;
+    }
+
+    public function setSection(array $section)
+    {
+        $this->section = $section;
+    }
 }

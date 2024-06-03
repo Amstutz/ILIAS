@@ -4366,7 +4366,7 @@ common#:#info_remark_interrupted#:#Rolle wurde an dieser Position unterbrochen. 
 common#:#info_remove_sure#:#Sind Sie sicher, dass folgende Objekte entfernt werden sollen?
 common#:#info_short#:#Info
 common#:#info_status_info#:#Wer hat hier welche Rechte?
-common#:#info_view_of_user#:#Benutzer
+common#:#info_view_of_user#:#Benutzermenü
 common#:#inform_user_mail#:#Benutzer per Mail über Änderungen informieren
 common#:#inline_file_extensions#:#Im Browser anzeigbare Dateien
 common#:#inline_file_extensions_info#:#Dateien mit diesen Endungen werden direkt im Browser angezeigt.<br/>Zum Beispiel: <b>gif jpg jpeg mp3 pdf png</b><br/> Alle übrigen Dateien werden zum Herunterladen angeboten.
@@ -7274,6 +7274,7 @@ copg#:#copg_est_reading_time#:#Geschätzte Lesezeit
 copg#:#copg_history_cleanup_cron#:#Verlaufsbereinigung
 copg#:#copg_history_cleanup_cron_info#:#Löscht ältere Einträge aus dem Verlauf des Seiteneditors.
 copg#:#copg_more_character_formats#:#Weitere Zeichenformate
+copg#:#copg_obj_types#:#Objekttypen
 copg#:#copg_page_element_not_found#:#Unbekanntes Seitenelement.
 copg#:#copg_page_type_stys#:#Seitenlayout
 copg#:#copg_par_format_selection#:#Absatzformatauswahl
@@ -9521,6 +9522,7 @@ exp#:#exp_scorm#:#SCORM
 exp#:#exp_show_print_view#:#Druckansicht anzeigen
 exp#:#exp_xml#:#XML
 exp#:#export_created#:#Eine neue Exportdatei wurde erstellt.
+exp#:#export_files_deleted#:#Die ausgewählten Exportdateien wurden gelöscht.
 export#:#export_create#:#Neu erstellen
 export#:#export_create_new_file#:#Neue Exportdatei erstellen
 export#:#export_existing#:#Wiederverwenden
@@ -12093,6 +12095,7 @@ mme#:#type_separator#:#Trenner
 mme#:#type_separator_info#:#Der Titel des Trenners wird in einem grauen Bereich angezeigt. Sie erhalten eine Trennlinie, wenn Sie den Titel leer lassen.
 mme#:#type_top_link_item#:#Link
 mme#:#type_top_parent_item#:#Container
+mme#:#unable_to_render#:#Der Eintrag '%s' kann nicht in '%s' angezeigt werden.
 mob#:#mob_choose_from_pool#:#Aus Medienpool
 mob#:#mob_external_url#:#Externe URL
 mob#:#mob_file#:#Datei
@@ -16350,6 +16353,8 @@ tbl#:#tbl_template_deleted#:#Die gespeicherte Ansicht wurde gelöscht.
 tbl#:#tbl_templates#:#Ansicht
 tos#:#deleteDocument#:#Löschen
 tos#:#detachCriterionAssignment#:#Löschen
+tos#:#tos_accept_usr_agreement_anonymous#:#Nutzungsvereinbarung
+tos#:#tos_accept_usr_agreement_anonymous_intro#:#Bevor Sie zu ILIAS wechseln, akzeptieren Sie die folgenden Nutzungsvereinbarungen.
 tos#:#tos_acceptance_history#:#Zustimmungshistorie
 tos#:#tos_account_reg_not_possible#:#Eine Selbstregistrierung ist aktuell nicht möglich, da in dieser Installation keine Benutzervereinbarung angeboten wird. Bitte kontaktieren Sie Ihren <a href="%1$s">Systemadministrator</a> für weitere Informationen.
 tos#:#tos_add_document_btn_label#:#Dokument hinzufügen

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of ILIAS, a powerful learning management system
  * published by ILIAS open source e-Learning e.V.
@@ -13,8 +14,7 @@
  * https://www.ilias.de
  * https://github.com/ILIAS-eLearning
  *
- ********************************************************************
- */
+ *********************************************************************/
 
 /**
  * DataCollection dataset class
@@ -113,6 +113,9 @@ class ilDataCollectionDataSet extends ilDataSet
         ilImportMapping $a_mapping,
         string $a_schema_version
     ): void {
+        foreach ($a_rec as &$value) {
+            $value = htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'utf-8');
+        }
         switch ($a_entity) {
             case 'dcl':
                 if ($new_id = $a_mapping->getMapping('Services/Container', 'objs', $a_rec['id'])) {
@@ -238,13 +241,13 @@ class ilDataCollectionDataSet extends ilDataSet
                     $setting->setInFilter($a_rec['in_filter']);
                     $setting->setFilterValue($a_rec['filter_value'] ?: null);
                     $setting->setFilterChangeable($a_rec['filter_changeable']);
-                    is_null($a_rec['required_create']) ? $setting->setRequiredCreate(0) : $setting->setRequiredCreate($a_rec['required_create']);
-                    is_null($a_rec['locked_create']) ? $setting->setLockedCreate(0) : $setting->setLockedCreate($a_rec['locked_create']);
-                    is_null($a_rec['visible_create']) ? $setting->setVisibleCreate(1) : $setting->setVisibleCreate($a_rec['visible_create']);
-                    is_null($a_rec['visible_edit']) ? $setting->setVisibleEdit(1) : $setting->setVisibleEdit($a_rec['visible_edit']);
-                    is_null($a_rec['required_edit']) ? $setting->setRequiredEdit(0) : $setting->setRequiredEdit($a_rec['required_edit']);
-                    is_null($a_rec['locked_edit']) ? $setting->setLockedEdit(0) : $setting->setLockedEdit($a_rec['locked_edit']);
-                    $setting->setDefaultValue($a_rec['default_value']);
+                    $setting->setRequiredCreate($a_rec['required_create'] ?? 0);
+                    $setting->setLockedCreate($a_rec['locked_create'] ?? 0);
+                    $setting->setVisibleCreate($a_rec['visible_create'] ?? 1);
+                    $setting->setVisibleEdit($a_rec['visible_edit'] ?? 1);
+                    $setting->setRequiredEdit($a_rec['required_edit'] ?? 0);
+                    $setting->setLockedEdit($a_rec['locked_edit'] ?? 0);
+                    $setting->setDefaultValue($a_rec['default_value'] ?? null);
                     $setting->create();
                     $a_mapping->addMapping('Modules/DataCollection', 'il_dcl_tview_set', $a_rec['id'], $setting->getId());
                 }
@@ -442,7 +445,7 @@ class ilDataCollectionDataSet extends ilDataSet
                                 break;
                             case ilDclDatatype::INPUTFORMAT_DATETIME:
                                 $value = $a_rec['value'];
-                                if ($value=='0000-00-00 00:00:00') {
+                                if ($value == '0000-00-00 00:00:00') {
                                     $value = null;
                                 }
                                 break;
@@ -472,7 +475,7 @@ class ilDataCollectionDataSet extends ilDataSet
                     if ($value) {
                         $stloc_default = (new ilDclDefaultValueFactory())->createByTableName($a_entity);
                         if ($a_entity == ilDclTableViewNumberDefaultValue::returnDbTableName()) {
-                            $value = (int)$value;
+                            $value = (int) $value;
                         }
                         $stloc_default->setValue($value);
                         $stloc_default->setTviewSetId($tview_set_id);
@@ -769,7 +772,7 @@ class ilDataCollectionDataSet extends ilDataSet
                     'il_dcl_tview_set' => ['ids' => $ids],
                 ];
             case 'il_dcl_tview_set':
-                if (!(int)$a_rec['field']>0) {
+                if (!(int) $a_rec['field'] > 0) {
                     break;
                 }
                 // Also build a cache of all values, no matter in which table they are (il_dcl_stloc(1|2|3)_value)

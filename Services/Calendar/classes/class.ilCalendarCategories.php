@@ -914,18 +914,36 @@ class ilCalendarCategories
                 $course_ids[] = $this->categories_info[$cat_id]['obj_id'];
             }
         }
+        //UNIBE PATCH Start
+        global $DIC;
+        $ilDB = $DIC->database();
+        $usr_id = $DIC->user()->getId();
 
-        $query = "SELECT od2.obj_id sess_id, od1.obj_id crs_id,cat_id, or2.ref_id sess_ref_id, od2.type FROM object_data od1 " .
-            "JOIN object_reference or1 ON od1.obj_id = or1.obj_id " .
-            "JOIN tree t ON or1.ref_id = t.parent " .
-            "JOIN object_reference or2 ON t.child = or2.ref_id " .
-            "JOIN object_data od2 ON or2.obj_id = od2.obj_id " .
-            "JOIN cal_categories cc ON od2.obj_id = cc.obj_id " .
-            "WHERE " . $this->db->in('od2.type', array('sess', 'exc', 'etal'), false, 'text') .
-            "AND (od1.type = 'crs' OR od1.type = 'grp' OR od1.type = 'tals') " .
-            "AND " . $this->db->in('od1.obj_id', $course_ids, false, 'integer') . ' ' .
-            "AND or2.deleted IS NULL";
-
+        if(strtolower($DIC->http()->wrapper()->query()->retrieve("basClass", $DIC->refinery()->kindlyTo()->string())) == "ildashboardgui" || $this->getMode() == self::MODE_REMOTE_ACCESS) {
+            $query = "SELECT od2.type obj_type, od2.obj_id sess_id, od1.obj_id crs_id,cat_id, or2.ref_id sess_ref_id FROM object_data od1 ".
+                    "JOIN object_reference or1 ON od1.obj_id = or1.obj_id ".
+                    "JOIN tree t ON or1.ref_id = t.parent ".
+                    "JOIN object_reference or2 ON t.child = or2.ref_id ".
+                    "JOIN object_data od2 ON or2.obj_id = od2.obj_id ".
+                    "JOIN cal_categories cc ON od2.obj_id = cc.obj_id ".
+                    "JOIN event_participants ep ON od2.obj_id = ep.event_id ".
+                    "WHERE ((od2.type IN ('sess') AND (ep.registered = 1 || ep.participated = 1)  AND ep.usr_id = $usr_id ) OR od2.type IN ('exc') )".
+                    "AND (od1.type = 'crs' OR od1.type = 'grp') ".
+                    "AND ".$ilDB->in('od1.obj_id', $course_ids, false, 'integer').' '.
+                    "AND or2.deleted IS NULL";
+        } else {
+            $query = "SELECT od2.obj_id sess_id, od1.obj_id crs_id,cat_id,or2.ref_id sess_ref_id FROM object_data od1 ".
+                    "JOIN object_reference or1 ON od1.obj_id = or1.obj_id ".
+                    "JOIN tree t ON or1.ref_id = t.parent ".
+                    "JOIN object_reference or2 ON t.child = or2.ref_id ".
+                    "JOIN object_data od2 ON or2.obj_id = od2.obj_id ".
+                    "JOIN cal_categories cc ON od2.obj_id = cc.obj_id ".
+                    "WHERE ".$ilDB->in('od2.type', array('sess','exc'), false, 'text').
+                    "AND (od1.type = 'crs' OR od1.type = 'grp') ".
+                    "AND ".$ilDB->in('od1.obj_id', $course_ids, false, 'integer').' '.
+                    "AND or2.deleted IS NULL";
+        }
+        //UNIBE PATCH end
         $res = $this->db->query($query);
         $cat_ids = array();
         $course_sessions = array();

@@ -919,8 +919,8 @@ class ilCalendarCategories
         $ilDB = $DIC->database();
         $usr_id = $DIC->user()->getId();
 
-        if(strtolower($DIC->http()->wrapper()->query()->retrieve("basClass", $DIC->refinery()->kindlyTo()->string())) == "ildashboardgui" || $this->getMode() == self::MODE_REMOTE_ACCESS) {
-            $query = "SELECT od2.type obj_type, od2.obj_id sess_id, od1.obj_id crs_id,cat_id, or2.ref_id sess_ref_id FROM object_data od1 ".
+        if(strtolower($DIC->http()->wrapper()->query()->has("baseClass") ? $DIC->http()->wrapper()->query()->retrieve("baseClass", $DIC->refinery()->kindlyTo()->string()) : "") == "ildashboardgui" || $this->getMode() == self::MODE_REMOTE_ACCESS) {
+            $query = "SELECT od2.type obj_type, od2.obj_id sess_id, od1.obj_id crs_id,cat_id, or2.ref_id sess_ref_id, od2.type FROM object_data od1 ".
                     "JOIN object_reference or1 ON od1.obj_id = or1.obj_id ".
                     "JOIN tree t ON or1.ref_id = t.parent ".
                     "JOIN object_reference or2 ON t.child = or2.ref_id ".
@@ -932,7 +932,7 @@ class ilCalendarCategories
                     "AND ".$ilDB->in('od1.obj_id', $course_ids, false, 'integer').' '.
                     "AND or2.deleted IS NULL";
         } else {
-            $query = "SELECT od2.obj_id sess_id, od1.obj_id crs_id,cat_id,or2.ref_id sess_ref_id FROM object_data od1 ".
+            $query = "SELECT od2.obj_id sess_id, od1.obj_id crs_id,cat_id,or2.ref_id sess_ref_id ,od2.typeFROM object_data od1 ".
                     "JOIN object_reference or1 ON od1.obj_id = or1.obj_id ".
                     "JOIN tree t ON or1.ref_id = t.parent ".
                     "JOIN object_reference or2 ON t.child = or2.ref_id ".

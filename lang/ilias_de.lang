@@ -5568,7 +5568,7 @@ common#:#shib_email#:#Attribut für E-Mail-Adresse
 common#:#shib_federation_name#:#Name der Shibboleth-Föderation
 common#:#shib_firstname#:#Attribut für Vornamen
 common#:#shib_gender#:#Attribut für Anrede (muss 'n', 'm' oder 'f' sein)
-common#:#shib_general_login_instructions#:#Um sich über %s anzumelden, klicken Sie bitte auf den Anmelde-Button und wählen Sie auf der folgenden Seite Ihre Organisation aus.<br />Bei Fragen dazu, wenden Sie sich bitte an den %s
+common#:#shib_general_login_instructions#:#Um sich über %s anzumelden, klicken Sie bitte auf den Anmelde-Button und wählen auf der folgenden Seite Ihre Organisation aus. Bei Fragen dazu wenden Sie sich bitte an den %s
 common#:#shib_general_wayf_login_instructions#:#Falls Sie keiner der angegebenen Organisationen angehören und Zugang zu einem Kurs auf diesem Server benötigen, wenden Sie sich bitte an den %s
 common#:#shib_idp_list#:#Bitte geben Sie eine Liste von Identity-Providern an, aus denen der Benutzer auf der ILIAS-Anmeldeseite auswählen kann.<br />In jeder Zeile muss ein Komma-getrenntes Tupel sein, welches aus der<strong>providerID eines IdP</strong> (schauen Sie dazu die Shibboleth-Metadaten an) und dem <strong>Namen eines IdP</strong> besteht, so wie er in der Drop-Down Liste angezeigt werden soll.<br />Als optionaler dritter Parameter kann die <strong>Location eines Shibboleth Session Initiators</strong> angegeben werden, welcher benutzt werden kann falls Ihre ILIAS-Installation Teil von mehreren Föderationen ist.
 common#:#shib_institution#:#Attribut für Institution
@@ -7415,6 +7415,7 @@ crs#:#crs_course_status_of_users#:#Bestehen des Kurses
 crs#:#crs_create_date#:#Erstellungsdatum
 crs#:#crs_custom_user_fields#:#Personenbezogene Angaben
 crs#:#crs_custom_user_fields_infobox#:#Legen Sie weitere Datenfelder an, welche Kursmitglieder beim Beitritt ausfüllen. Die Angaben können Sie im Reiter „Mitglieder“ als zusätzliche Spalte einblenden.
+crs#:#crs_custom_user_fields_table_title#:#Personenbezogene Angaben zu diesem Kurs
 crs#:#crs_dates#:#Termine
 crs#:#crs_deactivate_notification#:#Benachrichtigung deaktivieren
 crs#:#crs_delete_objectve_sure#:#Sind Sie sicher, dass die ausgewählten Lernziele entfernt werden sollen?
@@ -7609,7 +7610,7 @@ crs#:#crs_members_groups#:#Gruppenmitgliedschaften
 crs#:#crs_members_map#:#Karte Kursmitglieder
 crs#:#crs_members_print_title#:#Kursmitglieder
 crs#:#crs_min_one_admin#:#Diesem Kurs muss mindestens ein Administrator zugeordnet bleiben.
-crs#:#crs_msg_no_self_registration_period_if_self_enrolment_disabled#:#Der Zeitraum für den zeitlich begrenzten Beitritt kann nicht bestimmt werden, wenn die Einstellung "Kein selbständiger Beitritt" aktiviert ist.
+crs#:#crs_msg_no_self_registration_period_if_self_enrolment_disabled#:#Änderungen gespeichert. Der Zeitraum für den zeitlich begrenzten Beitritt wurde zurückgesetzt, weil die Einstellung "Kein selbständiger Beitritt" aktiviert ist.
 crs#:#crs_my_courses_groups_enabled#:#Meine Kurse und Gruppen
 crs#:#crs_my_courses_groups_enabled_info#:#Wenn Sie diese Option aktivieren, wird die Option 'Meine Kurse und Gruppen' im Magazin angezeigt.
 crs#:#crs_new_status#:#Ihr Status:
@@ -9905,6 +9906,7 @@ grp#:#grp_create_or_use_existing#:#Wollen Sie den Benutzer zu einer bestehenden 
 grp#:#grp_created_and_user_been_added#:#Die Gruppe wurde erstellt und der Benutzer hinzugefügt.
 grp#:#grp_custom_user_fields#:#Personenbezogene Angaben
 grp#:#grp_custom_user_fields_infobox#:#Legen Sie weitere Datenfelder an, welche Gruppenmitglieder beim Beitritt ausfüllen. Die Angaben können Sie im Reiter "Mitglieder" als zusätzliche Spalte einblenden.
+grp#:#grp_custom_user_fields_table_title#:#Personenbezogene Angaben zu dieser Gruppe
 grp#:#grp_deactivate_notification#:#Benachrichtigung deaktivieren
 grp#:#grp_edit_members#:#Teilnehmerverwaltung
 grp#:#grp_enable_map#:#Gruppenkarte aktivieren
@@ -11140,9 +11142,8 @@ mathjax#:#mathjax_polyfill_url#:#Url eines Polyfills
 mathjax#:#mathjax_polyfill_url_desc_line1#:#Für MathJax 2 nicht benötigt
 mathjax#:#mathjax_polyfill_url_desc_line2#:#Für MathJax 3 in älteren Browsern, z.B. https://polyfill.io/v3/polyfill.min.js?features=es6
 mathjax#:#mathjax_script_url#:#URL des MathJax-Skripts
-mathjax#:#mathjax_script_url_desc_line1#:#Für MathJax 2 z.B. https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML,Safe
-mathjax#:#mathjax_script_url_desc_line2#:#Für MathJax 3 z.B. https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
-mathjax#:#mathjax_script_url_desc_line3#:#Bitte verwenden Sie den Safe Mode, um XSS-Angriffe durch MathJax-Code mit Javascript zu vermeiden. Für MathJax 2 kann er an die CDN-Url als Parameter angefügt werden (s.o). Für MathJax 3 müssen Sie ein Skript einbinden, dass ihn konfiguriert, bevor MathJax geladen wird. Verwenden Sie z.B. https://ihre-domain/ihr-ilias/Services/MathJax/js/cdn-mathjax3-es5-tex-mml-chtml-safe.js
+mathjax#:#mathjax_script_url_desc_line1#:#Für MathJax 2 z.B. %s
+mathjax#:#mathjax_script_url_desc_line2#:#Bitte verwenden Sie den Safe Mode, um XSS-Angriffe durch MathJax-Code mit Javascript zu vermeiden. Für MathJax 2 kann er an die CDN-Url als Parameter angefügt werden (s.o). Für MathJax 3 müssen Sie ein Skript einbinden, dass ihn konfiguriert, bevor MathJax geladen wird. Verwenden Sie z.B. %s
 mathjax#:#mathjax_server_address#:#Server-Adresse
 mathjax#:#mathjax_server_address_info#:#z.B. http://localhost:8003
 mathjax#:#mathjax_server_cache_cleared#:#Der MathJax-Cache wurde geleert.
@@ -12284,7 +12285,7 @@ noti#:#noti_activate_notification#:#Benachrichtigung aktivieren
 noti#:#noti_deactivate_notification#:#Benachrichtigung deaktivieren
 noti#:#noti_notification_activated#:#Benachrichtigungen sind aktiviert
 noti#:#noti_notification_deactivated#:#Benachrichtigungen sind deaktiviert
-notifications_adm#:#enable_osd#:#Pop-up-Benachrichtigungen aktivieren
+notifications_adm#:#enable_osd#:#Pop-up Benachrichtigungen aktivieren
 notifications_adm#:#enable_osd_desc#:#Wenn aktiviert, werden Benutzer durch ein Pop-up über neue Benachrichtigungen informiert.
 notifications_adm#:#notification_settings#:#Benachrichtigungseinstellungen
 notifications_adm#:#osd_delay#:#Anzeigeverzögerung
@@ -12296,7 +12297,7 @@ notifications_adm#:#osd_interval#:#Abfrageintervall
 notifications_adm#:#osd_interval_desc#:#Abfrageintervall für Nachrichten in Millisekunden.Eine geringere Zeit ermöglicht zeitnähere Benachrichtigungen, erhöht aber die Serverlast.
 notifications_adm#:#osd_play_sound#:#Ton abspielen
 notifications_adm#:#osd_play_sound_desc#:#Ton abspielen bei Erhalt einer neuen Benachrichtigung.
-notifications_adm#:#osd_settings#:#Popup Benachrichtigungen
+notifications_adm#:#osd_settings#:#Pop-up Benachrichtigungen
 notifications_adm#:#osd_vanish#:#Anzeigedauer
 notifications_adm#:#osd_vanish_desc#:#Dauer der Anzeige von Benachrichtigungen in Millisekunden
 obj#:#cont_filter_empty#:#Bitte nutzen Sie den Filter zur Anzeige von Objekten.

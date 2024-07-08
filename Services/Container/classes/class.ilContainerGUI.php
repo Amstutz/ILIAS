@@ -1056,7 +1056,7 @@ class ilContainerGUI extends ilObjectGUI implements ilDesktopItemHandling
                     continue;
                 }
 
-                if (!$rbacsystem->checkAccess('visible,read,copy', $node["ref_id"])) {
+                if (!$rbacsystem->checkAccess('visible,read', $node["ref_id"])) {
                     $no_copy[] = $node["ref_id"];
                 }
             }
@@ -1101,6 +1101,10 @@ class ilContainerGUI extends ilObjectGUI implements ilDesktopItemHandling
 
     public function downloadObject(): void
     {
+        if (in_array($this->user->getId(), [ANONYMOUS_USER_ID, 0], true)) {
+            return;
+        }
+
         $ilErr = $this->error;
         // This variable determines whether the task has been initiated by a folder's action drop-down to prevent a folder
         // duplicate inside the zip.

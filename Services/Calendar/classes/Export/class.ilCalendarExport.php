@@ -325,7 +325,7 @@ class ilCalendarExport
     /**
      * @return \ilCalendarCategory
      */
-    private function getCategoryFromCalendarEntry(ilCalendarEntry $app) : \ilCalendarCategory
+    private function getCategoryFromCalendarEntry(ilCalendarEntry $app): \ilCalendarCategory
     {
         $entry_id = $app->getEntryId();
         $cat_id = ilCalendarCategoryAssignments::_lookupCategory($entry_id);
@@ -337,7 +337,7 @@ class ilCalendarExport
      * @return string
      * @throws ilDatabaseException
      */
-    protected function getDescriptionByMetaData(int $obj_id) : string
+    protected function getDescriptionByMetaData(int $obj_id): string
     {
         $description = "";
 
@@ -361,28 +361,28 @@ class ilCalendarExport
      * @return string
      * @throws ilDatabaseException
      */
-    protected function getLocationByMetaData(int $obj_id) : string
+    protected function getLocationByMetaData(int $obj_id): string
     {
         return $this->getMetaDataValueByObjIdAndTitle($obj_id, "Ort");
     }
 
 
     /**
-     * @param int $obj_id
-     * @param string $title
-     * @return string
      * @throws ilDatabaseException
      */
-    protected function getMetaDataValueByObjIdAndTitle(int $obj_id, string $title) : string
+    protected function getMetaDataValueByObjIdAndTitle(int $obj_id, string $title): string
     {
         global $DIC;
 
         $query = "SELECT val.value
-           FROM adv_md_values_text as val
+           FROM adv_md_values_ltext as val
            INNER JOIN adv_mdf_definition as def ON  val.field_id = def.field_id
            WHERE def.title = '$title' AND val.obj_id = $obj_id";
         $res = $DIC->database()->query($query)->fetchRow();
-        return $res ? $res['value']: "";
+        if($res && is_null($res['value'])) {
+            return $res['value'];
+        }
+        return '';
     }
     //End UNIBE-Patch
 

@@ -179,7 +179,7 @@ class ilGlobalPageTemplate implements ilGlobalTemplateInterface
     /**
      * @inheritDoc
      */
-    public function getContent() : string
+    public function getContent() : ?string
     {
         return $this->legacy_content_template->getMainContent();
     }

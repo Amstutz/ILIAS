@@ -148,7 +148,7 @@ class PageContentGUI
     }
 
     //UNIBE-PATCH: add getter for iLubMods-Plugin
-    public function getMainContent() : string
+    public function getMainContent() : ?string
     {
         return $this->main_content;
     }

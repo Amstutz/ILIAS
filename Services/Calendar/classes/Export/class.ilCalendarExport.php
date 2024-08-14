@@ -379,7 +379,7 @@ class ilCalendarExport
            INNER JOIN adv_mdf_definition as def ON  val.field_id = def.field_id
            WHERE def.title = '$title' AND val.obj_id = $obj_id";
         $res = $DIC->database()->query($query)->fetchRow();
-        if($res && is_null($res['value'])) {
+        if($res && !is_null($res['value'])) {
             return $res['value'];
         }
         return '';

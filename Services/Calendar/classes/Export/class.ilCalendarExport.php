@@ -307,14 +307,6 @@ class ilCalendarExport
             $str_writer->addLine('LOCATION:' . $location);
         }
         //END UNIBE-Patch
-        $str_writer->append($this->createRecurrences($app));
-        $str_writer->addLine('SUMMARY:' . ilICalWriter::escapeText($app->getPresentationTitle(false)));
-        if (strlen($app->getDescription())) {
-            $str_writer->addLine('DESCRIPTION:' . ilICalWriter::escapeText($app->getDescription()));
-        }
-        if (strlen($app->getLocation())) {
-            $str_writer->addLine('LOCATION:' . ilICalWriter::escapeText($app->getLocation()));
-        }
 
         // TODO: URL
         $str_writer->append($this->buildAppointmentUrl($app));

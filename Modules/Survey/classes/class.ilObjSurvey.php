@@ -3724,9 +3724,9 @@ class ilObjSurvey extends ilObject
 
                 if ($row["externaldata"]) {
                     $ext = unserialize($row["externaldata"], ['allowed_classes' => false]);
-                    $item['email'] = $ext['email'];
-                    $item['last_name'] = $ext['lastname'];
-                    $item['first_name'] = $ext['firstname'];
+                    $item['email'] = array_key_exists('email', $ext) ? $ext['email']:'';
+                    $item['last_name'] = array_key_exists('lastname', $ext) ? $ext['lastname']:'';
+                    $item['first_name'] = array_key_exists('fistname', $ext) ? $ext['firstname']:'';;
                 }
 
                 $codes[] = $item;
